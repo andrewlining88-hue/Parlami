@@ -366,9 +366,9 @@ const Logo = ({size=48}) => (
 </svg>
 );
 async function callClaude(msgs, sys) {
-const r = await fetch("https://api.anthropic.com/v1/messages", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:sys,messages:msgs})});
+const r = await fetch("/api/chat", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system:sys,messages:msgs})});
 const d = await r.json();
-return (d.content||[]).map(b=>b.type==="text"?b.text:"").join("");
+return d.text||"";
 }
 const PwInput = ({value,onChange,onEnter,placeholder,autoFocus}) => (
 <input type="password" value={value} onChange={onChange} onKeyDown={e=>e.key==="Enter"&&onEnter?.()} placeholder={placeholder} autoFocus={autoFocus} className={cx.input}/>
