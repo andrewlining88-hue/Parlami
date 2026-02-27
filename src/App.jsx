@@ -370,6 +370,12 @@ const r = await fetch("/api/chat", {method:"POST",headers:{"Content-Type":"appli
 const d = await r.json();
 return d.text||"";
 }
+const dbCall = async (action, data) => {
+const r = await fetch("/api/db", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,data})});
+const d = await r.json();
+if(d.error) throw new Error(d.error);
+return d;
+};
 const PwInput = ({value,onChange,onEnter,placeholder,autoFocus}) => (
 <input type="password" value={value} onChange={onChange} onKeyDown={e=>e.key==="Enter"&&onEnter?.()} placeholder={placeholder} autoFocus={autoFocus} className={cx.input}/>
 );
@@ -764,8 +770,8 @@ const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
 const todayStr0=new Date().toISOString().slice(0,10);
 const todayCount=msgs.filter(m=>m.sender==="user"&&m.date===todayStr0).length;
-const store=async(k,v)=>{try{await window.storage.set(k,JSON.stringify(v));}catch{}};
-const load=async k=>{try{const r=await window.storage.get(k);return r?JSON.parse(r.value):null;}catch{return null;}};
+const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("save",{email,...v});}catch(e){console.error("store error",e);}};
+const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
 useEffect(()=>{if(view!=="student"||!email)return;store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote,lessonVocab,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length});},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
@@ -857,12 +863,12 @@ if(newTotal%5===0){
 }catch{setMsgs(p=>[...p,{id:Date.now()+1,text:"Ciao! Continuiamo a praticare! 🇮🇹",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);}
 setTyping(false);
 };
-const handleRemove=async e=>{try{await window.storage.delete("student:"+e);}catch{}setStudents(p=>p.filter(s=>s.email!==e));};
+const handleRemove=async e=>{try{await dbCall("delete",{email:e});}catch{}setStudents(p=>p.filter(s=>s.email!==e));};
 const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordHash=hashPw("parlami2026");await store("student:"+e,d);}};
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}];await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}];await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
 const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){d.pendingMsg=msg;await store("student:"+e,d);}};
-const loadAll=async()=>{try{const keys=await window.storage.list("student:");const loaded=await Promise.all((keys.keys||[]).map(async k=>{try{const r=await window.storage.get(k);return r?JSON.parse(r.value):null;}catch{return null;}}));setStudents(loaded.filter(Boolean));}catch{}};
+const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
 if(view==="teacher") return <TeacherDash students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg}/>;
