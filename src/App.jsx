@@ -770,7 +770,7 @@ const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
 const todayStr0=new Date().toISOString().slice(0,10);
 const todayCount=msgs.filter(m=>m.sender==="user"&&m.date===todayStr0).length;
-const store=async(k,v)=>{try{const email=k.replace("student:","");console.log("SAVING to DB:",email);const r=await dbCall("save",{email,...v});console.log("SAVED:",r);}catch(e){console.error("store error",e);}};
+const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("save",{email,...v});}catch(e){console.error("store error",e);}};
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
@@ -797,7 +797,7 @@ setVocabWords(s);setVocabCount(s.length);
 useEffect(()=>{BADGES.forEach(b=>{if(badges.includes(b.id))return;const p=b.type==="messages"?umc:b.type==="streak"?streak:b.type==="tests"?testsPassed.length:vocabCount;if(p>=b.req){setBadges(p=>[...p,b.id]);setBadgeNotif(b);setTimeout(()=>setBadgeNotif(null),3500);}});},[umc,streak,vocabCount,testsPassed]);
 const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:true,hasPassword:!!d.passwordHash,name:d.name||""}:{exists:false};};
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
-const today=new Date();const isFirstOfMonth=today.getDate()===1;const lastClean=d.lastMonthlyClean||"";const thisMonth=today.toISOString().slice(0,7);if(isFirstOfMonth&&lastClean!==thisMonth){d.messages=[];d.lastMonthlyClean=thisMonth;await store("student:"+e,d);}
+const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
 setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);
 if(d.pendingMsg){
 const tm={id:Date.now(),text:"👨‍🏫 "+d.pendingMsg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
@@ -826,7 +826,7 @@ const vp=lessonVocab?"New vocabulary from this lesson: \""+lessonVocab+"\". Try 
 let urgency="";
 if(streakAtRisk&&streak>=3) urgency="IMPORTANT: The student has a "+streak+"-day streak at risk today — they haven't practiced yet. Open with urgent but encouraging Italian warning about losing the streak. Reference the number directly.";
 else if(goalBehind) urgency="The student hasn't reached their daily goal of "+dailyGoal+" messages yet and it's evening. Open with a gentle motivating nudge in Italian to keep going.";
-const r=await callClaude([{role:"user",content:"[Student just logged in]"}],"You are Andrei, Italian tutor. Student is "+LN(level)+" ("+level+"). "+np+" "+vp+" "+(urgency||"Open with a warm greeting. 2-3 sentences.")+" End with a question in Italian.");
+const r=await callClaude([{role:"user",content:"[Student just logged in]"}],"You are Andrei, Italian tutor. Student's name is "+name+". Student is "+LN(level)+" ("+level+"). Streak: "+streak+" days. "+np+" "+vp+" "+(urgency||"Greet them by name warmly. 2-3 sentences.")+" End with a question in Italian. Never ask for their name - you already know it.");
 setMsgs(p=>[...p,{id:Date.now(),text:r,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:ts}]);
 }catch{}
 setTyping(false);
@@ -845,7 +845,7 @@ uc.push({type:"text",text:txt||"Please review and help me practice."});hist.push
 const np=lessonNote?"LAST LESSON NOTES: \""+lessonNote+"\". Reference naturally.":"";
 const vp=lessonVocab?"LESSON VOCABULARY: \""+lessonVocab+"\". Encourage use of these words, correct gently if misused.":"";
 const mp=recurringMistakes.length>0?"RECURRING MISTAKES: "+recurringMistakes.map((m,i)=>(i+1)+". "+m).join("; ")+". Correct gently once if they appear.":"";
-const sys="You are Andrei, Italian tutor. Student is "+LN(level)+" ("+level+"). "+np+" "+vp+" "+mp+" Mostly Italian, English only for grammar notes. 2-4 sentences, end with question. Do NOT correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress, etc) — these are normal Italian.";
+const sys="You are Andrei, Italian tutor. Student's name is "+name+". Student is "+LN(level)+" ("+level+"). "+np+" "+vp+" "+mp+" Mostly Italian, English only for grammar notes. 2-4 sentences, end with question. Do NOT correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress, etc) — these are normal Italian. Never ask for their name - you already know it.";
 const reply=await callClaude(hist,sys);
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
