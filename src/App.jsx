@@ -770,7 +770,7 @@ const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
 const todayStr0=new Date().toISOString().slice(0,10);
 const todayCount=msgs.filter(m=>m.sender==="user"&&m.date===todayStr0).length;
-const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("save",{email,...v});}catch(e){console.error("store error",e);}};
+const store=async(k,v)=>{try{const email=k.replace("student:","");console.log("SAVING to DB:",email);const r=await dbCall("save",{email,...v});console.log("SAVED:",r);}catch(e){console.error("store error",e);}};
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
