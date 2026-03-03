@@ -1,5 +1,8 @@
 export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   const { messages, system } = req.body;
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -15,12 +18,16 @@ export default async function handler(req, res) {
         messages: messages || [],
       }),
     });
-    const text = await response.text();
-    console.log('Anthropic raw response:', text);
-    const data = JSON.parse(text);
-    return res.status(200).json({ text: data.content?.[0]?.text || 'error' });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Anthropic error:', JSON.stringify(data));
+      return res.status(500).json({ error: 'API error' });
+    }
+    const text = data.content?.[0]?.text || '';
+    return res.status(200).json({ text });
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(200).json({ text: error.message });
+    console.error('API error:', error);
+    return res.status(500).json({ error: error.message });
   }
 }
