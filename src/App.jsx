@@ -11,6 +11,30 @@ const DarkToggle = ({dark, setDark}) => (
   </button>
 );
 const LEVEL_REQ = { A1:1000, A2:2000, B1:3500, B2:5500, C1:8000, C2:12000 };
+const DarkStyle = ({dark}) => dark ? <style>{`
+  .dark-app .bg-white { background: #1f2937 !important; }
+  .dark-app .border-gray-100 { border-color: #374151 !important; }
+  .dark-app .border-gray-200 { border-color: #4b5563 !important; }
+  .dark-app .text-gray-800, .dark-app .text-gray-700, .dark-app .text-gray-600 { color: #e5e7eb !important; }
+  .dark-app .text-gray-500, .dark-app .text-gray-400 { color: #9ca3af !important; }
+  .dark-app .text-gray-300 { color: #6b7280 !important; }
+  .dark-app .bg-gray-50, .dark-app .bg-gray-100 { background: #111827 !important; }
+  .dark-app input, .dark-app textarea { background: #374151 !important; color: #f9fafb !important; border-color: #4b5563 !important; }
+  .dark-app input::placeholder, .dark-app textarea::placeholder { color: #9ca3af !important; }
+  .dark-app .text-gray-900 { color: #f9fafb !important; }
+  .dark-app p, .dark-app span, .dark-app div { color: inherit; }
+  .dark-app .rounded-2xl.border { background: #1f2937 !important; border-color: #374151 !important; }
+  .dark-app .rounded-xl.border { background: #1f2937 !important; border-color: #374151 !important; }
+  .dark-app .bg-indigo-50 { background: #1e1b4b !important; }
+  .dark-app .text-indigo-700 { color: #a5b4fc !important; }
+  .dark-app .text-indigo-400 { color: #818cf8 !important; }
+  .dark-app .bg-orange-50 { background: #431407 !important; }
+  .dark-app .bg-green-50 { background: #052e16 !important; }
+  .dark-app .text-green-800 { color: #86efac !important; }
+  .dark-app .bg-red-50 { background: #450a0a !important; }
+  .dark-app .text-red-800 { color: #fca5a5 !important; }
+  .dark-app .border-b { border-color: #374151 !important; }
+`}</style> : null;
 const LEVELS = ["A1","A2","B1","B2","C1","C2"];
 const LC = l => ({A1:"#22c55e",A2:"#84cc16",B1:"#eab308",B2:"#f97316",C1:"#ef4444",C2:"#a855f7"}[l]||"#22c55e");
 const LN = l => ({A1:"Beginner",A2:"Elementary",B1:"Intermediate",B2:"Upper Int.",C1:"Advanced",C2:"Mastery"}[l]||"Beginner");
@@ -478,7 +502,7 @@ catch{setReport("Unable to generate.");}
 setLoadingReport(false);
 };
 return (
-<div className="min-h-screen flex flex-col" style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}>
+<div className={"min-h-screen flex flex-col"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}><DarkStyle dark={dark}/>
 {confirmRm&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center"><p className="text-3xl mb-3">🗑️</p><p className="font-semibold mb-1">Remove {confirmRm.name}?</p><div className="flex space-x-2 mt-4"><button onClick={()=>setConfirmRm(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">No</button><button onClick={()=>{onRemove(confirmRm.email);if(sel?.email===confirmRm.email)setSel(null);setConfirmRm(null);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#ef4444"}}>Remove</button></div></div></div>}
 {resetModal&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center">{resetDone?<><p className="text-3xl mb-3">✅</p><p className="font-semibold mb-2">Password reset</p><p className="text-lg font-bold tracking-widest bg-gray-50 rounded-xl py-2 px-4 mb-4">parlami2026</p><button onClick={()=>{setResetModal(null);setResetDone(false);}} className={cx.btn} style={{background:"#1a1a2e"}}>Done</button></>:<><p className="text-3xl mb-3">🔑</p><p className="font-semibold mb-4">Reset password for {resetModal.name}?</p><div className="flex space-x-2"><button onClick={()=>setResetModal(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">Cancel</button><button onClick={async()=>{await onResetPw(resetModal.email);setResetDone(true);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#f97316"}}>Reset</button></div></>}</div></div>}
 <div style={{background:dark?"#1f2937":"white",borderColor:dark?"#374151":"#f3f4f6"}} className="border-b px-6 py-4 flex items-center justify-between">
@@ -882,7 +906,7 @@ const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(n
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
 if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg}/>;
 if(view==="login") return (
-<div className="min-h-screen flex items-center justify-center p-4" style={{background:dark?"#111827":"#f9fafb"}}>
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
 <div className="flex flex-col items-center mb-8"><Logo size={64}/><h1 className="text-xl font-bold mt-4">Parlami</h1><p className={cx.xs4+" mt-1"}>Practice Italian between lessons</p></div>
 {step==="identify"&&<div className="space-y-3 mb-4"><input type="text" value={email} onChange={e=>{setEmail(e.target.value);setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&email.trim()&&handleIdentify()} placeholder="Email address" className={cx.input}/><button onClick={handleIdentify} disabled={!email.trim()} className={cx.btn} style={{background:"#1a1a2e"}}>Continue →</button></div>}
@@ -897,7 +921,7 @@ if(view==="login") return (
 </div>
 );
 return (
-<div className="flex flex-col h-screen" style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}>
+<div className={"flex flex-col h-screen"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}><DarkStyle dark={dark}/>
 {showTest&&<TestModal level={level} onClose={()=>setShowTest(false)} onPass={passTest} onFail={failTest}/>}
 {showChangePw&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
