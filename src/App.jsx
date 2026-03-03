@@ -761,7 +761,6 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 }
 
 export default function App() {
-const [dark,setDark]=useState(()=>localStorage.getItem("parlami_dark")==="1");
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
 const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState("");
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");
