@@ -2,6 +2,14 @@ import { useState, useRef, useEffect } from "react";
 // Parlami v4
 import { Send, BookOpen, LogOut, X, CheckCircle, XCircle, Users, ChevronRight, Star } from "lucide-react";
 const TEACHER_PW = "Teacher2026";
+const DarkToggle = ({dark, setDark}) => (
+  <button onClick={()=>{setDark(d=>{const n=!d;localStorage.setItem("parlami_dark",n?"1":"0");return n;});}} 
+    className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all"
+    style={{background:dark?"#374151":"#f3f4f6"}}
+    title={dark?"Switch to light mode":"Switch to dark mode"}>
+    {dark?"☀️":"🌙"}
+  </button>
+);
 const LEVEL_REQ = { A1:1000, A2:2000, B1:3500, B2:5500, C1:8000, C2:12000 };
 const LEVELS = ["A1","A2","B1","B2","C1","C2"];
 const LC = l => ({A1:"#22c55e",A2:"#84cc16",B1:"#eab308",B2:"#f97316",C1:"#ef4444",C2:"#a855f7"}[l]||"#22c55e");
@@ -455,7 +463,7 @@ return(
 </div>
 );
 }
-function TeacherDash({students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg}) {
+function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg}) {
 const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
@@ -470,12 +478,12 @@ catch{setReport("Unable to generate.");}
 setLoadingReport(false);
 };
 return (
-<div className="min-h-screen flex flex-col" style={{background:"#f9fafb"}}>
+<div className="min-h-screen flex flex-col" style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}>
 {confirmRm&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center"><p className="text-3xl mb-3">🗑️</p><p className="font-semibold mb-1">Remove {confirmRm.name}?</p><div className="flex space-x-2 mt-4"><button onClick={()=>setConfirmRm(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">No</button><button onClick={()=>{onRemove(confirmRm.email);if(sel?.email===confirmRm.email)setSel(null);setConfirmRm(null);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#ef4444"}}>Remove</button></div></div></div>}
 {resetModal&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center">{resetDone?<><p className="text-3xl mb-3">✅</p><p className="font-semibold mb-2">Password reset</p><p className="text-lg font-bold tracking-widest bg-gray-50 rounded-xl py-2 px-4 mb-4">parlami2026</p><button onClick={()=>{setResetModal(null);setResetDone(false);}} className={cx.btn} style={{background:"#1a1a2e"}}>Done</button></>:<><p className="text-3xl mb-3">🔑</p><p className="font-semibold mb-4">Reset password for {resetModal.name}?</p><div className="flex space-x-2"><button onClick={()=>setResetModal(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">Cancel</button><button onClick={async()=>{await onResetPw(resetModal.email);setResetDone(true);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#f97316"}}>Reset</button></div></>}</div></div>}
-<div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+<div style={{background:dark?"#1f2937":"white",borderColor:dark?"#374151":"#f3f4f6"}} className="border-b px-6 py-4 flex items-center justify-between">
 <div className="flex items-center space-x-3"><Logo size={34}/><div><p className="text-sm font-semibold">Parlami</p><p className={cx.xs4}>Teacher Dashboard</p></div></div>
-<button onClick={onLogout} className="flex items-center space-x-1.5 text-xs text-gray-400 hover:text-gray-700"><LogOut className="w-3.5 h-3.5"/><span>Logout</span></button>
+<div className="flex items-center space-x-2"><DarkToggle dark={dark} setDark={setDark}/><button onClick={onLogout} className="flex items-center space-x-1.5 text-xs text-gray-400 hover:text-gray-700"><LogOut className="w-3.5 h-3.5"/><span>Logout</span></button></div>
 </div>
 <div className="flex-1 overflow-y-auto">
 <div className="max-w-4xl mx-auto px-5 py-6 space-y-5">
@@ -753,6 +761,8 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 }
 
 export default function App() {
+const [dark,setDark]=useState(()=>localStorage.getItem("parlami_dark")==="1");
+const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
 const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState("");
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");
 const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");
@@ -871,9 +881,9 @@ const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){d.pend
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
-if(view==="teacher") return <TeacherDash students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg}/>;
+if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg}/>;
 if(view==="login") return (
-<div className="min-h-screen flex items-center justify-center p-4" style={{background:"#f9fafb"}}>
+<div className="min-h-screen flex items-center justify-center p-4" style={{background:dark?"#111827":"#f9fafb"}}>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
 <div className="flex flex-col items-center mb-8"><Logo size={64}/><h1 className="text-xl font-bold mt-4">Parlami</h1><p className={cx.xs4+" mt-1"}>Practice Italian between lessons</p></div>
 {step==="identify"&&<div className="space-y-3 mb-4"><input type="text" value={email} onChange={e=>{setEmail(e.target.value);setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&email.trim()&&handleIdentify()} placeholder="Email address" className={cx.input}/><button onClick={handleIdentify} disabled={!email.trim()} className={cx.btn} style={{background:"#1a1a2e"}}>Continue →</button></div>}
@@ -888,7 +898,7 @@ if(view==="login") return (
 </div>
 );
 return (
-<div className="flex flex-col h-screen" style={{background:"#f9fafb"}}>
+<div className="flex flex-col h-screen" style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}>
 {showTest&&<TestModal level={level} onClose={()=>setShowTest(false)} onPass={passTest} onFail={failTest}/>}
 {showChangePw&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
@@ -907,9 +917,9 @@ return (
 </div>
 )}
 {badgeNotif&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="flex items-center space-x-3 px-5 py-3 rounded-2xl shadow-lg text-white text-sm font-medium" style={{background:"#1a1a2e"}}><span className="text-2xl">{badgeNotif.icon}</span><span>Badge unlocked: {badgeNotif.name}</span></div></div>}
-<div className="bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between flex-shrink-0">
+<div className="bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between flex-shrink-0" style={{background:dark?"#1f2937":"white",borderColor:dark?"#374151":"#f3f4f6"}}>
 <div className="flex items-center space-x-2.5"><Logo size={32}/><div><p className="text-sm font-semibold">Parlami</p><p className={cx.xs4}>{name}</p></div></div>
-<div className="flex items-center space-x-2"><button onClick={()=>setShowChangePw(true)} className="text-gray-300 hover:text-gray-500" title="Change password"><span className="text-sm">🔑</span></button><button onClick={logout} className="text-gray-300 hover:text-gray-500"><LogOut className="w-4 h-4"/></button></div>
+<div className="flex items-center space-x-2"><DarkToggle dark={dark} setDark={setDark}/><button onClick={()=>setShowChangePw(true)} className="text-gray-300 hover:text-gray-500" title="Change password"><span className="text-sm">🔑</span></button><button onClick={logout} className="text-gray-300 hover:text-gray-500"><LogOut className="w-4 h-4"/></button></div>
 </div>
 {showGoalPicker&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
