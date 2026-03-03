@@ -422,7 +422,7 @@ const shuffle=arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.
 const [qs]=useState(()=>shuffle(test?.qs||[]).slice(0,30));
 const [idx,setIdx]=useState(0);const [ans,setAns]=useState("");const [results,setResults]=useState([]);
 const [fb,setFb]=useState(null);const [loading,setLoading]=useState(false);const [done,setDone]=useState(false);
-if(!test) return <div className={cx.modal} style={cx.overlay}><div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-xl"><p className="text-2xl mb-3">🚧</p><button onClick={onClose} className="w-full py-2.5 rounded-xl text-sm" style={{background:"#f3f4f6"}}>Close</button></div></div>;
+if(!test) return <div className={cx.modal} style={cx.overlay}><div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-xl"><p className="text-2xl mb-3">🚧</p><button onClick={onClose} className="w-full py-2.5 rounded-xl text-sm" style={{background:dark?"#374151":"#f3f4f6"}}>Close</button></div></div>;
 const total=qs.length,q=qs[idx],score=results.filter(r=>r.ok).length;
 const submit = async () => {
 const ok=checkAns(ans,q.a); setLoading(true);
@@ -443,7 +443,7 @@ return (
 ) : (
 <div>
 <div className={cx.row+" mb-3"}><p className={cx.xs4}>{test.title}</p><button onClick={onClose}><X className="w-4 h-4 text-gray-300"/></button></div>
-<div className="w-full rounded-full h-1 mb-4" style={{background:"#f3f4f6"}}><div className="h-1 rounded-full" style={{width:(idx/total*100)+"%",background:LC(level)}}/></div>
+<div className="w-full rounded-full h-1 mb-4" style={{background:dark?"#374151":"#f3f4f6"}}><div className="h-1 rounded-full" style={{width:(idx/total*100)+"%",background:LC(level)}}/></div>
 <p className={cx.xs4+" mb-2"}>{idx+1}/{total}</p>
 <p className="text-base font-medium text-gray-900 mb-5">{q.q}</p>
 {fb?<div className={"p-4 rounded-xl text-sm "+(fb.ok?"bg-green-50 text-green-800":"bg-red-50 text-red-800")}>{fb.ok?"✅ ":"❌ "}{fb.t}</div>:<><input autoFocus type="text" value={ans} onChange={e=>setAns(e.target.value)} onKeyDown={e=>e.key==="Enter"&&ans.trim()&&!loading&&submit()} placeholder="Your answer..." className={cx.input+" mb-3"}/><button onClick={submit} disabled={!ans.trim()||loading} className={cx.btn} style={{background:LC(level)}}>{loading?"Checking...":"Submit"}</button></>}
@@ -463,10 +463,10 @@ return(
 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Week of {wd[0].slice(5).replace("-","/")} – {wd[6].slice(5).replace("-","/")}</p>
 <div className="grid grid-cols-3 gap-2">
 {[[practiced.length+"/"+students.length,"Practiced","✅"],[total,"Messages","💬"],[silent.length,"Inactive","😴"]].map(([v,l,ic])=>(
-<div key={l} className="rounded-xl p-3 text-center" style={{background:"#f9fafb"}}><p className="text-lg">{ic}</p><p className="text-lg font-bold">{v}</p><p className={cx.xs4}>{l}</p></div>
+<div key={l} className="rounded-xl p-3 text-center" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-lg">{ic}</p><p className="text-lg font-bold">{v}</p><p className={cx.xs4}>{l}</p></div>
 ))}
 </div>
-{best&&<div className="rounded-xl px-4 py-3 text-sm" style={{background:"#f0fdf4"}}><span className="text-green-600 font-semibold">🏆 </span><span className="text-green-700">{best.name} — {best.msgs7} msgs, {best.days} days</span></div>}
+{best&&<div className="rounded-xl px-4 py-3 text-sm" style={{background:dark?"#052e16":"#f0fdf4"}}><span className="text-green-600 font-semibold">🏆 </span><span className="text-green-700">{best.name} — {best.msgs7} msgs, {best.days} days</span></div>}
 <div className="space-y-2">
 {rows.map((r,i)=>(
 <div key={i} className={"rounded-xl p-3 border "+(r.msgs7>0?"border-gray-100":"border-red-100 bg-red-50")}>
@@ -484,7 +484,7 @@ return(
 ))}
 </div>
 {silent.length>0&&(
-<div className="rounded-xl px-4 py-3 space-y-2" style={{background:"#fff7ed"}}>
+<div className="rounded-xl px-4 py-3 space-y-2" style={{background:dark?"#431407":"#fff7ed"}}>
 <p className="text-xs font-semibold text-orange-600">⚠️ {silent.map(s=>s.name).join(", ")} — no practice this week</p>
 <button onClick={async()=>{await Promise.all(silent.map(s=>onSendMsg(s.email,"🔔 Ciao "+s.name.split(" ")[0]+"! Non ti vedo da un po' — anche solo 5 minuti oggi fanno la differenza! Forza! 💪")));setReminderSent(true);setTimeout(()=>setReminderSent(false),3000);}} className="w-full py-2 rounded-xl text-xs font-semibold transition-all" style={{background:reminderSent?"#dcfce7":"#f97316",color:reminderSent?"#16a34a":"white"}}>{reminderSent?"✓ Reminders sent!":"🔔 Send reminder to all inactive"}</button>
 </div>
@@ -540,7 +540,7 @@ return (
 <ChevronRight className={"w-4 h-4 "+(sel?.email===s.email?"text-gray-600":"text-gray-200")}/>
 </div>
 </div>
-<div className="mt-3 w-full rounded-full h-0.5" style={{background:"#f3f4f6"}}><div className="h-0.5 rounded-full" style={{width:s.progress+"%",background:LC(s.level)}}/></div>
+<div className="mt-3 w-full rounded-full h-0.5" style={{background:dark?"#374151":"#f3f4f6"}}><div className="h-0.5 rounded-full" style={{width:s.progress+"%",background:LC(s.level)}}/></div>
 </div>
 ))}
 </div>
@@ -553,14 +553,14 @@ return (
 </div>
 <div className="grid grid-cols-3 gap-2">
 {[["Level",sel.level],["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
-<div key={l} className="rounded-xl p-3" style={{background:"#f9fafb"}}><p className="text-sm font-semibold">{v}</p><p className={cx.xs4+" mt-0.5"}>{l}</p></div>
+<div key={l} className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-sm font-semibold">{v}</p><p className={cx.xs4+" mt-0.5"}>{l}</p></div>
 ))}
 </div>
 <div>
 <div className={cx.row+" text-xs text-gray-400 mb-2"}><span>Level progress</span><span>{sel.progress}%</span></div>
-<div className="w-full rounded-full h-1.5" style={{background:"#f3f4f6"}}><div className="h-1.5 rounded-full" style={{width:sel.progress+"%",background:LC(sel.level)}}/></div>
+<div className="w-full rounded-full h-1.5" style={{background:dark?"#374151":"#f3f4f6"}}><div className="h-1.5 rounded-full" style={{width:sel.progress+"%",background:LC(sel.level)}}/></div>
 </div>
-<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:"#fafafa"}}>
+<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <div className={cx.row}>
 <p className="text-xs font-semibold text-gray-500">📝 Lesson Notes</p>
 {sel.noteHistory?.length>0&&<button onClick={()=>setShowHistory(h=>!h)} className="text-xs text-gray-400 underline">{showHistory?"Hide":"History ("+sel.noteHistory.length+")"}</button>}
@@ -573,7 +573,7 @@ return (
 <textarea value={noteText} onChange={e=>{setNoteText(e.target.value);setNoteSaved(false);}} rows={3} placeholder="e.g. passato prossimo, travelling to Sicilia..." className="w-full text-sm bg-white border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-gray-400 placeholder-gray-300"/>
 <button onClick={async()=>{const u=await onSaveNote(sel.email,noteText.trim());if(u)setSel(p=>({...p,...u}));setNoteSaved(true);setShowHistory(false);setTimeout(()=>setNoteSaved(false),2500);}} className="w-full py-2 rounded-xl text-xs font-semibold transition-all" style={{background:noteSaved?"#dcfce7":LC(sel.level),color:noteSaved?"#16a34a":"white"}}>{noteSaved?"✓ Saved!":"Save Note → Andrei will use this"}</button>
 </div>
-<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:"#fafafa"}}>
+<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <div className={cx.row}>
 <p className="text-xs font-semibold text-gray-500">📚 Lesson Vocabulary</p>
 {sel.vocabHistory?.length>0&&<button onClick={()=>setShowVocabHistory(h=>!h)} className="text-xs text-gray-400 underline">{showVocabHistory?"Hide":"History ("+sel.vocabHistory.length+")"}</button>}
@@ -588,9 +588,9 @@ return (
 </div>
 <div>
 <button onClick={genReport} disabled={loadingReport} className={cx.btn} style={{background:"#1a1a2e"}}>{loadingReport?"Generating...":"✨ Generate AI Progress Report"}</button>
-{report&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:"#fafafa"}}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">AI Report</p>{report}</div>}
+{report&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">AI Report</p>{report}</div>}
 </div>
-<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:"#fafafa"}}>
+<div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <p className="text-xs font-semibold text-gray-500">✉️ Message to {sel.name}</p>
 <p className={cx.xs4}>Appears in their chat next time they log in.</p>
 <textarea value={msgText} onChange={e=>{setMsgText(e.target.value);setMsgSent(false);}} rows={2} placeholder={'e.g. "Bravissima questa settimana! 🎉"'} className="w-full text-sm bg-white border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-gray-400 placeholder-gray-300"/>
@@ -620,15 +620,15 @@ const hm=Array.from({length:28},(_,i)=>{const d=new Date(today);d.setDate(d.getD
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className="rounded-2xl p-5 text-white" style={{background:"#1a1a2e"}}><div className="flex justify-between items-start mb-4"><div><p className="text-xs opacity-50 mb-1">Current level</p><p className="text-4xl font-bold">{studentLevel}</p><p className="text-xs opacity-50 mt-1">{LN(studentLevel)}</p></div><div className="text-right"><p className="text-xs opacity-50 mb-1">Progress</p><p className="text-2xl font-bold">{lp}%</p><p className="text-xs opacity-50 mt-1">{Math.max(0,LEVEL_REQ[studentLevel]-umc)} msgs left</p></div></div><div className="w-full rounded-full h-1" style={{background:"rgba(255,255,255,0.15)"}}><div className="h-1 rounded-full" style={{width:lp+"%",background:color}}/></div></div>
 <div className={cx.card+" space-y-4"}><div className={cx.row}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">📊 Activity</p><div className="flex rounded-xl overflow-hidden border border-gray-100">{[["week","Week"],["month","Month"],["all","All"]].map(([v,l])=>(<button key={v} onClick={()=>setChartFilter(v)} className="px-3 py-1.5 text-xs font-medium" style={{background:chartFilter===v?color:"transparent",color:chartFilter===v?"white":"#9ca3af"}}>{l}</button>))}</div></div>
-<div className="grid grid-cols-3 gap-2">{[[tot,chartFilter==="week"?"This week":chartFilter==="month"?"This month":"All time","💬"],[ad,"Active days","📅"],[bd.count,"Best day","🏆"]].map(([val,label,icon])=>(<div key={label} className="rounded-xl p-2.5 text-center" style={{background:"#f9fafb"}}><p>{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
+<div className="grid grid-cols-3 gap-2">{[[tot,chartFilter==="week"?"This week":chartFilter==="month"?"This month":"All time","💬"],[ad,"Active days","📅"],[bd.count,"Best day","🏆"]].map(([val,label,icon])=>(<div key={label} className="rounded-xl p-2.5 text-center" style={{background:dark?"#374151":"#f9fafb"}}><p>{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
 {tot===0?<p className="text-sm text-gray-400 text-center py-4">No messages in this period yet</p>:<><div className="flex items-end gap-px" style={{height:"64px"}}>{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center"><div className="w-full rounded-t" style={{height:d.count>0?Math.max(d.count/mx*100,6)+"%":"2px",background:d.count===0?"#f3f4f6":d.date===todayStr?color:color+"99"}}/></div>)}</div><div className="flex gap-px">{data.map((d,i)=><div key={i} className="flex-1 text-center">{d.label&&<p style={{fontSize:"9px",color:"#d1d5db"}}>{d.label}</p>}</div>)}</div></>}
 <div className="grid gap-1" style={{gridTemplateColumns:"repeat(28,1fr)"}}>{hm.map((d,i)=><div key={i} className="rounded-sm aspect-square" style={{background:d.count===0?"#f3f4f6":color,opacity:d.count===0?1:Math.min(0.2+d.count*0.15,1),outline:d.k===todayStr?"2px solid "+color:"none",outlineOffset:"1px"}}/>)}</div>
 {ad>0&&<div className="rounded-xl px-3 py-2.5 text-xs font-medium text-center" style={{background:color+"15",color}}>{ad>=7?"🔥 You're on a roll!":ad>=4?"⭐ Great consistency!":ad>=2?"👍 Good start — practice every day!":"💡 Even 5 minutes a day makes a difference!"}</div>}</div>
 <div className="grid grid-cols-3 gap-3">{[["💬",umc,"Messages"],["🔥",practiceStreak,"Streak"],["📖",vocabularyCount,"Words"]].map(([icon,val,label])=>(<div key={label} className={cx.card+" text-center"}><p className="text-xl mb-1">{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
 <div className="space-y-2">{(()=>{const failed=testFailedAt?.[studentLevel];const locked=failed!==undefined&&(totalMsgCount-failed)<500;const remaining=locked?500-(totalMsgCount-failed):0;return locked?<div className="w-full py-3 rounded-2xl text-sm font-semibold text-center border border-gray-200 text-gray-400">🔒 Test locked — chat {remaining} more messages to retake</div>:<button onClick={onShowTest} className={cx.btn+" flex items-center justify-center space-x-2"} style={{background:"#1a1a2e"}}><BookOpen className="w-4 h-4"/><span>Take {studentLevel} Level Test</span></button>;})()}<a href="https://preply.com/en/tutor/4536645" target="_blank" rel="noopener noreferrer" className="block w-full py-3 rounded-2xl text-sm font-semibold text-white text-center" style={{background:"#f97316"}}>📅 Prenota una lezione con Andrei</a></div>
 {testsPassed.length>0&&<div className={cx.card}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Tests Passed</p><div className="flex flex-wrap gap-2">{testsPassed.map(l=><span key={l} className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{background:LC(l)}}>{l}</span>)}</div></div>}
-<div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">💡 Tips from Andrei</p>{tipLog.length>0&&<span className="text-xs bg-indigo-50 text-indigo-400 px-2 py-0.5 rounded-full">{tipLog.length}</span>}</div>{tipLog.length===0?<p className="text-xs text-gray-300 text-center py-3">Tips will appear here every 5 messages.</p>:<div className="space-y-2">{tipLog.map((t,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:"#f5f3ff"}}><Star className="w-3 h-3 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/><div><p className="text-xs text-indigo-700 leading-relaxed">{t.text}</p><p className="text-xs text-indigo-300 mt-0.5">{t.date}</p></div></div>)}</div>}</div>
-<div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">🔁 Andrei is watching</p>{recurringMistakes.length>0&&<span className="text-xs bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full">{recurringMistakes.length}</span>}</div>{recurringMistakes.length===0?<p className="text-xs text-gray-300 text-center py-3">Andrei will track recurring mistakes after a few sessions.</p>:<div className="space-y-2">{recurringMistakes.map((m,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:"#fff7ed"}}><span className="text-orange-300 mt-0.5">⚠️</span><p className="text-xs text-orange-700 leading-relaxed">{m}</p></div>)}<p className="text-xs text-gray-300 pt-1">Andrei will gently correct these when they come up.</p></div>}</div>
+<div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">💡 Tips from Andrei</p>{tipLog.length>0&&<span className="text-xs bg-indigo-50 text-indigo-400 px-2 py-0.5 rounded-full">{tipLog.length}</span>}</div>{tipLog.length===0?<p className="text-xs text-gray-300 text-center py-3">Tips will appear here every 5 messages.</p>:<div className="space-y-2">{tipLog.map((t,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#1e1b4b":"#f5f3ff"}}><Star className="w-3 h-3 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/><div><p className="text-xs text-indigo-700 leading-relaxed">{t.text}</p><p className="text-xs text-indigo-300 mt-0.5">{t.date}</p></div></div>)}</div>}</div>
+<div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">🔁 Andrei is watching</p>{recurringMistakes.length>0&&<span className="text-xs bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full">{recurringMistakes.length}</span>}</div>{recurringMistakes.length===0?<p className="text-xs text-gray-300 text-center py-3">Andrei will track recurring mistakes after a few sessions.</p>:<div className="space-y-2">{recurringMistakes.map((m,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#431407":"#fff7ed"}}><span className="text-orange-300 mt-0.5">⚠️</span><p className="text-xs text-orange-700 leading-relaxed">{m}</p></div>)}<p className="text-xs text-gray-300 pt-1">Andrei will gently correct these when they come up.</p></div>}</div>
 <div className={cx.card}><div className={cx.row+" mb-3"}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Badges</p><p className="text-xs text-gray-300">{unlockedBadges.length}/{BADGES.length}</p></div><div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=unlockedBadges.includes(b.id);const raw=b.type==="messages"?umc:b.type==="streak"?practiceStreak:b.type==="tests"?testsPassed.length:vocabularyCount;const p=Math.min(raw/b.req*100,100);return(<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100 bg-gray-50")}><div className="flex items-center space-x-2 mb-1.5"><span className={"text-xl "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold truncate "+(u?"text-gray-800":"text-gray-500")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div><p className="text-xs text-gray-400 mb-1.5 leading-tight">{b.desc}</p>{!u&&<><div className="w-full rounded-full h-1" style={{background:"#e5e7eb"}}><div className="h-1 rounded-full" style={{width:p+"%",background:color}}/></div><p className="text-xs text-gray-300 mt-1">{raw.toLocaleString()} / {b.req.toLocaleString()}</p></>}</div>);})}</div></div>
 </div>);}
 function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords}) {
@@ -984,20 +984,20 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 {tab==="chat"&&(
 <div className="flex flex-col flex-1 min-h-0">
 {todayCount>=dailyGoal&&todayCount>0&&(
-<div className="mx-4 mt-3 px-4 py-2.5 rounded-xl flex items-center space-x-2 flex-shrink-0" style={{background:"#f0fdf4"}}>
+<div className="mx-4 mt-3 px-4 py-2.5 rounded-xl flex items-center space-x-2 flex-shrink-0" style={{background:dark?"#052e16":"#f0fdf4"}}>
 <span>🎯</span>
 <p className="text-xs font-semibold text-green-700 flex-1">Daily goal reached! {todayCount}/{dailyGoal} messages today</p>
 <button onClick={()=>setShowGoalPicker(true)} className="text-xs text-green-500 underline">change</button>
 </div>
 )}
 {todayCount<dailyGoal&&streak>=3&&(()=>{const h=new Date().getHours();if(h<18)return null;return(
-<div className="mx-4 mt-3 px-4 py-2.5 rounded-xl flex items-center space-x-2 flex-shrink-0" style={{background:"#fff7ed"}}>
+<div className="mx-4 mt-3 px-4 py-2.5 rounded-xl flex items-center space-x-2 flex-shrink-0" style={{background:dark?"#431407":"#fff7ed"}}>
 <span>🔥</span>
 <p className="text-xs font-semibold text-orange-700 flex-1">{streak}-day streak at risk! {dailyGoal-todayCount} more message{dailyGoal-todayCount!==1?"s":""} to protect it today</p>
 </div>
 );})()}
 {tipLog.length>0&&(
-<div className="mx-4 mt-3 px-4 py-3 rounded-xl flex items-start space-x-2 flex-shrink-0" style={{background:"#f5f3ff"}}>
+<div className="mx-4 mt-3 px-4 py-3 rounded-xl flex items-start space-x-2 flex-shrink-0" style={{background:dark?"#1e1b4b":"#f5f3ff"}}>
 <Star className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/>
 <div className="flex-1 min-w-0"><p className="text-xs font-semibold mb-0.5" style={{color:"#6366f1"}}>💡 Tip from Andrei</p><p className="text-xs leading-relaxed" style={{color:"#4f46e5"}}>{tipLog[0].text}</p></div>
 <button onClick={()=>setTipLog(p=>p.slice(1))}><X className="w-3.5 h-3.5" style={{color:"#a5b4fc"}}/></button>
@@ -1010,7 +1010,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 <div ref={endRef}/>
 </div>
 <div className="bg-white border-t border-gray-100 px-4 py-3 flex-shrink-0">
-{file&&<div className="flex items-center space-x-2 mb-2 px-3 py-2 rounded-xl text-xs" style={{background:"#f3f4f6"}}><span>{file.type==="pdf"?"📄":"🖼️"}</span><span className="text-gray-600 truncate flex-1">{file.name}</span><button onClick={()=>setFile(null)}><X className="w-3.5 h-3.5 text-gray-400"/></button></div>}
+{file&&<div className="flex items-center space-x-2 mb-2 px-3 py-2 rounded-xl text-xs" style={{background:dark?"#374151":"#f3f4f6"}}><span>{file.type==="pdf"?"📄":"🖼️"}</span><span className="text-gray-600 truncate flex-1">{file.name}</span><button onClick={()=>setFile(null)}><X className="w-3.5 h-3.5 text-gray-400"/></button></div>}
 <div className="flex items-center space-x-2">
 <input ref={fileRef} type="file" accept="image/*,.pdf" onChange={e=>{const f=e.target.files[0];if(!f)return;const isPdf=f.type==="application/pdf";if(!isPdf&&!f.type.startsWith("image/"))return;const r=new FileReader();r.onload=()=>setFile({type:isPdf?"pdf":"image",mediaType:f.type,data:r.result.split(",")[1],name:f.name});r.readAsDataURL(f);}} className="hidden"/>
 <button onClick={()=>fileRef.current?.click()} disabled={typing} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 border border-gray-200 disabled:opacity-40"><span>📎</span></button>
