@@ -416,7 +416,7 @@ return d;
 const PwInput = ({value,onChange,onEnter,placeholder,autoFocus}) => (
 <input type="password" value={value} onChange={onChange} onKeyDown={e=>e.key==="Enter"&&onEnter?.()} placeholder={placeholder} autoFocus={autoFocus} className={cx.input}/>
 );
-function TestModal({level,onClose,onPass,onFail}) {
+function TestModal({level,onClose,onPass,onFail,dark=false}) {
 const test=TESTS[level];
 const shuffle=arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const [qs]=useState(()=>shuffle(test?.qs||[]).slice(0,30));
@@ -609,7 +609,7 @@ return (
 </div>
 );
 }
-function ProgressTab({messages,studentLevel,practiceStreak,vocabularyCount,testsPassed,unlockedBadges,chartFilter,setChartFilter,activityLog,onShowTest,recurringMistakes,tipLog,testFailedAt,totalMsgCount}) {
+function ProgressTab({messages,studentLevel,practiceStreak,vocabularyCount,testsPassed,unlockedBadges,chartFilter,setChartFilter,activityLog,onShowTest,recurringMistakes,tipLog,testFailedAt,totalMsgCount,dark=false}) {
 const umc=messages.filter(m=>m.sender==="user").length,color=LC(studentLevel);
 const today=new Date(),todayStr=today.toISOString().slice(0,10);
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[studentLevel]*100),100);
@@ -1020,7 +1020,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 </div>
 </div>
 )}
-{tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount}/>}
+{tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} dark={dark}/>}
 {tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords}/>}
 {tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} lessonNote={lessonNote} lessonVocab={lessonVocab}/>}
 
