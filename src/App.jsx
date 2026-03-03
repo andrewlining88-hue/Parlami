@@ -895,7 +895,7 @@ if(newTotal%5===0){
       [{role:"user",content:"Recent conversation:\n"+recentExchange}],
       "You are Andrei, an Italian teacher. Read the conversation and write ONE specific, short tip (max 2 sentences) about something the student actually did in this conversation — a mistake they made, a word they used incorrectly, or a grammar point they struggled with. Be direct and concrete. Example format: 'You used \"ho andato\" — with movement verbs like andare, use essere: \"sono andato\". Remember: essere for movement, avere for actions.' If the student made no errors, pick one useful grammar point from what they discussed. Never give generic advice. IMPORTANT: Do NOT correct English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are completely normal and accepted in Italian."
     );
-    setTipLog(p=>[{text:fb,date:new Date().toLocaleDateString([],{day:"numeric",month:"short"})},...p].slice(0,10));
+    if(fb && fb.length > 20 && fb !== "error") setTipLog(p=>[{text:fb,date:new Date().toLocaleDateString([],{day:"numeric",month:"short"})},...p].slice(0,10));
   }catch{}
 }
 }catch{setMsgs(p=>[...p,{id:Date.now()+1,text:"Ciao! Continuiamo a praticare! 🇮🇹",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);}
