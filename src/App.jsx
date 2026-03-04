@@ -2,6 +2,31 @@ import { useState, useRef, useEffect } from "react";
 // Parlami v4
 import { Send, BookOpen, LogOut, X, CheckCircle, XCircle, Users, ChevronRight, Star } from "lucide-react";
 const TEACHER_PW = "Teacher2026";
+const Markdown = ({text}) => {
+  if(!text) return null;
+  const lines = text.split("\n");
+  const els = [];
+  let i = 0;
+  while(i < lines.length) {
+    const line = lines[i];
+    if(!line.trim()){i++;continue;}
+    const inline = t => {
+      const parts = [];
+      let rest = t;
+      let key = 0;
+      rest = rest.replace(/\*\*(.+?)\*\*/g, (_, m) => `<b>${m}</b>`);
+      rest = rest.replace(/\*(.+?)\*/g, (_, m) => `<i>${m}</i>`);
+      return <span key={key} dangerouslySetInnerHTML={{__html: rest}}/>;
+    };
+    if(/^###\s/.test(line)) els.push(<p key={i} className="font-bold text-sm mt-1">{line.replace(/^###\s/,"")}</p>);
+    else if(/^##\s/.test(line)) els.push(<p key={i} className="font-bold mt-1">{line.replace(/^##\s/,"")}</p>);
+    else if(/^#\s/.test(line)) els.push(<p key={i} className="font-bold text-base mt-1">{line.replace(/^#\s/,"")}</p>);
+    else if(/^[-*]\s/.test(line)) els.push(<p key={i} className="ml-2">• {inline(line.replace(/^[-*]\s/,""))}</p>);
+    else els.push(<p key={i} className={i>0?"mt-1":""}>{inline(line)}</p>);
+    i++;
+  }
+  return <>{els}</>;
+};
 const DarkToggle = ({dark, setDark}) => (
   <button onClick={()=>{setDark(d=>{const n=!d;localStorage.setItem("parlami_dark",n?"1":"0");return n;});}} 
     className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all"
@@ -1098,7 +1123,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 )}
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
 {msgs.length===0&&!typing&&<div className="flex flex-col items-center justify-center h-full text-center py-16"><Logo size={56}/><p className="text-gray-800 font-semibold mt-4 mb-1">Ciao, {name}!</p><p className="text-sm text-gray-400">Andrei is preparing your session…</p></div>}
-{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":"text-gray-800 border border-gray-100 bg-white"))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}<p>{m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text}</p><p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":"text-gray-300")}>{m.time}</p></div></div>)}
+{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":"text-gray-800 border border-gray-100 bg-white"))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text}/>}<p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":"text-gray-300")}>{m.time}</p></div></div>)}
 {typing&&<div className="flex justify-start"><div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3"><div className="flex space-x-1">{[0,0.2,0.4].map((d,i)=><div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{animationDelay:d+"s"}}/>)}</div></div></div>}
 <div ref={endRef}/>
 </div>
