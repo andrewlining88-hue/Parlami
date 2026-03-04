@@ -518,7 +518,7 @@ return(
 );
 }
 function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg}) {
-const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);
+const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
 const [vocabText,setVocabText]=useState("");const [vocabSaved,setVocabSaved]=useState(false);const [showVocabHistory,setShowVocabHistory]=useState(false);
@@ -554,7 +554,7 @@ return (
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
 {students.map((s,i)=>(
-<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);}}>
+<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
 <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{s.name[0].toUpperCase()}</div>
@@ -624,6 +624,23 @@ return (
 </button>
 </div>
 <button onClick={()=>{setResetModal(sel);setResetDone(false);}} className="w-full py-2.5 rounded-xl text-sm font-medium border border-orange-200 text-orange-500">🔑 Reset Student Password</button>
+<button onClick={()=>setShowChat(c=>!c)} className="w-full py-2.5 rounded-xl text-sm font-medium border transition-all" style={{borderColor:showChat?"#1a1a2e":"#e5e7eb",background:showChat?"#1a1a2e":"transparent",color:showChat?"white":"#374151"}}>💬 {showChat?"Hide":"View"} Student Chat ({sel.messages?.length||0} messages)</button>
+{showChat&&(
+<div className="rounded-xl border overflow-hidden" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="px-3 py-2 border-b text-xs font-semibold text-gray-400" style={{borderColor:dark?"#374151":"#e5e7eb"}}>Chat history — read only</div>
+<div className="overflow-y-auto p-3 space-y-2" style={{maxHeight:"400px"}}>
+{(!sel.messages||sel.messages.length===0)&&<p className="text-xs text-gray-400 text-center py-4">No messages yet</p>}
+{(sel.messages||[]).map((m,i)=>(
+<div key={i} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}>
+<div className={"max-w-xs px-3 py-2 rounded-xl text-xs "+(m.sender==="user"?"text-white":"text-gray-700 border")} style={{background:m.sender==="user"?"#1a1a2e":dark?"#1f2937":"white",borderColor:dark?"#374151":"#e5e7eb"}}>
+<p className="leading-relaxed">{m.text}</p>
+<p className="text-xs mt-1 opacity-50">{m.time||""}</p>
+</div>
+</div>
+))}
+</div>
+</div>
+)}
 </div>
 ):<div className="bg-white rounded-2xl border border-gray-100 h-full min-h-48 flex items-center justify-center"><p className="text-sm text-gray-300">Select a student</p></div>}
 </div>
