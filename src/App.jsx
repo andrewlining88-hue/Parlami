@@ -577,7 +577,8 @@ return (
 <div><p className="font-semibold">{sel.name}</p><p className={cx.xs4}>{sel.email}</p></div>
 </div>
 <div className="grid grid-cols-3 gap-2">
-{[["Level",sel.level],["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
+<div className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><select value={sel.level} onChange={async e=>{const nl=e.target.value;const d=await load("student:"+sel.email);if(d){d.level=nl;await store("student:"+sel.email,d);setStudents(p=>p.map(s=>s.email===sel.email?{...s,level:nl}:s));setSel(p=>({...p,level:nl}));}}} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level</p></div>
+{[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
 <div key={l} className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-sm font-semibold">{v}</p><p className={cx.xs4+" mt-0.5"}>{l}</p></div>
 ))}
 </div>
