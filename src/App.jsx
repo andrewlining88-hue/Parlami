@@ -517,7 +517,7 @@ return(
 </div>
 );
 }
-function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg}) {
+function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg,onChangeLevel}) {
 const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
@@ -577,13 +577,16 @@ return (
 <div><p className="font-semibold">{sel.name}</p><p className={cx.xs4}>{sel.email}</p></div>
 </div>
 <div className="grid grid-cols-3 gap-2">
-{[["Level",sel.level],["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
-<div key={l} className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-sm font-semibold">{v}</p><p className={cx.xs4+" mt-0.5"}>{l}</p></div>
+<div className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}>
+<p className="text-xs font-semibold text-gray-400 mb-1">Level</p>
+<select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-bold w-full rounded bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>
+{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}
+</select>
+</div>
+{[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
+<div key={l} className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-xs font-semibold text-gray-400 mb-1">{l}</p><p className="text-sm font-bold">{v}</p></div>
 ))}
 </div>
-<div>
-<div className={cx.row+" text-xs text-gray-400 mb-2"}><span>Level progress</span><span>{sel.progress}%</span></div>
-<div className="w-full rounded-full h-1.5" style={{background:dark?"#374151":"#f3f4f6"}}><div className="h-1.5 rounded-full" style={{width:sel.progress+"%",background:LC(sel.level)}}/></div>
 </div>
 <div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <div className={cx.row}>
@@ -949,7 +952,7 @@ const handleRemove=async e=>{try{await dbCall("delete",{email:e});}catch{}setStu
 const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordHash=hashPw("parlami2026");await store("student:"+e,d);}};
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}];await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}];await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
-const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){d.pendingMsg=msg;await store("student:"+e,d);}};
+const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){d.pendingMsg=msg;await store("student:"+e,d);}};
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
@@ -1046,7 +1049,7 @@ return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark
 {onboardStep===1&&<div><p className="font-semibold mb-4 text-center">What is your main goal?</p><div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left font-medium text-sm transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>{g.label}</button>)}</div></div>}
 {onboardStep===2&&<div><p className="font-semibold mb-4 text-center">How many messages per day?</p><div className="grid grid-cols-2 gap-3">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-4 rounded-xl border-2 text-center transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="text-2xl font-bold">{d.label}</p><p className="text-xs text-gray-400">{d.desc}</p></button>)}</div></div>}
 </div></div>);}
-if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg}/>;
+if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
 if(view==="login") return (
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
