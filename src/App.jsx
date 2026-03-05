@@ -703,13 +703,15 @@ const DEFAULT_EX = [
 
 function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
   const color = LC(studentLevel);
-  const [list,setList] = useState(DEFAULT_EX);
+  const [list,setList] = useState([]);
   const [busy,setBusy] = useState(false);
   const [inp,setInp] = useState({});
   const [checked,setChecked] = useState({});
 
   const total = Object.keys(checked).length;
   const correct = Object.values(checked).filter(Boolean).length;
+
+  useEffect(()=>{generate();},[studentLevel,lessonNote,lessonVocab]);
 
   const checkIt = (i,val) => setChecked(p => ({...p,[i]: norm(val)===norm(list[i].a)}));
 
