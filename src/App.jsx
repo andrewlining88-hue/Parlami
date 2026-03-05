@@ -731,7 +731,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
         : "Create exercises appropriate for the student level.";
       const r = await callClaude(
         [{role:"user",content:"Student level: "+studentLevel+". "+teacherBlock+" "+chatBlock+" "+instruction}],
-        "Italian teacher. Return a JSON array of exactly 6 exercises, no other text. 3 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"hint\"}. 3 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}."
+        "Italian teacher creating exercises for a "+studentLevel+" level student. "+( studentLevel==="A1"?"Use very simple present tense sentences, basic vocabulary, short sentences.": studentLevel==="A2"?"Use simple past and present tense, everyday vocabulary, straightforward sentences.": studentLevel==="B1"?"Use past tenses (passato prossimo, imperfetto), subjunctive occasionally, varied vocabulary.": studentLevel==="B2"?"Use complex grammar, subjunctive, conditional, nuanced vocabulary.": studentLevel==="C1"||studentLevel==="C2"?"Use advanced grammar, idiomatic expressions, complex sentence structures.":"")+" Return a JSON array of exactly 6 exercises, no other text. 3 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"hint\"}. 3 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}."+( studentLevel==="A1"||studentLevel==="A2"?"Keep all Italian simple and short.":"")
       );
       const start = r.indexOf("[");
       const end = r.lastIndexOf("]");
