@@ -416,6 +416,7 @@ C2:{title:"C2 – Padronanza",qs:[
 
 const norm = s => s.toLowerCase().trim().replace(/[àáâã]/g,"a").replace(/[èéêë]/g,"e").replace(/[ìíîï]/g,"i").replace(/[òóôõ]/g,"o").replace(/[ùúûü]/g,"u").replace(/[.,!?;:]/g,"").replace(/\s+/g," ").trim();
 const checkAns = (u,a) => { const n=norm(u); return a.some(x=>{ const nx=norm(x); if(n===nx||n.includes(nx)||nx.includes(n))return true; const aw=nx.split(" ").filter(w=>w.length>3),nw=n.split(" "); return aw.length>2&&aw.filter(w=>nw.includes(w)).length>=Math.ceil(aw.length*0.6); }); };
+const checkAnsAI=async(sentence,expected,student)=>{try{const r=await callClaude([{role:"user",content:"Sentence: "+sentence+"\nExpected: "+expected+"\nStudent answer: "+student}],"Italian grammar checker. Is the student answer correct? Accept gender variations (andato/andata), accents, and all valid Italian alternatives. Reply only: CORRECT or INCORRECT");return r.trim().toUpperCase().includes("CORRECT");}catch{return checkAns(student,[expected]);}};
 const hashPw = pw => { let h=0; for(let i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;} return "h"+Math.abs(h).toString(36); };
 const Logo = ({size=48}) => (
 <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
@@ -450,7 +451,7 @@ const [fb,setFb]=useState(null);const [loading,setLoading]=useState(false);const
 if(!test) return <div className={cx.modal} style={cx.overlay}><div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-xl"><p className="text-2xl mb-3">🚧</p><button onClick={onClose} className="w-full py-2.5 rounded-xl text-sm" style={{background:dark?"#374151":"#f3f4f6"}}>Close</button></div></div>;
 const total=qs.length,q=qs[idx],score=results.filter(r=>r.ok).length;
 const submit = async () => {
-const ok=checkAns(ans,q.a); setLoading(true);
+setLoading(true);const ok=await checkAnsAI(q.q||q.s||"",q.a[0],ans);
 let t=""; try{t=await callClaude([{role:"user",content:"Q: "+q.q+"\nAnswer: "+ans+"\nCorrect: "+(ok?"Yes":"No, correct: "+q.a[0])}],"Italian teacher. 1-2 sentence feedback. Be encouraging.");}catch{t=ok?"Corretto!":"Correct: "+q.a[0];}
 setLoading(false);setResults(p=>[...p,{q:q.q,ans,ok}]);setFb({ok,t});
 setTimeout(()=>{setFb(null);setAns("");if(idx+1>=total)setDone(true);else setIdx(i=>i+1);},2800);
@@ -714,7 +715,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 
   useEffect(()=>{generate();},[studentLevel,lessonNote,lessonVocab]);
 
-  const checkIt = (i,val) => setChecked(p => ({...p,[i]: norm(val)===norm(list[i].a)}));
+  const checkIt=async(i,val)=>{const ex=list[i];try{const r=await checkAnsAI(ex.s||ex.q||"",ex.a,val);setChecked(p=>({...p,[i]:r}));}catch{setChecked(p=>({...p,[i]:norm(val)===norm(ex.a)}));}};
 
   const generate = async () => {
     setBusy(true);
