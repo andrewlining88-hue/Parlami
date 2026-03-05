@@ -416,7 +416,7 @@ C2:{title:"C2 – Padronanza",qs:[
 
 const norm = s => s.toLowerCase().trim().replace(/[àáâã]/g,"a").replace(/[èéêë]/g,"e").replace(/[ìíîï]/g,"i").replace(/[òóôõ]/g,"o").replace(/[ùúûü]/g,"u").replace(/[.,!?;:]/g,"").replace(/\s+/g," ").trim();
 const checkAns = (u,a) => { const n=norm(u); return a.some(x=>{ const nx=norm(x); if(n===nx||n.includes(nx)||nx.includes(n))return true; const aw=nx.split(" ").filter(w=>w.length>3),nw=n.split(" "); return aw.length>2&&aw.filter(w=>nw.includes(w)).length>=Math.ceil(aw.length*0.6); }); };
-const checkAnsAI=async(sentence,expected,student)=>{try{const r=await callClaude([{role:"user",content:"Sentence: "+sentence+"\nExpected: "+expected+"\nStudent answer: "+student}],"Italian grammar checker. Is the student answer correct? Accept gender variations (andato/andata), accents, and all valid Italian alternatives. Reply only: CORRECT or INCORRECT");return r.trim().toUpperCase().includes("CORRECT");}catch{return checkAns(student,[expected]);}};
+const checkAnsAI=async(sentence,expected,student)=>{const base=norm(expected);const s=norm(student);if(!s)return false;if(checkAns(student,[expected]))return true;const genderVariants=(w)=>[w,w.replace(/o$/,"a"),w.replace(/a$/,"o"),w.replace(/o$/,"i"),w.replace(/a$/,"e"),w.replace(/i$/,"o"),w.replace(/e$/,"a")];const expWords=base.split(" ");const stuWords=s.split(" ");if(expWords.length!==stuWords.length)return false;return expWords.every((w,i)=>genderVariants(w).map(v=>norm(v)).includes(stuWords[i]));};
 const hashPw = pw => { let h=0; for(let i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;} return "h"+Math.abs(h).toString(36); };
 const Logo = ({size=48}) => (
 <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
