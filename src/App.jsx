@@ -478,7 +478,7 @@ return (
 </div>
 );
 }
-function WeeklySummary({students,onSendMsg,reminderSent,setReminderSent}) {
+function WeeklySummary({students,onSendMsg,reminderSent,setReminderSent,dark=false}) {
 const now=new Date();
 const wd=Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(now.getDate()-6+i);return d.toISOString().slice(0,10);});
 const rows=students.map(s=>{const m7=(s.messages||[]).filter(m=>m.sender==="user"&&m.date>=wd[0]);return{...s,msgs7:m7.length,days:new Set(m7.map(m=>m.date)).size,active:wd.map(d=>m7.some(m=>m.date===d))};}).sort((a,b)=>b.msgs7-a.msgs7);
@@ -549,7 +549,7 @@ return (
 <button onClick={()=>setShowWeekly(v=>!v)} className="w-full py-3 rounded-2xl text-sm font-semibold border-2 transition-all" style={{borderColor:showWeekly?"#1a1a2e":"#e5e7eb",background:showWeekly?"#1a1a2e":"white",color:showWeekly?"white":"#374151"}}>
 {showWeekly?"✕ Close Weekly Summary":"📊 Weekly Summary"}
 </button>
-{showWeekly&&<WeeklySummary students={students} onSendMsg={onSendMsg} reminderSent={reminderSent} setReminderSent={setReminderSent}/>}
+{showWeekly&&<WeeklySummary students={students} onSendMsg={onSendMsg} reminderSent={reminderSent} setReminderSent={setReminderSent} dark={dark}/>}
 {students.length===0?<div className={cx.card+" p-16 text-center"}><Users className="w-8 h-8 text-gray-200 mx-auto mb-3"/><p className="text-sm text-gray-400">No students yet.</p></div>:(
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
