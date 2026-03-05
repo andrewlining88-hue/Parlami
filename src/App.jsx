@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 // Parlami v4
 import { Send, BookOpen, LogOut, X, CheckCircle, XCircle, Users, ChevronRight, Star } from "lucide-react";
 const TEACHER_PW = "Teacher2026";
+const INVITE_CODE = "parlami2026";
 const Markdown = ({text}) => {
   if(!text) return null;
   const lines = text.split("\n");
@@ -838,7 +839,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
 const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState("");
-const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");
+const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");const [hasInvite]=useState(()=>new URLSearchParams(window.location.search).get("invite")===INVITE_CODE);
 const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");
 const [msgs,setMsgs]=useState([]);const [curMsg,setCurMsg]=useState("");const [typing,setTyping]=useState(false);const [listening,setListening]=useState(false);
 const [level,setLevel]=useState("A1");const [badges,setBadges]=useState([]);const [vocabCount,setVocabCount]=useState(0);
@@ -889,7 +890,7 @@ setMsgs(prev=>[...(d.messages||[]),tm]);
 d.pendingMsg=null; await store("student:"+e,d);
 }
 return"ok";};
-const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else setStep("newuser");setLoginErr("");};
+const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
 const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
 const logout=()=>{setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
