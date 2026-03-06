@@ -956,92 +956,11 @@ const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
-if(view==="onboarding") {
-const LEVELS_OB=[
-  {id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},
-  {id:"A2",label:"I know some basics",desc:"I can say simple phrases"},
-  {id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},
-  {id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"},
-];
-const GOALS=[
-  {id:"travel",label:"✈️ Travel & holidays"},
-  {id:"living",label:"🏠 Living in Italy"},
-  {id:"family",label:"👨‍👩‍👧 Family & friends"},
-  {id:"work",label:"💼 Work & business"},
-  {id:"fun",label:"🎉 Just for fun"},
-];
-const DAILY=[
-  {v:5,label:"5",desc:"Casual"},
-  {v:10,label:"10",desc:"Regular"},
-  {v:20,label:"20",desc:"Intensive"},
-  {v:30,label:"30",desc:"Serious"},
-];
-const completeOnboarding=async(goal,lvl,daily)=>{
-  setStudentGoal(goal);
-  setLevel(lvl);
-  setDailyGoal(daily);
-  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
-  setView("student");
-};
-return(
-<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
-<DarkStyle dark={dark}/>
-<div className="w-full max-w-sm">
-<div className="text-center mb-8">
-  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div>
-  <p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p>
-  <p className="text-sm text-gray-400 mt-1">Quick setup — 3 steps</p>
-  <div className="flex justify-center space-x-2 mt-3">
-    {[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
-  </div>
-</div>
-{onboardStep===0&&(
-<div>
-  <p className="font-semibold mb-4 text-center">How would you describe your Italian?</p>
-  <div className="space-y-2">
-    {LEVELS_OB.map(l=>(
-      <button key={l.id} onClick={()=>setOnboardStep(1)||setLevel(l.id)} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        <p className="font-medium text-sm">{l.label}</p>
-        <p className="text-xs text-gray-400">{l.desc}</p>
-      </button>
-    ))}
-  </div>
-</div>
-)}
-{onboardStep===1&&(
-<div>
-  <p className="font-semibold mb-4 text-center">What is your main goal?</p>
-  <div className="space-y-2">
-    {GOALS.map(g=>(
-      <button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400 font-medium text-sm" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        {g.label}
-      </button>
-    ))}
-  </div>
-</div>
-)}
-{onboardStep===2&&(
-<div>
-  <p className="font-semibold mb-4 text-center">How many messages per day?</p>
-  <div className="grid grid-cols-2 gap-3 mb-6">
-    {DAILY.map(d=>(
-      <button key={d.v} onClick={()=>completeOnboarding(studentGoal,level,d.v)} className="py-4 rounded-xl border-2 text-center transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        <p className="text-2xl font-bold">{d.label}</p>
-        <p className="text-xs text-gray-400">{d.desc}</p>
-      </button>
-    ))}
-  </div>
-</div>
-)}
-</div>
-</div>
-);
-}
 if(view==="onboarding"){
 const LEVELS_OB=[{id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},{id:"A2",label:"I know some basics",desc:"I can say simple phrases"},{id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},{id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"}];
 const GOALS=[{id:"travel",label:"Travel & holidays"},{id:"living",label:"Living in Italy"},{id:"family",label:"Family & friends"},{id:"work",label:"Work & business"},{id:"fun",label:"Just for fun"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
-const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 I'm Dante, Andrei's AI Italian assistant. I'm here to help you practice between your lessons — chat with me, ask questions, make mistakes (that's how you learn! 😄). Andrei will check your progress and leave you notes and vocabulary to practice. When you're ready, try answering in Italian! So... come stai oggi? 🇮🇹",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);setView("student");};
+const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);setView("student");};
 return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-sm">
 <div className="text-center mb-8"><div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div><p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p><p className="text-sm text-gray-400 mt-1">3 quick questions</p><div className="flex justify-center space-x-2 mt-3">{[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div></div>
