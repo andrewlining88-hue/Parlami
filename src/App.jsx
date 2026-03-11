@@ -906,9 +906,8 @@ d.pendingMsg=null; await store("student:"+e,d);
 }
 return"ok";};
 useEffect(()=>{
-  if(email) handleIdentify();
   try{
-    if(localStorage.getItem("parlami_teacher")==="1"){loadAll();setView("teacher");}
+    if(localStorage.getItem("parlami_teacher")==="1"){loadAll();setView("teacher");return;}
   }catch{}
 },[]);
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
