@@ -905,14 +905,7 @@ setMsgs(prev=>[...(d.messages||[]),tm]);
 d.pendingMsg=null; await store("student:"+e,d);
 }
 return"ok";};
-useEffect(()=>{
-  try{
-    if(localStorage.getItem("parlami_teacher")==="1"){
-      loadAll().then(()=>setView("teacher"));
-      return;
-    }
-  }catch{}
-},[]);
+
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
 const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
@@ -1072,7 +1065,7 @@ return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark
 {onboardStep===1&&<div><p className="font-semibold mb-4 text-center">What is your main goal?</p><div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left font-medium text-sm transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>{g.label}</button>)}</div></div>}
 {onboardStep===2&&<div><p className="font-semibold mb-4 text-center">How many messages per day?</p><div className="grid grid-cols-2 gap-3">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-4 rounded-xl border-2 text-center transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="text-2xl font-bold">{d.label}</p><p className="text-xs text-gray-400">{d.desc}</p></button>)}</div></div>}
 </div></div>);}
-if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>{try{localStorage.removeItem("parlami_teacher");}catch{}setView("login")}} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
+if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
 if(view==="login") return (
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
@@ -1082,8 +1075,8 @@ if(view==="login") return (
 {step==="newuser"&&<div className="space-y-3 mb-4"><div className="flex items-center space-x-2 mb-1"><button onClick={()=>{setStep("identify");setLoginErr("");}} className="text-gray-400 text-lg">←</button><p className="text-sm text-gray-500">Create your account</p></div><input type="text" value={name} onChange={e=>{setName(e.target.value);setLoginErr("");}} autoFocus placeholder="Your name" className={cx.input}/><PwInput value={pw} onChange={e=>{setPw(e.target.value);setLoginErr("");}} placeholder="Choose a password"/><PwInput value={pw2} onChange={e=>{setPw2(e.target.value);setLoginErr("");}} onEnter={handleRegister} placeholder="Confirm password"/><button onClick={handleRegister} disabled={!name.trim()||!pw||!pw2} className={cx.btn} style={{background:"#1a1a2e"}}>Create Account</button></div>}
 {loginErr&&<p className="text-red-400 text-xs text-center mb-3">{loginErr}</p>}
 {showTeacher&&<div className="border-t border-gray-100 pt-4 flex space-x-2">
-<PwInput value={tPw} onChange={e=>setTPw(e.target.value)} onEnter={()=>{if(tPw===TEACHER_PW){loadAll();try{localStorage.setItem("parlami_teacher","1");}catch{}setView("teacher");}}} placeholder="Teacher password" autoFocus/>
-<button onClick={()=>{if(tPw===TEACHER_PW){loadAll();try{localStorage.setItem("parlami_teacher","1");}catch{}setView("teacher");}else setLoginErr("Wrong password.");}} className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 border border-gray-200">Enter</button>
+<PwInput value={tPw} onChange={e=>setTPw(e.target.value)} onEnter={()=>{if(tPw===TEACHER_PW){loadAll();setView("teacher");}}} placeholder="Teacher password" autoFocus/>
+<button onClick={()=>{if(tPw===TEACHER_PW){loadAll();setView("teacher");}else setLoginErr("Wrong password.");}} className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 border border-gray-200">Enter</button>
 </div>}
 </div>
 </div>
