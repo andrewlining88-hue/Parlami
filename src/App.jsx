@@ -520,7 +520,7 @@ return(
 );
 }
 function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg,onChangeLevel}) {
-const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);
+const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);const [insights,setInsights]=useState("");const [loadingInsights,setLoadingInsights]=useState(false);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
 const [vocabText,setVocabText]=useState("");const [vocabSaved,setVocabSaved]=useState(false);const [showVocabHistory,setShowVocabHistory]=useState(false);
@@ -532,6 +532,19 @@ setLoadingReport(true);setReport("");
 try{const r=await callClaude([{role:"user",content:"Student name: "+sel.name+", Level: "+sel.level+", Messages sent: "+sel.messageCount+", Streak: "+sel.streak+" days, Vocab words: "+sel.vocabCount+(sel.lessonNote?", Last lesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?", Lesson vocabulary: "+sel.lessonVocab:"")}],"You are an Italian teacher writing a short personal message directly to your student. Use their first name. Speak directly to them in second person (you/your). Be warm, specific and encouraging. Mention their actual stats naturally. 3-4 sentences. Write it as if you are about to send it to them as a WhatsApp message.");setReport(r);}
 catch{setReport("Unable to generate.");}
 setLoadingReport(false);
+};
+const genInsights = async () => {
+setLoadingInsights(true);setInsights("");
+try{
+const recentMsgs=(sel.messages||[]).slice(-40).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
+if(!recentMsgs.trim()){setInsights("No chat history yet for this student.");setLoadingInsights(false);return;}
+const r=await callClaude(
+[{role:"user",content:"Student: "+sel.name+"\nLevel: "+sel.level+"\nRecent conversation:\n"+recentMsgs}],
+"You are an expert Italian teacher analysing a student's chat history. Write a concise teaching insight report for the teacher (not the student). Cover: 1) Main grammar mistakes you notice 2) Vocabulary gaps 3) What is improving 4) Specific suggestions for the next lesson. Be direct and practical. Use plain text, no markdown symbols. Max 150 words."
+);
+setInsights(r);
+}catch{setInsights("Unable to generate insights.");}
+setLoadingInsights(false);
 };
 return (
 <div className={"min-h-screen flex flex-col"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}><DarkStyle dark={dark}/>
@@ -556,7 +569,7 @@ return (
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
 {students.map((s,i)=>(
-<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);}}>
+<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
 <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{s.name[0].toUpperCase()}</div>
@@ -617,6 +630,8 @@ return (
 <div>
 <button onClick={genReport} disabled={loadingReport} className={cx.btn} style={{background:"#1a1a2e"}}>{loadingReport?"Generating...":"✨ Generate AI Progress Report"}</button>
 {report&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">AI Report</p>{report}</div>}
+<button onClick={genInsights} disabled={loadingInsights} className={cx.btn+" mt-2"} style={{background:"#4f46e5"}}>{loadingInsights?"Analysing...":"🧠 Dante's Teaching Insights"}</button>
+{insights&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-semibold text-indigo-400 uppercase tracking-wide mb-2">🧠 Teaching Insights</p>{insights}</div>}
 </div>
 <div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <p className="text-xs font-semibold text-gray-500">✉️ Message to {sel.name}</p>
