@@ -840,7 +840,7 @@ export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
 const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState("");
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");const [hasInvite]=useState(()=>new URLSearchParams(window.location.search).get("invite")===INVITE_CODE);
-const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");
+const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");const [showTeacher,setShowTeacher]=useState(false);
 const [msgs,setMsgs]=useState([]);const [curMsg,setCurMsg]=useState("");const [typing,setTyping]=useState(false);const [listening,setListening]=useState(false);
 const [level,setLevel]=useState("A1");const [badges,setBadges]=useState([]);const [vocabCount,setVocabCount]=useState(0);
 const [streak,setStreak]=useState(0);const [lastDate,setLastDate]=useState(null);const [badgeNotif,setBadgeNotif]=useState(null);
@@ -930,7 +930,7 @@ uc.push({type:"text",text:txt||"Please review and help me practice."});hist.push
 const np=lessonNote?"LAST LESSON NOTES: \""+lessonNote+"\". Reference naturally.":"";
 const vp=lessonVocab?"LESSON VOCABULARY: \""+lessonVocab+"\". Encourage use of these words, correct gently if misused.":"";
 const mp=recurringMistakes.length>0?"RECURRING MISTAKES: "+recurringMistakes.map((m,i)=>(i+1)+". "+m).join("; ")+". Correct gently once if they appear.":"";
-const sys="You are Dante, the AI language assistant created by Andrei, a professional Italian teacher. Your personality: warm, fun and relaxed, deeply encouraging, patient and empathetic, passionate about Italian language and culture. You have a light sense of humour — you laugh WITH students when they make mistakes, never AT them. You occasionally reference Italian culture, food, places and expressions to make conversations feel authentic and immersive. You sound like a knowledgeable Italian friend, not a robot or a textbook. Never be stiff or formal. Make students feel excited about learning Italian. Student's name is "+name+". Student is "+LN(level)+" ("+level+"). "+(studentGoal?"Their goal: "+studentGoal+". Tailor vocabulary and examples to this. ":"")+np+" "+vp+" "+mp+" "+(level==="A1"?"LANGUAGE: Speak mostly in English, introduce only simple Italian words and short phrases. Always translate Italian you use.":level==="A2"?"LANGUAGE: Mix English and Italian 50/50. Use simple Italian sentences, always provide English translation in brackets.":level==="B1"?"LANGUAGE: Speak mostly Italian, use English only for grammar explanations.":"LANGUAGE: Speak entirely in Italian, use English only when absolutely necessary for a grammar point.")+" Keep responses 2-4 sentences, always end with a question to keep conversation flowing. Do NOT correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress, etc) — these are perfectly normal Italian. Never ask for their name - you already know it.";
+const sys="You are Dante, the AI language assistant created by Andrei, a professional Italian teacher. Your personality: warm, fun and relaxed, deeply encouraging, patient and empathetic, passionate about Italian language and culture. You have a light sense of humour — you laugh WITH students when they make mistakes, never AT them. You occasionally reference Italian culture, food, places and expressions to make conversations feel authentic and immersive. You sound like a knowledgeable Italian friend, not a robot or a textbook. Never be stiff or formal. Make students feel excited about learning Italian. Student's name is "+name+". Student is "+LN(level)+" ("+level+"). "+(studentGoal?"Their goal: "+studentGoal+". Tailor vocabulary and examples to this. ":"")+np+" "+vp+" "+mp+" Respond mostly in Italian, use English only for grammar explanations. Keep responses 2-4 sentences, always end with a question to keep conversation flowing. Do NOT correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress, etc) — these are perfectly normal Italian. Never ask for their name - you already know it.";
 const reply=await callClaude(hist,sys);
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
@@ -956,11 +956,92 @@ const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
+if(view==="onboarding") {
+const LEVELS_OB=[
+  {id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},
+  {id:"A2",label:"I know some basics",desc:"I can say simple phrases"},
+  {id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},
+  {id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"},
+];
+const GOALS=[
+  {id:"travel",label:"✈️ Travel & holidays"},
+  {id:"living",label:"🏠 Living in Italy"},
+  {id:"family",label:"👨‍👩‍👧 Family & friends"},
+  {id:"work",label:"💼 Work & business"},
+  {id:"fun",label:"🎉 Just for fun"},
+];
+const DAILY=[
+  {v:5,label:"5",desc:"Casual"},
+  {v:10,label:"10",desc:"Regular"},
+  {v:20,label:"20",desc:"Intensive"},
+  {v:30,label:"30",desc:"Serious"},
+];
+const completeOnboarding=async(goal,lvl,daily)=>{
+  setStudentGoal(goal);
+  setLevel(lvl);
+  setDailyGoal(daily);
+  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
+  setView("student");
+};
+return(
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
+<DarkStyle dark={dark}/>
+<div className="w-full max-w-sm">
+<div className="text-center mb-8">
+  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div>
+  <p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p>
+  <p className="text-sm text-gray-400 mt-1">Quick setup — 3 steps</p>
+  <div className="flex justify-center space-x-2 mt-3">
+    {[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
+  </div>
+</div>
+{onboardStep===0&&(
+<div>
+  <p className="font-semibold mb-4 text-center">How would you describe your Italian?</p>
+  <div className="space-y-2">
+    {LEVELS_OB.map(l=>(
+      <button key={l.id} onClick={()=>setOnboardStep(1)||setLevel(l.id)} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
+        <p className="font-medium text-sm">{l.label}</p>
+        <p className="text-xs text-gray-400">{l.desc}</p>
+      </button>
+    ))}
+  </div>
+</div>
+)}
+{onboardStep===1&&(
+<div>
+  <p className="font-semibold mb-4 text-center">What is your main goal?</p>
+  <div className="space-y-2">
+    {GOALS.map(g=>(
+      <button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400 font-medium text-sm" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
+        {g.label}
+      </button>
+    ))}
+  </div>
+</div>
+)}
+{onboardStep===2&&(
+<div>
+  <p className="font-semibold mb-4 text-center">How many messages per day?</p>
+  <div className="grid grid-cols-2 gap-3 mb-6">
+    {DAILY.map(d=>(
+      <button key={d.v} onClick={()=>completeOnboarding(studentGoal,level,d.v)} className="py-4 rounded-xl border-2 text-center transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
+        <p className="text-2xl font-bold">{d.label}</p>
+        <p className="text-xs text-gray-400">{d.desc}</p>
+      </button>
+    ))}
+  </div>
+</div>
+)}
+</div>
+</div>
+);
+}
 if(view==="onboarding"){
 const LEVELS_OB=[{id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},{id:"A2",label:"I know some basics",desc:"I can say simple phrases"},{id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},{id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"}];
 const GOALS=[{id:"travel",label:"Travel & holidays"},{id:"living",label:"Living in Italy"},{id:"family",label:"Family & friends"},{id:"work",label:"Work & business"},{id:"fun",label:"Just for fun"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
-const finishOnboard=async(daily)=>{const welcomeText=level==="A1"||level==="A2"?"Ciao "+name.split(" ")[0]+"! 👋 I'm Dante, the AI assistant of your teacher Andrei. I'm here to help you practice Italian between your lessons — chat with me, ask questions, and don't worry about mistakes (that's how you learn! 😄). Andrei will check your progress and leave you notes to practice. Ready? How are you today? (Try in Italian: Come stai?)":level==="B1"?"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano — chatta con me, fai domande, fai errori (è così che si impara! 😄). Andrei controllerà i tuoi progressi. Pronto? Come stai oggi?":"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?";const welcomeMsg={id:1,text:welcomeText,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);setView("student");};
+const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 I'm Dante, Andrei's AI Italian assistant. I'm here to help you practice between your lessons — chat with me, ask questions, make mistakes (that's how you learn! 😄). Andrei will check your progress and leave you notes and vocabulary to practice. When you're ready, try answering in Italian! So... come stai oggi? 🇮🇹",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);setView("student");};
 return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-sm">
 <div className="text-center mb-8"><div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div><p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p><p className="text-sm text-gray-400 mt-1">3 quick questions</p><div className="flex justify-center space-x-2 mt-3">{[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div></div>
@@ -977,10 +1058,10 @@ if(view==="login") return (
 {step==="returning"&&<div className="space-y-3 mb-4"><div className="flex items-center space-x-2 mb-1"><button onClick={()=>{setStep("identify");setLoginErr("");}} className="text-gray-400 text-lg">←</button><p className="text-sm text-gray-600">Welcome back, <span className="font-semibold">{name}</span></p></div><PwInput value={pw} onChange={e=>{setPw(e.target.value);setLoginErr("");}} onEnter={handleLogin} placeholder="Your password" autoFocus/><button onClick={handleLogin} disabled={!pw} className={cx.btn} style={{background:"#1a1a2e"}}>Log In</button></div>}
 {step==="newuser"&&<div className="space-y-3 mb-4"><div className="flex items-center space-x-2 mb-1"><button onClick={()=>{setStep("identify");setLoginErr("");}} className="text-gray-400 text-lg">←</button><p className="text-sm text-gray-500">Create your account</p></div><input type="text" value={name} onChange={e=>{setName(e.target.value);setLoginErr("");}} autoFocus placeholder="Your name" className={cx.input}/><PwInput value={pw} onChange={e=>{setPw(e.target.value);setLoginErr("");}} placeholder="Choose a password"/><PwInput value={pw2} onChange={e=>{setPw2(e.target.value);setLoginErr("");}} onEnter={handleRegister} placeholder="Confirm password"/><button onClick={handleRegister} disabled={!name.trim()||!pw||!pw2} className={cx.btn} style={{background:"#1a1a2e"}}>Create Account</button></div>}
 {loginErr&&<p className="text-red-400 text-xs text-center mb-3">{loginErr}</p>}
-<div className="border-t border-gray-100 pt-4 flex space-x-2">
-<PwInput value={tPw} onChange={e=>setTPw(e.target.value)} onEnter={()=>tPw===TEACHER_PW&&(loadAll(),setView("teacher"))} placeholder="Teacher password"/>
+{showTeacher&&<div className="border-t border-gray-100 pt-4 flex space-x-2">
+<PwInput value={tPw} onChange={e=>setTPw(e.target.value)} onEnter={()=>tPw===TEACHER_PW&&(loadAll(),setView("teacher"))} placeholder="Teacher password" autoFocus/>
 <button onClick={()=>{if(tPw===TEACHER_PW){loadAll();setView("teacher");}else setLoginErr("Wrong password.");}} className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 border border-gray-200">Enter</button>
-</div>
+</div>}
 </div>
 </div>
 );
@@ -1063,7 +1144,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 </div>
 )}
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-{msgs.length===0&&!typing&&<div className="flex flex-col items-center justify-center h-full text-center py-16"><Logo size={56}/><p className="text-gray-800 font-semibold mt-4 mb-1">Ciao, {name}!</p><p className="text-sm text-gray-400">Dante is preparing your session…</p></div>}
+{msgs.length===0&&!typing&&<div className="flex flex-col items-center justify-center h-full text-center py-16"><Logo size={56} onClick={()=>setShowTeacher(t=>!t)} style={{cursor:"pointer"}}/><p className="text-gray-800 font-semibold mt-4 mb-1">Ciao, {name}!</p><p className="text-sm text-gray-400">Dante is preparing your session…</p></div>}
 {msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":"text-gray-800 border border-gray-100 bg-white"))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text}/>}<p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":"text-gray-300")}>{m.time}</p></div></div>)}
 {typing&&<div className="flex justify-start"><div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3"><div className="flex space-x-1">{[0,0.2,0.4].map((d,i)=><div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{animationDelay:d+"s"}}/>)}</div></div></div>}
 <div ref={endRef}/>
