@@ -719,7 +719,7 @@ const DEFAULT_EX = [
   {type:"mc",q:"How are you in Italian:",o:["Come stai?","Dove sei?","Chi sei?","Cosa fai?"],a:"Come stai?"}
 ];
 
-function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
+function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringMistakes=[]}) {
   const color = LC(studentLevel);
   const [list,setList] = useState([]);
   const [busy,setBusy] = useState(false);
@@ -749,8 +749,12 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
       const instruction = hasTeacherContent
         ? "You MUST use the teacher's vocabulary words and lesson topic in every exercise. Each exercise must test or practice those specific words."
         : "Create exercises appropriate for the student level.";
+      const mistakesBlock = recurringMistakes.length>0
+        ? "STUDENT RECURRING MISTAKES (target at least 2 exercises at these): "+recurringMistakes.join("; ")+"."
+        : "";
+      const seed = "Session ID: "+Date.now()+". Generate UNIQUE exercises, never repeat previous ones.";
       const r = await callClaude(
-        [{role:"user",content:"STUDENT LEVEL: "+studentLevel+" — THIS IS CRITICAL. "+teacherBlock+" "+chatBlock+" "+instruction}],
+        [{role:"user",content:"STUDENT LEVEL: "+studentLevel+" — THIS IS CRITICAL. "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+instruction+" "+seed}],
         "You are an Italian teacher. CRITICAL RULE: You MUST create exercises at exactly "+studentLevel+" level. NEVER use simple present tense for B1+ students. "+( studentLevel==="A1"?"A1 LEVEL: Only use present tense (sono, ho, abito). Very short simple sentences. Basic vocabulary only.": studentLevel==="A2"?"A2 LEVEL: Use present and simple past. Everyday vocabulary. Short sentences.": studentLevel==="B1"?"B1 LEVEL: You MUST use passato prossimo, imperfetto, or condizionale in every fill-in-blank. Never use simple present as the answer. Use the lesson vocabulary in complex sentences.": studentLevel==="B2"?"B2 LEVEL: Use subjunctive (congiuntivo), conditional, complex clause structures. Advanced vocabulary required.": "C1/C2 LEVEL: Use idiomatic expressions, advanced grammar, nuanced vocabulary.")+" Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"verb infinitive hint\"}. 3 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}. No other text."
       );
       const start = r.indexOf("[");
@@ -853,7 +857,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
-const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
+const [view,setView]=useState("login");const [name,setName]=useState(()=>{try{return localStorage.getItem("parlami_name")||"";}catch{return "";}});const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");const [hasInvite]=useState(()=>new URLSearchParams(window.location.search).get("invite")===INVITE_CODE);
 const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");const [showTeacher,setShowTeacher]=useState(false);
 const [msgs,setMsgs]=useState([]);const [curMsg,setCurMsg]=useState("");const [typing,setTyping]=useState(false);const [listening,setListening]=useState(false);
@@ -906,10 +910,21 @@ d.pendingMsg=null; await store("student:"+e,d);
 }
 return"ok";};
 
+useEffect(()=>{
+  const savedEmail=localStorage.getItem("parlami_email");
+  const savedHash=localStorage.getItem("parlami_hash");
+  const savedName=localStorage.getItem("parlami_name");
+  if(savedEmail&&savedHash&&savedName){
+    setName(savedName);
+    loadData(savedEmail,savedHash).then(r=>{
+      if(r==="ok") setView("student");
+    }).catch(()=>{});
+  }
+},[]);
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
-const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
+const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
-const logout=()=>{try{localStorage.removeItem("parlami_email");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
+const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
 useEffect(()=>{
 if(view!=="student")return;
@@ -1178,7 +1193,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} dark={dark}/>}
 {tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords}/>}
-{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} lessonNote={lessonNote} lessonVocab={lessonVocab}/>}
+{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
 );
