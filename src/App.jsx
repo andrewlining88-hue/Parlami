@@ -499,7 +499,7 @@ return(
 <div key={i} className={"rounded-xl p-3 border "+(r.msgs7>0?"border-gray-100":"border-red-100 bg-red-50")}>
 <div className={cx.row}>
 <div className="flex items-center space-x-2.5">
-<div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{background:LC(r.level)}}>{r.name[0].toUpperCase()}</div>
+<div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{background:LC(r.level)}}>{(r.name||"?")[0].toUpperCase()}</div>
 <div><p className="text-sm font-medium">{r.name}</p><p className={cx.xs4}>{r.level} · {r.msgs7} msgs · {r.days}d</p></div>
 </div>
 <div className="text-right"><p className={cx.xs4}>🔥{r.streak}d</p>{r.msgs7===0&&<p className="text-xs text-red-400 font-medium">No activity</p>}</div>
@@ -572,7 +572,7 @@ return (
 <div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
-<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{s.name[0].toUpperCase()}</div>
+<div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{(s.name||"?")[0].toUpperCase()}</div>
 <div><p className="text-sm font-medium">{s.name}</p><p className={cx.xs4}>{s.level} · {s.messageCount} msgs · 🔥{s.streak}</p></div>
 </div>
 <div className="flex items-center space-x-1">
@@ -588,7 +588,7 @@ return (
 {sel?(
 <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
 <div className="flex items-center space-x-3">
-<div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold text-white" style={{background:LC(sel.level)}}>{sel.name[0].toUpperCase()}</div>
+<div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold text-white" style={{background:LC(sel.level)}}>{(sel.name||"?")[0].toUpperCase()}</div>
 <div><p className="font-semibold">{sel.name}</p><p className={cx.xs4}>{sel.email}</p></div>
 </div>
 <div className="grid grid-cols-3 gap-2">
