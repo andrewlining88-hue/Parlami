@@ -853,7 +853,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab}) {
 
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
-const [view,setView]=useState("login");const [name,setName]=useState("");const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
+const [view,setView]=useState("login");const [name,setName]=useState(()=>{try{return localStorage.getItem("parlami_name")||"";}catch{return "";}});const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");const [hasInvite]=useState(()=>new URLSearchParams(window.location.search).get("invite")===INVITE_CODE);
 const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");const [showTeacher,setShowTeacher]=useState(false);
 const [msgs,setMsgs]=useState([]);const [curMsg,setCurMsg]=useState("");const [typing,setTyping]=useState(false);const [listening,setListening]=useState(false);
@@ -906,10 +906,21 @@ d.pendingMsg=null; await store("student:"+e,d);
 }
 return"ok";};
 
+useEffect(()=>{
+  const savedEmail=localStorage.getItem("parlami_email");
+  const savedHash=localStorage.getItem("parlami_hash");
+  const savedName=localStorage.getItem("parlami_name");
+  if(savedEmail&&savedHash&&savedName){
+    setName(savedName);
+    loadData(savedEmail,savedHash).then(r=>{
+      if(r==="ok") setView("student");
+    }).catch(()=>{});
+  }
+},[]);
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
-const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
+const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
-const logout=()=>{try{localStorage.removeItem("parlami_email");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
+const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
 useEffect(()=>{
 if(view!=="student")return;
