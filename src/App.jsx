@@ -755,7 +755,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
       const seed = "Session ID: "+Date.now()+". Generate UNIQUE exercises, never repeat previous ones.";
       const r = await callClaude(
         [{role:"user",content:"STUDENT LEVEL: "+studentLevel+" — THIS IS CRITICAL. "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+instruction+" "+seed}],
-        "You are an Italian teacher. CRITICAL RULE: You MUST create exercises at exactly "+studentLevel+" level. NEVER use simple present tense for B1+ students. "+( studentLevel==="A1"?"A1 LEVEL: Only use present tense (sono, ho, abito). Very short simple sentences. Basic vocabulary only.": studentLevel==="A2"?"A2 LEVEL: Use present and simple past. Everyday vocabulary. Short sentences.": studentLevel==="B1"?"B1 LEVEL: You MUST use passato prossimo, imperfetto, or condizionale in every fill-in-blank. Never use simple present as the answer. Use the lesson vocabulary in complex sentences.": studentLevel==="B2"?"B2 LEVEL: Use subjunctive (congiuntivo), conditional, complex clause structures. Advanced vocabulary required.": "C1/C2 LEVEL: Use idiomatic expressions, advanced grammar, nuanced vocabulary.")+" Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"verb infinitive hint\"}. 3 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}. No other text."
+        "You are an Italian teacher. CRITICAL RULE: You MUST create exercises at exactly "+studentLevel+" level. NEVER use simple present tense for B1+ students. "+( studentLevel==="A1"?"A1 LEVEL: Only use present tense (sono, ho, abito). Very short simple sentences. Basic vocabulary only.": studentLevel==="A2"?"A2 LEVEL: Use present and simple past. Everyday vocabulary. Short sentences.": studentLevel==="B1"?"B1 LEVEL: You MUST use passato prossimo, imperfetto, or condizionale in every fill-in-blank. Never use simple present as the answer. Use the lesson vocabulary in complex sentences.": studentLevel==="B2"?"B2 LEVEL: Use subjunctive (congiuntivo), conditional, complex clause structures. Advanced vocabulary required.": "C1/C2 LEVEL: Use idiomatic expressions, advanced grammar, nuanced vocabulary.")+" VARIETY RULE: Every session must feel different. Vary the topics (food, travel, family, work, daily life, culture), grammar points tested, and sentence structures. Never repeat the same sentences or questions. Return ONLY a JSON array of exactly 7 exercises: 2 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"hint\"}. 2 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}. 3 translation from English to Italian: {\"type\":\"trans\",\"q\":\"English sentence to translate\",\"a\":\"Italian translation\",\"h\":\"grammar hint\"}. No other text."
       );
       const start = r.indexOf("[");
       const end = r.lastIndexOf("]");
@@ -765,6 +765,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
         if (!e || !e.type || !e.a) return false;
         if (e.type === "fill") return typeof e.s === "string" && e.s.includes("___");
         if (e.type === "mc") return typeof e.q === "string" && Array.isArray(e.o) && e.o.length >= 2;
+        if (e.type === "trans") return typeof e.q === "string";
         return false;
       });
       if (valid.length >= 4) setList(valid);
@@ -800,7 +801,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
           <div key={i} className={"bg-white rounded-2xl border p-4 " + (isDone ? (isOk ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50") : "border-gray-100")}>
             <div className={cx.row + " mb-3"}>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{background: isDone ? (isOk ? "#dcfce7" : "#fee2e2") : color+"22", color: isDone ? (isOk ? "#16a34a" : "#dc2626") : color}}>
-                {ex.type === "fill" ? "Fill in the blank" : "Multiple choice"}
+                {ex.type === "fill" ? "Fill in the blank" : ex.type === "mc" ? "Multiple choice" : "🇬🇧 Translate to Italian"}
               </span>
               {isDone && <span className="text-lg">{isOk ? "✅" : "❌"}</span>}
             </div>
@@ -837,7 +838,26 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
                     );
                   })}
                 </div>
-                {isDone && <p className="text-xs mt-2 font-medium" style={{color: isOk ? "#16a34a" : "#dc2626"}}>{isOk ? "Perfetto!" : "Correct: " + ex.a}</p>}
+                {isDone && <div><p className="text-xs mt-2 font-medium" style={{color: isOk ? "#16a34a" : "#dc2626"}}>{isOk ? "Perfetto! 🎉" : "✗ Correct: " + ex.a}</p>{!isOk && feedback[i] && <p className="text-xs mt-1 text-gray-500 italic">{feedback[i]}</p>}</div>}
+              </div>
+            )}
+
+            {ex.type === "trans" && (
+              <div>
+                <p className="text-xs text-gray-400 mb-1">Translate to Italian:</p>
+                <p className="text-sm font-medium mb-2">{ex.q}</p>
+                {ex.h && !isDone && <p className="text-xs text-gray-400 mb-2">Hint: {ex.h}</p>}
+                {!isDone ? (
+                  <div className="flex gap-2 mt-2">
+                    <input type="text" value={inp[i]||""} onChange={e=>setInp(p=>({...p,[i]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&(inp[i]||"").trim()&&checkIt(i,inp[i])} placeholder="Your Italian translation" className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none"/>
+                    <button onClick={()=>(inp[i]||"").trim()&&checkIt(i,inp[i])} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:"#1a1a2e"}}>Check</button>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs mt-1 font-medium" style={{color: isOk ? "#16a34a" : "#dc2626"}}>{isOk ? "Perfetto! 🎉" : "✗ Correct: " + ex.a}</p>
+                    {!isOk && feedback[i] && <p className="text-xs mt-1 text-gray-500 italic">{feedback[i]}</p>}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -878,7 +898,7 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:hashPw(pw),messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
 useEffect(()=>{if(!msgs.length)return;const t=new Date().toDateString();if(lastDate===t)return;setStreak(p=>lastDate===new Date(Date.now()-86400000).toDateString()?p+1:1);setLastDate(t);},[msgs]);
 useEffect(()=>{const wm={};msgs.filter(m=>m.sender==="user").forEach((m,i)=>{const k=m.date||(()=>{const d=new Date();d.setDate(d.getDate()-Math.floor((umc-i-1)/4));return d.toISOString().slice(0,10);})();wm[k]=(wm[k]||0)+1;});setActivityLog(Object.entries(wm).sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date,count})));},[msgs]);
 useEffect(()=>{
