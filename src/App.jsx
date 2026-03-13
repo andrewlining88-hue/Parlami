@@ -720,6 +720,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
   const [busy,setBusy] = useState(false);
   const [inp,setInp] = useState({});
   const [checked,setChecked] = useState({});
+  const [feedback] = useState({});
 
   const total = Object.keys(checked).length;
   const correct = Object.values(checked).filter(Boolean).length;
@@ -802,7 +803,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
 
             {ex.type === "fill" && (
               <div>
-                <p className="text-sm font-medium mb-1">{isDone ? ex.s.replace("___","["+ex.a+"]") : ex.s}</p>
+                <p className="text-sm font-medium mb-1">{isDone ? (ex.s||"").replace("___","["+ex.a+"]") : ex.s}</p>
                 {ex.h && !isDone && <p className={cx.xs4 + " mb-2"}>Hint: {ex.h}</p>}
                 {!isDone ? (
                   <div className="flex gap-2 mt-2">
@@ -819,7 +820,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
               <div>
                 <p className="text-sm font-medium mb-3">{ex.q}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {ex.o.map((opt,j) => {
+                  {(ex.o||[]).map((opt,j) => {
                     const isC = opt === ex.a;
                     const isSel = inp[i] === opt;
                     let bg = "#f9fafb", br = "#e5e7eb", co = "#374151";
