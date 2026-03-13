@@ -750,7 +750,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
       const seed = "Session ID: "+Date.now()+". Generate UNIQUE exercises, never repeat previous ones.";
       const r = await callClaude(
         [{role:"user",content:"STUDENT LEVEL: "+studentLevel+" — THIS IS CRITICAL. "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+instruction+" "+seed}],
-        "You are an Italian teacher. CRITICAL RULE: You MUST create exercises at exactly "+studentLevel+" level. NEVER use simple present tense for B1+ students. "+( studentLevel==="A1"?"A1 LEVEL: Only use present tense (sono, ho, abito). Very short simple sentences. Basic vocabulary only.": studentLevel==="A2"?"A2 LEVEL: Use present and simple past. Everyday vocabulary. Short sentences.": studentLevel==="B1"?"B1 LEVEL: You MUST use passato prossimo, imperfetto, or condizionale in every fill-in-blank. Never use simple present as the answer. Use the lesson vocabulary in complex sentences.": studentLevel==="B2"?"B2 LEVEL: Use subjunctive (congiuntivo), conditional, complex clause structures. Advanced vocabulary required.": "C1/C2 LEVEL: Use idiomatic expressions, advanced grammar, nuanced vocabulary.")+" VARIETY RULE: Every session must feel different. Vary the topics (food, travel, family, work, daily life, culture), grammar points tested, and sentence structures. Never repeat the same sentences or questions. Return ONLY a JSON array of exactly 7 exercises: 2 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"hint\"}. 2 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}. 3 translation from English to Italian: {\"type\":\"trans\",\"q\":\"English sentence to translate\",\"a\":\"Italian translation\",\"h\":\"grammar hint\"}. No other text."
+        "You are an Italian teacher. CRITICAL RULE: You MUST create exercises at exactly "+studentLevel+" level. NEVER use simple present tense for B1+ students. "+( studentLevel==="A1"?"A1 LEVEL: Only use present tense (sono, ho, abito). Very short simple sentences. Basic vocabulary only.": studentLevel==="A2"?"A2 LEVEL: Use present and simple past. Everyday vocabulary. Short sentences.": studentLevel==="B1"?"B1 LEVEL: You MUST use passato prossimo, imperfetto, or condizionale in every fill-in-blank. Never use simple present as the answer. Use the lesson vocabulary in complex sentences.": studentLevel==="B2"?"B2 LEVEL: Use subjunctive (congiuntivo), conditional, complex clause structures. Advanced vocabulary required.": "C1/C2 LEVEL: Use idiomatic expressions, advanced grammar, nuanced vocabulary.")+" VARIETY RULE: Every session must feel different. Vary the topics (food, travel, family, work, daily life, culture), grammar points tested, and sentence structures. Never repeat the same sentences or questions. Return ONLY a JSON array of exactly 6 exercises: 3 fill-in-blank: {\"type\":\"fill\",\"s\":\"sentence with ___\",\"a\":\"answer\",\"h\":\"hint\"}. 2 multiple choice: {\"type\":\"mc\",\"q\":\"question\",\"o\":[\"opt1\",\"opt2\",\"opt3\",\"opt4\"],\"a\":\"correct option\"}. No other text."
       );
       const start = r.indexOf("[");
       const end = r.lastIndexOf("]");
@@ -760,7 +760,6 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
         if (!e || !e.type || !e.a) return false;
         if (e.type === "fill") return typeof e.s === "string" && e.s.includes("___");
         if (e.type === "mc") return typeof e.q === "string" && Array.isArray(e.o) && e.o.length >= 2;
-        if (e.type === "trans") return typeof e.q === "string";
         return false;
       });
       if (valid.length >= 4) setList(valid);
@@ -837,24 +836,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
               </div>
             )}
 
-            {ex.type === "trans" && (
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Translate to Italian:</p>
-                <p className="text-sm font-medium mb-2">{ex.q}</p>
-                {ex.h && !isDone && <p className="text-xs text-gray-400 mb-2">Hint: {ex.h}</p>}
-                {!isDone ? (
-                  <div className="flex gap-2 mt-2">
-                    <input type="text" value={inp[i]||""} onChange={e=>setInp(p=>({...p,[i]:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&(inp[i]||"").trim()&&checkIt(i,inp[i])} placeholder="Your Italian translation" className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none"/>
-                    <button onClick={()=>(inp[i]||"").trim()&&checkIt(i,inp[i])} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:"#1a1a2e"}}>Check</button>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-xs mt-1 font-medium" style={{color: isOk ? "#16a34a" : "#dc2626"}}>{isOk ? "Perfetto! 🎉" : "✗ Correct: " + ex.a}</p>
-                    {!isOk && feedback[i] && <p className="text-xs mt-1 text-gray-500 italic">{feedback[i]}</p>}
-                  </div>
-                )}
-              </div>
-            )}
+
           </div>
         );
       })}
