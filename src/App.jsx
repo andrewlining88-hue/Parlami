@@ -726,7 +726,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
 
   useEffect(()=>{generate();},[studentLevel,lessonNote,lessonVocab]);
 
-  const checkIt=async(i,val)=>{const ex=list[i];try{const r=await checkAnsAI(ex.s||ex.q||"",ex.a,val);setChecked(p=>({...p,[i]:r}));}catch{setChecked(p=>({...p,[i]:norm(val)===norm(ex.a)}));}};
+  const checkIt=async(i,val)=>{const ex=list[i];try{if(ex.type==="trans"){const r=norm(val)===norm(ex.a)||norm(val).includes(norm(ex.a))||norm(ex.a).includes(norm(val));setChecked(p=>({...p,[i]:r}));}else{const r=await checkAnsAI(ex.s||ex.q||"",ex.a,val);setChecked(p=>({...p,[i]:r}));}}catch{setChecked(p=>({...p,[i]:norm(val)===norm(ex.a)}));}};
 
   const generate = async () => {
     setBusy(true);
@@ -893,7 +893,7 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:hashPw(pw),messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:pw?hashPw(pw):fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
 useEffect(()=>{if(!msgs.length)return;const t=new Date().toDateString();if(lastDate===t)return;setStreak(p=>lastDate===new Date(Date.now()-86400000).toDateString()?p+1:1);setLastDate(t);},[msgs]);
 useEffect(()=>{const wm={};msgs.filter(m=>m.sender==="user").forEach((m,i)=>{const k=m.date||(()=>{const d=new Date();d.setDate(d.getDate()-Math.floor((umc-i-1)/4));return d.toISOString().slice(0,10);})();wm[k]=(wm[k]||0)+1;});setActivityLog(Object.entries(wm).sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date,count})));},[msgs]);
 useEffect(()=>{
