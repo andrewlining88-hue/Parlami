@@ -726,7 +726,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
 
   useEffect(()=>{generate();},[studentLevel,lessonNote,lessonVocab]);
 
-  const checkIt=async(i,val)=>{const ex=list[i];try{if(ex.type==="trans"){const r=norm(val)===norm(ex.a)||norm(val).includes(norm(ex.a))||norm(ex.a).includes(norm(val));setChecked(p=>({...p,[i]:r}));}else{const r=await checkAnsAI(ex.s||ex.q||"",ex.a,val);setChecked(p=>({...p,[i]:r}));}}catch{setChecked(p=>({...p,[i]:norm(val)===norm(ex.a)}));}};
+  const checkIt=(i,val)=>{try{const ex=list[i];if(!ex||!ex.a)return;const r=norm(val)===norm(ex.a);setChecked(p=>({...p,[i]:r}));}catch{}};
 
   const generate = async () => {
     setBusy(true);
