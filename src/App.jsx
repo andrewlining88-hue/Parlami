@@ -524,7 +524,11 @@ const [msgText,setMsgText]=useState("");const [msgSent,setMsgSent]=useState(fals
 const [reminderSent,setReminderSent]=useState(false);
 const genReport = async () => {
 setLoadingReport(true);setReport("");
-try{const r=await callClaude([{role:"user",content:"Student name: "+sel.name+", Level: "+sel.level+", Messages sent: "+sel.messageCount+", Streak: "+sel.streak+" days, Vocab words: "+sel.vocabCount+(sel.lessonNote?", Last lesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?", Lesson vocabulary: "+sel.lessonVocab:"")}],"You are an Italian teacher writing a short personal message directly to your student. Use their first name. Speak directly to them in second person (you/your). Be warm, specific and encouraging. Mention their actual stats naturally. 3-4 sentences. Write it as if you are about to send it to them as a WhatsApp message.");setReport(r);}
+try{
+const recentMsgs=(sel.messages||[]).slice(-40).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
+const r=await callClaude([{role:"user",content:"Student name: "+sel.name+"\nLevel: "+sel.level+(sel.lessonNote?"\nRecent lesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?"\nRecent vocabulary: "+sel.lessonVocab:"")+"\nRecent chat:\n"+recentMsgs}],"You are Andrei, a professional Italian teacher writing a short personal progress note directly to your student. Use their first name. Structure it as: 1) A warm personal opening acknowledging their progress and specific strengths you see from their recent conversations. 2) One line starting with What we will focus on next — a clear specific direction. 3) One line starting with Recommended activity — one practical out-of-class suggestion. 4) A short warm closing with their name. Keep the whole thing to 5-6 sentences max. No bullet symbols, no markdown. Speak directly to them, be warm and specific, not generic.");
+setReport(r);
+}
 catch{setReport("Unable to generate.");}
 setLoadingReport(false);
 };
