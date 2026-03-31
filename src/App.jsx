@@ -515,7 +515,7 @@ return(
 );
 }
 function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg,onChangeLevel}) {
-const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);const [insights,setInsights]=useState("");const [loadingInsights,setLoadingInsights]=useState(false);
+const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);const [insights,setInsights]=useState("");const [loadingInsights,setLoadingInsights]=useState(false);const [activeDetail,setActiveDetail]=useState(null);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
 const [vocabText,setVocabText]=useState("");const [vocabSaved,setVocabSaved]=useState(false);const [showVocabHistory,setShowVocabHistory]=useState(false);
@@ -568,7 +568,7 @@ return (
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
 {students.map((s,i)=>(
-<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);}}>
+<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);setActiveDetail(null);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
 <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{(s.name||"?")[0].toUpperCase()}</div>
@@ -592,10 +592,56 @@ return (
 </div>
 <div className="grid grid-cols-3 gap-2">
 <div className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level ✎</p></div>
-{[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>(
-<div key={l} className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-sm font-semibold">{v}</p><p className={cx.xs4+" mt-0.5"}>{l}</p></div>
-))}
+{[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>{
+const clickable=["Messages","Vocab","Badges","Tests"].includes(l);
+return(
+<div key={l} className={"rounded-xl p-3 transition-all "+(clickable?"cursor-pointer hover:opacity-80":"")} onClick={()=>clickable&&setActiveDetail(activeDetail===l?null:l)} style={{background:activeDetail===l?LC(sel.level):dark?"#374151":"#f9fafb"}}>
+<p className={"text-sm font-semibold "+(activeDetail===l?"text-white":"")}>{v}</p>
+<p className={(activeDetail===l?"text-white opacity-75":"text-gray-400")+" text-xs mt-0.5"}>{l}</p>
 </div>
+);})}
+</div>
+
+{activeDetail==="Messages"&&(
+<div className="rounded-xl border overflow-hidden" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="px-3 py-2 border-b text-xs font-semibold text-gray-400" style={{borderColor:dark?"#374151":"#e5e7eb"}}>💬 Chat history — read only</div>
+<div className="overflow-y-auto p-3 space-y-2" style={{maxHeight:"350px"}}>
+{(!sel.messages||sel.messages.length===0)&&<p className="text-xs text-gray-400 text-center py-4">No messages yet</p>}
+{(sel.messages||[]).map((m,i)=>(
+<div key={i} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}>
+<div className={"max-w-xs px-3 py-2 rounded-xl text-xs "+(m.sender==="user"?"text-white":(dark?"text-gray-100 border":"text-gray-700 border"))} style={{background:m.sender==="user"?"#1a1a2e":dark?"#2d3748":"white",borderColor:dark?"#374151":"#e5e7eb"}}>
+<Markdown text={m.text}/>
+<p className="text-xs mt-1 opacity-50">{m.time||""}</p>
+</div></div>))}
+</div></div>
+)}
+
+{activeDetail==="Vocab"&&(
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🗂️ Vocabulary ({(sel.savedWords||[]).length} words)</p>
+{(!sel.savedWords||sel.savedWords.length===0)?<p className="text-xs text-gray-400 text-center py-2">No vocabulary saved yet</p>:
+<div className="flex flex-wrap gap-2">{(sel.savedWords||[]).map((w,i)=><span key={i} className="px-2 py-1 rounded-lg text-xs font-medium text-white" style={{background:LC(sel.level)}}>{w.word||w}</span>)}</div>}
+</div>
+)}
+
+{activeDetail==="Badges"&&(
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🏅 Badges ({(sel.badges||[]).length}/{BADGES.length})</p>
+<div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=(sel.badges||[]).includes(b.id);return(
+<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100")} style={{background:u?"#fefce8":dark?"#1f2937":"#f9fafb"}}>
+<div className="flex items-center space-x-2"><span className={"text-lg "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold "+(u?"text-gray-800":"text-gray-400")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div>
+</div>);})}</div>
+</div>
+)}
+
+{activeDetail==="Tests"&&(
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">📝 Tests Passed</p>
+{(!sel.testsPassed||sel.testsPassed.length===0)?<p className="text-xs text-gray-400 text-center py-2">No tests passed yet</p>:
+<div className="flex flex-wrap gap-2">{(sel.testsPassed||[]).map(l=><span key={l} className="px-3 py-1.5 rounded-full text-xs font-bold text-white" style={{background:LC(l)}}>{l} ✓</span>)}</div>}
+</div>
+)}
+
 <div>
 <div className={cx.row+" text-xs text-gray-400 mb-2"}><span>Level progress</span><span>{sel.progress}%</span></div>
 <div className="w-full rounded-full h-1.5" style={{background:dark?"#374151":"#f3f4f6"}}><div className="h-1.5 rounded-full" style={{width:sel.progress+"%",background:LC(sel.level)}}/></div>
