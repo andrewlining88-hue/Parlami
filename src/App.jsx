@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, BookOpen, LogOut, X, CheckCircle, XCircle, Users, ChevronRight, Star } from "lucide-react";
 const TEACHER_PW = "Teacher2026";
 const INVITE_CODE = "parlami2026";
-const Markdown = ({text}) => {
+const Markdown = ({text, dark=false}) => {
   if(!text) return null;
   const clean = text
     .replace(/#{1,3}\s/g, "")
@@ -16,7 +16,7 @@ const Markdown = ({text}) => {
     if(!line.includes("[it]")) return <p key={i} className={i>0?"mt-1":""}>{line}</p>;
     const parts = line.split(/\[it\]|\[\/it\]/);
     return <p key={i} className={i>0?"mt-1":""}>{parts.map((part,j) => j%2===1
-      ? <strong key={j} style={{color:"#1a1a2e",fontWeight:"700"}}>{part}</strong>
+      ? <strong key={j} style={{color:dark?"#60a5fa":"#1a1a2e",fontWeight:"700"}}>{part}</strong>
       : part
     )}</p>;
   };
@@ -44,8 +44,8 @@ const DarkStyle = ({dark}) => dark ? <style>{`
   .dark-app .bg-gray-100 { background: #1f2937 !important; }
   .dark-app input, .dark-app textarea { background: #374151 !important; color: #f9fafb !important; border-color: #4b5563 !important; }
   .dark-app input::placeholder { color: #9ca3af !important; }
-  .dark-app .rounded-2xl.border { background: #1f2937 !important; border-color: #374151 !important; }
-  .dark-app .rounded-xl.border { background: #1f2937 !important; border-color: #374151 !important; }
+  .dark-app .rounded-2xl.border { background: #2d3748 !important; border-color: #4b5563 !important; color: #f1f5f9 !important; }
+  .dark-app .rounded-xl.border { background: #2d3748 !important; border-color: #4b5563 !important; color: #f1f5f9 !important; }
   .dark-app .border-b { border-color: #374151 !important; }
   .dark-app .bg-indigo-50 { background: #1e1b4b !important; }
   .dark-app .text-indigo-700, .dark-app .text-indigo-600 { color: #a5b4fc !important; }
@@ -650,7 +650,7 @@ return (
 {(sel.messages||[]).map((m,i)=>(
 <div key={i} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}>
 <div className={"max-w-xs px-3 py-2 rounded-xl text-xs "+(m.sender==="user"?"text-white":(dark?"text-gray-100 border":"text-gray-700 border"))} style={{background:m.sender==="user"?"#1a1a2e":dark?"#1f2937":"white",borderColor:dark?"#374151":"#e5e7eb"}}>
-<Markdown text={m.text}/>
+<Markdown text={m.text} dark={dark}/>
 <p className="text-xs mt-1 opacity-50">{m.time||""}</p>
 </div>
 </div>
@@ -1179,7 +1179,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 )}
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
 {msgs.length===0&&!typing&&<div className="flex flex-col items-center justify-center h-full text-center py-16"><Logo size={56}/><p className="text-gray-800 font-semibold mt-4 mb-1">Ciao, {name}!</p><p className="text-sm text-gray-400">Dante is preparing your session…</p></div>}
-{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":(dark?"text-gray-100 border":"text-gray-800 border border-gray-100 bg-white")))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:dark?{background:"#1f2937",borderColor:"#374151"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text}/>}<p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":dark?"text-gray-400":"text-gray-300")}>{m.time}</p></div></div>)}
+{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":(dark?"text-gray-100 border":"text-gray-800 border border-gray-100 bg-white")))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:dark?{background:"#1f2937",borderColor:"#374151"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text} dark={dark}/>}<p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":dark?"text-gray-400":"text-gray-300")}>{m.time}</p></div></div>)}
 {typing&&<div className="flex justify-start"><div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3"><div className="flex space-x-1">{[0,0.2,0.4].map((d,i)=><div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{animationDelay:d+"s"}}/>)}</div></div></div>}
 <div ref={endRef}/>
 </div>
