@@ -610,7 +610,7 @@ return(
 {(sel.messages||[]).map((m,i)=>(
 <div key={i} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}>
 <div className={"max-w-xs px-3 py-2 rounded-xl text-xs "+(m.sender==="user"?"text-white":(dark?"text-gray-100 border":"text-gray-700 border"))} style={{background:m.sender==="user"?"#1a1a2e":dark?"#2d3748":"white",borderColor:dark?"#374151":"#e5e7eb"}}>
-<Markdown text={m.text}/>
+<Markdown text={m.text} dark={dark}/>
 <p className="text-xs mt-1 opacity-50">{m.time||""}</p>
 </div></div>))}
 </div></div>
