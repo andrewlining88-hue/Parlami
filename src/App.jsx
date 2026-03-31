@@ -687,23 +687,7 @@ return(
 </button>
 </div>
 <button onClick={()=>{setResetModal(sel);setResetDone(false);}} className="w-full py-2.5 rounded-xl text-sm font-medium border border-orange-200 text-orange-500">🔑 Reset Student Password</button>
-<button onClick={()=>setShowChat(c=>!c)} className="w-full py-2.5 rounded-xl text-sm font-medium border transition-all" style={{borderColor:showChat?"#1a1a2e":"#e5e7eb",background:showChat?"#1a1a2e":"transparent",color:showChat?"white":"#374151"}}>💬 {showChat?"Hide":"View"} Student Chat ({sel.messages?.length||0} messages)</button>
-{showChat&&(
-<div className="rounded-xl border overflow-hidden" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
-<div className="px-3 py-2 border-b text-xs font-semibold text-gray-400" style={{borderColor:dark?"#374151":"#e5e7eb"}}>Chat history — read only</div>
-<div className="overflow-y-auto p-3 space-y-2" style={{maxHeight:"400px"}}>
-{(!sel.messages||sel.messages.length===0)&&<p className="text-xs text-gray-400 text-center py-4">No messages yet</p>}
-{(sel.messages||[]).map((m,i)=>(
-<div key={i} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}>
-<div className={"max-w-xs px-3 py-2 rounded-xl text-xs "+(m.sender==="user"?"text-white":(dark?"text-gray-100 border":"text-gray-700 border"))} style={{background:m.sender==="user"?"#1a1a2e":dark?"#1f2937":"white",borderColor:dark?"#374151":"#e5e7eb"}}>
-<Markdown text={m.text} dark={dark}/>
-<p className="text-xs mt-1 opacity-50">{m.time||""}</p>
-</div>
-</div>
-))}
-</div>
-</div>
-)}
+
 </div>
 ):<div className="bg-white rounded-2xl border border-gray-100 h-full min-h-48 flex items-center justify-center"><p className="text-sm text-gray-300">Select a student</p></div>}
 </div>
