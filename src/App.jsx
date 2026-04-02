@@ -889,11 +889,17 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
 
 const speakText = (text) => {
   window.speechSynthesis.cancel();
-  const clean = text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
+  const itParts = [];
+  const re = /\[it\](.+?)\[\/it\]/g;
+  let m;
+  while((m = re.exec(text)) !== null) itParts.push(m[1]);
+  const clean = itParts.length > 0 ? itParts.join(". ") : text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
   const utt = new SpeechSynthesisUtterance(clean);
   const voices = window.speechSynthesis.getVoices();
-  const itVoice = voices.find(v=>v.lang.startsWith("it"));
-  if(itVoice) utt.voice = itVoice;
+  const maleIt = voices.find(v=>v.lang.startsWith("it")&&(v.name.toLowerCase().includes("luca")||v.name.toLowerCase().includes("male")||v.name.toLowerCase().includes("giorgio")||v.name.toLowerCase().includes("matteo")));
+  const anyIt = voices.find(v=>v.lang.startsWith("it"));
+  if(maleIt) utt.voice = maleIt;
+  else if(anyIt) utt.voice = anyIt;
   utt.lang = "it-IT";
   utt.rate = 0.9;
   window.speechSynthesis.speak(utt);
