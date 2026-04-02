@@ -7,7 +7,12 @@ export default async function handler(req, res) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const voiceId = process.env.ELEVENLABS_VOICE_ID;
 
-  if (!apiKey || !voiceId) return res.status(500).json({ error: 'TTS not configured' });
+  console.log('TTS called, apiKey present:', !!apiKey, 'voiceId:', voiceId);
+
+  if (!apiKey || !voiceId) {
+    console.error('Missing env vars');
+    return res.status(500).json({ error: 'TTS not configured' });
+  }
 
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -28,10 +33,12 @@ export default async function handler(req, res) {
       }),
     });
 
+    console.log('ElevenLabs status:', response.status);
+
     if (!response.ok) {
-      const err = await response.json();
+      const err = await response.text();
       console.error('ElevenLabs error:', err);
-      return res.status(500).json({ error: 'TTS API error' });
+      return res.status(500).json({ error: 'TTS API error', detail: err });
     }
 
     const audioBuffer = await response.arrayBuffer();
