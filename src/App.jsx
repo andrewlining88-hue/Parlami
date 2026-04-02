@@ -894,7 +894,8 @@ const speakText = (text) => {
   let m;
   while((m = re.exec(text)) !== null) itParts.push(m[1]);
   const clean = itParts.length > 0 ? itParts.join(". ") : text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
-  const utt = new SpeechSynthesisUtterance(clean);
+  const spaced = clean.replace(/,/g,", ").replace(/\./g,". ").replace(/\?/g,"? ").replace(/!/g,"! ").replace(/\s+/g," ").trim();
+  const utt = new SpeechSynthesisUtterance(spaced);
   const voices = window.speechSynthesis.getVoices();
   const maleIt = voices.find(v=>v.lang.startsWith("it")&&(v.name.toLowerCase().includes("luca")||v.name.toLowerCase().includes("male")||v.name.toLowerCase().includes("giorgio")||v.name.toLowerCase().includes("matteo")));
   const anyIt = voices.find(v=>v.lang.startsWith("it"));
@@ -902,6 +903,7 @@ const speakText = (text) => {
   else if(anyIt) utt.voice = anyIt;
   utt.lang = "it-IT";
   utt.rate = 0.9;
+  utt.pitch = 1.0;
   window.speechSynthesis.speak(utt);
 };
 export default function App() {
