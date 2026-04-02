@@ -898,7 +898,7 @@ const [streak,setStreak]=useState(0);const [lastDate,setLastDate]=useState(null)
 const [showTest,setShowTest]=useState(false);const [testsPassed,setTestsPassed]=useState([]);const [testFailedAt,setTestFailedAt]=useState({});const [students,setStudents]=useState([]);
 const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [lessonNote,setLessonNote]=useState("");const [lessonVocab,setLessonVocab]=useState("");
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
-const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [savedWords,setSavedWords]=useState([]);
+const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);
 const fileRef=useRef(null),endRef=useRef(null);
@@ -937,8 +937,11 @@ const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000)
 setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");
 if(d.pendingMsg){
 const tm={id:Date.now(),text:"👨‍🏫 "+d.pendingMsg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
-setMsgs(prev=>[...(d.messages||[]),tm]);
-d.pendingMsg=null; await store("student:"+e,d);
+const updatedMsgs=[...(d.messages||[]),tm];
+setMsgs(updatedMsgs);
+d.messages=updatedMsgs;
+d.pendingMsg=null;
+await store("student:"+e,d);
 }
 return"ok";};
 
@@ -1006,7 +1009,7 @@ if(newTotal%5===0){
       [{role:"user",content:"Recent conversation:\n"+recentExchange}],
       "You are Dante, Andrei's Italian language AI assistant. Read the conversation and write ONE specific, friendly tip (max 2 sentences) about something the student actually did — a mistake, a word used incorrectly, or a grammar point they struggled with. Be warm and encouraging, not clinical. Example: 'Nice try with \"ho andato\" — movimento verbs like andare love essere: \"sono andato\". Think of it as: movement = essere!' If no errors, give one useful tip from what they discussed. Never generic advice. Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi) — these are normal Italian."
     );
-    if(fb && fb.length > 20 && fb !== "error") setTipLog(p=>[{text:fb,date:new Date().toLocaleDateString([],{day:"numeric",month:"short"})},...p].slice(0,10));
+    if(fb && fb.length > 20 && fb !== "error"){setTipLog(p=>[{text:fb,date:new Date().toLocaleDateString([],{day:"numeric",month:"short"})},...p].slice(0,10));setDismissedTip(null);}
   }catch{}
 }
 }catch{setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);}
@@ -1200,11 +1203,11 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 <p className="text-xs font-semibold text-orange-700 flex-1">{streak}-day streak at risk! {dailyGoal-todayCount} more message{dailyGoal-todayCount!==1?"s":""} to protect it today</p>
 </div>
 );})()}
-{tipLog.length>0&&(
+{tipLog.length>0&&dismissedTip!==tipLog[0]?.text&&(
 <div className="mx-4 mt-3 px-4 py-3 rounded-xl flex items-start space-x-2 flex-shrink-0" style={{background:dark?"#1e1b4b":"#f5f3ff"}}>
 <Star className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/>
 <div className="flex-1 min-w-0"><p className="text-xs font-semibold mb-0.5" style={{color:"#6366f1"}}>💡 Tip from Dante</p><p className="text-xs leading-relaxed" style={{color:"#4f46e5"}}>{tipLog[0].text}</p></div>
-<button onClick={()=>setTipLog(p=>p.slice(1))}><X className="w-3.5 h-3.5" style={{color:"#a5b4fc"}}/></button>
+<button onClick={()=>setDismissedTip(tipLog[0]?.text)}><X className="w-3.5 h-3.5" style={{color:"#a5b4fc"}}/></button>
 </div>
 )}
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
