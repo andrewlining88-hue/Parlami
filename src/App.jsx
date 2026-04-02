@@ -887,6 +887,17 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
   );
 }
 
+const speakText = (text) => {
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
+  const utt = new SpeechSynthesisUtterance(clean);
+  const voices = window.speechSynthesis.getVoices();
+  const itVoice = voices.find(v=>v.lang.startsWith("it"));
+  if(itVoice) utt.voice = itVoice;
+  utt.lang = "it-IT";
+  utt.rate = 0.9;
+  window.speechSynthesis.speak(utt);
+};
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
 const [view,setView]=useState("login");const [name,setName]=useState(()=>{try{return localStorage.getItem("parlami_name")||"";}catch{return "";}});const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
@@ -1217,7 +1228,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 )}
 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
 {msgs.length===0&&!typing&&<div className="flex flex-col items-center justify-center h-full text-center py-16"><Logo size={56}/><p className="text-gray-800 font-semibold mt-4 mb-1">Ciao, {name}!</p><p className="text-sm text-gray-400">Dante is preparing your session…</p></div>}
-{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":(dark?"text-gray-100 border":"text-gray-800 border border-gray-100 bg-white")))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:dark?{background:"#1f2937",borderColor:"#374151"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text} dark={dark}/>}<p className={"text-xs mt-1.5 "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":dark?"text-gray-400":"text-gray-300")}>{m.time}</p></div></div>)}
+{msgs.map(m=><div key={m.id} className={"flex "+(m.sender==="user"?"justify-end":"justify-start")}><div className={"max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm leading-relaxed "+(m.sender==="user"?"text-white rounded-br-sm":"rounded-bl-sm "+(m.fromTeacher?"text-white":(dark?"text-gray-100 border":"text-gray-800 border border-gray-100 bg-white")))} style={m.sender==="user"?{background:"#1a1a2e"}:m.fromTeacher?{background:"linear-gradient(135deg,#6366f1,#8b5cf6)"}:dark?{background:"#1f2937",borderColor:"#374151"}:{}}>{m.fromTeacher&&<p className="text-xs font-semibold mb-1 opacity-75">✉️ Message from your teacher</p>}{m.sender==="user"?<p>{m.text}</p>:<Markdown text={m.fromTeacher?m.text.replace("👨‍🏫 ",""):m.text} dark={dark}/>}<div className="flex items-center justify-between mt-1.5"><p className={"text-xs "+(m.sender==="user"?"text-gray-400":m.fromTeacher?"text-indigo-200":dark?"text-gray-400":"text-gray-300")}>{m.time}</p>{m.sender!=="user"&&<button onClick={()=>speakText(m.text)} className="text-xs opacity-40 hover:opacity-80 transition-opacity" title="Listen">🔊</button>}</div></div></div>)}
 {typing&&<div className="flex justify-start"><div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3"><div className="flex space-x-1">{[0,0.2,0.4].map((d,i)=><div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-bounce" style={{animationDelay:d+"s"}}/>)}</div></div></div>}
 <div ref={endRef}/>
 </div>
