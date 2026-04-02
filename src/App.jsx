@@ -910,7 +910,19 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);if(fresh?.pendingMsg){const tm={id:Date.now(),text:"👨‍🏫 "+fresh.pendingMsg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};const updatedMsgs=[...msgs,tm];setMsgs(updatedMsgs);fresh.messages=updatedMsgs;fresh.pendingMsg=null;await store("student:"+email,fresh);return;}store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
+useEffect(()=>{
+if(view!=="student"||!email)return;
+const interval=setInterval(async()=>{
+  const fresh=await load("student:"+email);
+  if(!fresh)return;
+  const freshMsgIds=new Set((fresh.messages||[]).map(m=>m.id));
+  const currentIds=new Set(msgs.map(m=>m.id));
+  const hasNew=[...(fresh.messages||[])].some(m=>m.fromTeacher&&!currentIds.has(m.id));
+  if(hasNew)setMsgs(fresh.messages||[]);
+},15000);
+return()=>clearInterval(interval);
+},[view,email,msgs]);
 useEffect(()=>{if(!msgs.length)return;const t=new Date().toDateString();if(lastDate===t)return;setStreak(p=>lastDate===new Date(Date.now()-86400000).toDateString()?p+1:1);setLastDate(t);},[msgs]);
 useEffect(()=>{const wm={};msgs.filter(m=>m.sender==="user").forEach((m,i)=>{const k=m.date||(()=>{const d=new Date();d.setDate(d.getDate()-Math.floor((umc-i-1)/4));return d.toISOString().slice(0,10);})();wm[k]=(wm[k]||0)+1;});setActivityLog(Object.entries(wm).sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date,count})));},[msgs]);
 useEffect(()=>{
@@ -935,14 +947,7 @@ const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:tru
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
 const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
 setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");
-if(d.pendingMsg){
-const tm={id:Date.now(),text:"👨‍🏫 "+d.pendingMsg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
-const updatedMsgs=[...(d.messages||[]),tm];
-setMsgs(updatedMsgs);
-d.messages=updatedMsgs;
-d.pendingMsg=null;
-await store("student:"+e,d);
-}
+
 return"ok";};
 
 useEffect(()=>{
@@ -1019,7 +1024,7 @@ const handleRemove=async e=>{try{await dbCall("delete",{email:e});}catch{}setStu
 const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordHash=hashPw("parlami2026");await store("student:"+e,d);}};
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
-const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){d.pendingMsg=msg;await store("student:"+e,d);}};
+const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){const tm={id:Date.now(),text:"👨‍🏫 "+msg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};d.messages=[...(d.messages||[]),tm];d.pendingMsg=null;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,messages:d.messages}:s));}};
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=l=>{setTestsPassed(p=>[...p,l]);const ni=LEVELS.indexOf(l)+1;if(ni<LEVELS.length)setLevel(LEVELS[ni]);setShowTest(false);};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
