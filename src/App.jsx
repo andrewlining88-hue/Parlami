@@ -887,24 +887,36 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
   );
 }
 
-const speakText = (text) => {
-  window.speechSynthesis.cancel();
+const speakText = async (text) => {
   const itParts = [];
   const re = /\[it\](.+?)\[\/it\]/g;
   let m;
   while((m = re.exec(text)) !== null) itParts.push(m[1]);
   const clean = itParts.length > 0 ? itParts.join(" ") : text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
   const spaced = clean.replace(/,\s*/g,", ").replace(/\.\s*/g,". ").replace(/\?\s*/g,"? ").replace(/!\s*/g,"! ").replace(/\s+/g," ").trim();
-  const utt = new SpeechSynthesisUtterance(spaced);
-  const voices = window.speechSynthesis.getVoices();
-  const maleIt = voices.find(v=>v.lang.startsWith("it")&&(v.name.toLowerCase().includes("luca")||v.name.toLowerCase().includes("male")||v.name.toLowerCase().includes("giorgio")||v.name.toLowerCase().includes("matteo")));
-  const anyIt = voices.find(v=>v.lang.startsWith("it"));
-  if(maleIt) utt.voice = maleIt;
-  else if(anyIt) utt.voice = anyIt;
-  utt.lang = "it-IT";
-  utt.rate = 0.9;
-  utt.pitch = 1.0;
-  window.speechSynthesis.speak(utt);
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({text: spaced}),
+    });
+    if (!res.ok) throw new Error("TTS failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play();
+  } catch {
+    // fallback to browser TTS
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(spaced);
+    const voices = window.speechSynthesis.getVoices();
+    const itVoice = voices.find(v=>v.lang.startsWith("it"));
+    if(itVoice) utt.voice = itVoice;
+    utt.lang = "it-IT";
+    utt.rate = 0.9;
+    window.speechSynthesis.speak(utt);
+  }
 };
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
