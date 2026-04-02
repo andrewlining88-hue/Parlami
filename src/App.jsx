@@ -893,8 +893,8 @@ const speakText = (text) => {
   const re = /\[it\](.+?)\[\/it\]/g;
   let m;
   while((m = re.exec(text)) !== null) itParts.push(m[1]);
-  const clean = itParts.length > 0 ? itParts.join(". ") : text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
-  const spaced = clean.replace(/,/g,", ").replace(/\./g,". ").replace(/\?/g,"? ").replace(/!/g,"! ").replace(/\s+/g," ").trim();
+  const clean = itParts.length > 0 ? itParts.join(" ") : text.replace(/\[it\]|\[\/it\]/g,"").replace(/👨‍🏫\s*/,"").trim();
+  const spaced = clean.replace(/,\s*/g,", ").replace(/\.\s*/g,". ").replace(/\?\s*/g,"? ").replace(/!\s*/g,"! ").replace(/\s+/g," ").trim();
   const utt = new SpeechSynthesisUtterance(spaced);
   const voices = window.speechSynthesis.getVoices();
   const maleIt = voices.find(v=>v.lang.startsWith("it")&&(v.name.toLowerCase().includes("luca")||v.name.toLowerCase().includes("male")||v.name.toLowerCase().includes("giorgio")||v.name.toLowerCase().includes("matteo")));
