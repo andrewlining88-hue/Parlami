@@ -1125,7 +1125,7 @@ if(newTotal%5===0){
   try{
     const fb=await callClaude(
       [{role:"user",content:"Recent conversation:\n"+recentExchange}],
-      "You are Dante, Andrei's Italian language AI assistant. Read the conversation and write ONE specific, friendly tip (max 2 sentences) about something the student actually did — a mistake, a word used incorrectly, or a grammar point they struggled with. Be warm and encouraging, not clinical. Example: 'Nice try with \"ho andato\" — movimento verbs like andare love essere: \"sono andato\". Think of it as: movement = essere!' If no errors, give one useful tip from what they discussed. Never generic advice. Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi) — these are normal Italian."
+      "You are a helpful Italian language assistant. The student name is "+name+". Read the conversation and write ONE specific, friendly tip (max 2 sentences) about something the student actually did — a mistake, a word used incorrectly, or a grammar point they struggled with. Be warm and encouraging, not clinical. Example: 'Nice try with \"ho andato\" — movimento verbs like andare love essere: \"sono andato\". Think of it as: movement = essere!' If no errors, give one useful tip from what they discussed. Never generic advice. Never call the student Andrei (that is the teacher name). Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi) — these are normal Italian."
     );
     if(fb && fb.length > 20 && fb !== "error"){setTipLog(p=>[{text:fb,date:new Date().toLocaleDateString([],{day:"numeric",month:"short"})},...p].slice(0,10));setDismissedTip(null);}
   }catch{}
