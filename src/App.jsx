@@ -737,7 +737,7 @@ const categorize=async()=>{
     const wordList=allWords.map(w=>w.word).join(", ");
     const r=await callClaude(
       [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
-      "You are an Italian teacher. Given a list of Italian words, group them into categories, provide English translations, and add simple phonetic pronunciation for English speakers. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak',ph:'par-LA-reh'}]},{category:'Luoghi',words:[{it:'citta',en:'city',ph:'cheet-TA'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
+      "You are an Italian teacher. Given a list of Italian words, group them into categories, provide English translations, and phonetic pronunciation for English speakers. Return ONLY a valid JSON array with double quotes. Format: [{\"category\":\"Verbi\",\"words\":[{\"it\":\"parlare\",\"en\":\"to speak\",\"ph\":\"par-LA-reh\"}]}]. Categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word in exactly one category. Return ONLY the JSON array, nothing else."
     );
     const start=r.indexOf("[");const end=r.lastIndexOf("]");
     if(start===-1||end===-1)throw new Error("no array");
