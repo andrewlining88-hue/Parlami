@@ -724,6 +724,7 @@ function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,dark=false})
 const color=LC(studentLevel);
 const [newWord,setNewWord]=useState("");
 const [showTranslation,setShowTranslation]=useState(true);
+const [showPhonetic,setShowPhonetic]=useState(false);
 const [categorized,setCategorized]=useState(null);
 const [loadingCat,setLoadingCat]=useState(false);
 const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];
@@ -748,13 +749,49 @@ const categorize=async()=>{
 };
 
 useEffect(()=>{if(allWords.length>0)categorize();},[allWords.length]);
+useEffect(()=>{
+  if(!showPhonetic||!categorized)return;
+  const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
+  if(hasPhonetics)return;
+  (async()=>{
+    try{
+      const wordsList=categorized.flatMap(c=>c.words||[]).map(w=>w.it).join(", ");
+      const r=await callClaude(
+        [{role:"user",content:"Phonetic pronunciation for English speakers: "+wordsList}],
+        "Return ONLY a valid JSON object mapping each Italian word to its phonetic pronunciation. Example: {\"parlare\":\"par-LA-reh\",\"casa\":\"KA-za\"}. No extra text."
+      );
+      const s=r.indexOf("{");const e=r.lastIndexOf("}");
+      if(s===-1||e===-1)return;
+      const map=JSON.parse(r.slice(s,e+1));
+      setCategorized(prev=>prev.map(cat=>({...cat,words:(cat.words||[]).map(w=>({...w,ph:map[w.it]||w.ph||""}))})));
+    }catch{}
+  })();
+},[showPhonetic,categorized]);
+useEffect(()=>{
+  if(!showPhonetic||!categorized)return;
+  const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
+  if(hasPhonetics)return;
+  (async()=>{
+    try{
+      const wordsList=categorized.flatMap(c=>c.words||[]).map(w=>w.it).join(", ");
+      const r=await callClaude(
+        [{role:"user",content:"Phonetic pronunciation for English speakers: "+wordsList}],
+        "Return ONLY a valid JSON object mapping each Italian word to its phonetic. Example: {\"parlare\":\"par-LA-reh\",\"casa\":\"KA-za\"}. No extra text."
+      );
+      const s=r.indexOf("{");const e=r.lastIndexOf("}");
+      if(s===-1||e===-1)return;
+      const map=JSON.parse(r.slice(s,e+1));
+      setCategorized(prev=>prev.map(cat=>({...cat,words:(cat.words||[]).map(w=>({...w,ph:map[w.it]||w.ph||""}))})));
+    }catch{}
+  })();
+},[showPhonetic,categorized]);
 
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 <div className={cx.row}>
   <p className="text-sm font-semibold">🗂️ Vocabulary</p>
   <div className="flex items-center gap-2">
     <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{allWords.length} words</span>
-    <button onClick={()=>setShowTranslation(t=>!t)} className="text-xs px-3 py-1 rounded-full font-medium" style={{background:showTranslation?color:"#f3f4f6",color:showTranslation?"white":"#6b7280"}}>{showTranslation?"🇮🇹 + 🇬🇧":"🇮🇹 only"}</button>
+    <div className="flex gap-1">{[["🇮🇹",false,false],["🇮🇹+🇬🇧",true,false],["🔤",true,true]].map(([label,tr,ph])=><button key={label} onClick={()=>{setShowTranslation(tr);setShowPhonetic(ph);}} className="text-xs px-2 py-1 rounded-full font-medium" style={{background:(showTranslation===tr&&showPhonetic===ph)?color:"#f3f4f6",color:(showTranslation===tr&&showPhonetic===ph)?"white":"#6b7280"}}>{label}</button>)}</div>
   </div>
 </div>
 <div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
@@ -762,7 +799,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 loadingCat?<div className={cx.card+" p-6 text-center"}><p className="text-sm text-gray-400">Organizing your vocabulary...</p></div>:
 categorized?categorized.map((cat,ci)=>(
   <div key={ci} className={cx.card}>
-    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{cat.category}</p>
+    <p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#C8102E"}}>{cat.category}</p>
     <div className="space-y-1">
       {(cat.words||[]).map((w,wi)=>{
         const sw=savedWords.find(s=>s.word===w.it)||{};
@@ -770,7 +807,7 @@ categorized?categorized.map((cat,ci)=>(
           <div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
             <div className="flex-1 min-w-0">
               <span className={"text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.it}</span>
-              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}</span>}
+              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{showPhonetic&&w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}
             </div>
             <button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button>
             <button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button>
