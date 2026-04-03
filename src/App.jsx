@@ -737,7 +737,7 @@ const categorize=async()=>{
     const wordList=allWords.map(w=>w.word).join(", ");
     const r=await callClaude(
       [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
-      "You are an Italian teacher. Given a list of Italian words, group them into categories and provide English translations. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak'}]},{category:'Luoghi',words:[{it:'citta',en:'city'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
+      "You are an Italian teacher. Given a list of Italian words, group them into categories, provide English translations, and phonetic pronunciation for English speakers. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak',ph:'par-LAH-reh'}]},{category:'Luoghi',words:[{it:'citta',en:'city',ph:'cheet-TAH'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
     );
     const start=r.indexOf("[");const end=r.lastIndexOf("]");
     if(start===-1||end===-1)throw new Error("no array");
@@ -770,7 +770,7 @@ categorized?categorized.map((cat,ci)=>(
           <div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
             <div className="flex-1 min-w-0">
               <span className={"text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.it}</span>
-              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}</span>}
+              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}
             </div>
             <button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button>
             <button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button>
