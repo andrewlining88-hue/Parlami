@@ -720,23 +720,68 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">🔁 Dante is watching</p>{recurringMistakes.length>0&&<span className="text-xs bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full">{recurringMistakes.length}</span>}</div>{recurringMistakes.length===0?<p className="text-xs text-gray-300 text-center py-3">Dante will track recurring mistakes after a few sessions.</p>:<div className="space-y-2">{recurringMistakes.map((m,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#431407":"#fff7ed"}}><span className="text-orange-300 mt-0.5">⚠️</span><p className="text-xs text-orange-700 leading-relaxed">{m}</p></div>)}<p className="text-xs text-gray-300 pt-1">Dante will gently correct these when they come up.</p></div>}</div>
 <div className={cx.card}><div className={cx.row+" mb-3"}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Badges</p><p className="text-xs text-gray-300">{unlockedBadges.length}/{BADGES.length}</p></div><div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=unlockedBadges.includes(b.id);const raw=b.type==="messages"?umc:b.type==="streak"?practiceStreak:b.type==="tests"?testsPassed.length:vocabularyCount;const p=Math.min(raw/b.req*100,100);return(<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100 bg-gray-50")}><div className="flex items-center space-x-2 mb-1.5"><span className={"text-xl "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold truncate "+(u?"text-gray-800":"text-gray-500")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div><p className="text-xs text-gray-400 mb-1.5 leading-tight">{b.desc}</p>{!u&&<><div className="w-full rounded-full h-1" style={{background:"#e5e7eb"}}><div className="h-1 rounded-full" style={{width:p+"%",background:color}}/></div><p className="text-xs text-gray-300 mt-1">{raw.toLocaleString()} / {b.req.toLocaleString()}</p></>}</div>);})}</div></div>
 </div>);}
-function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords}) {
+function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,dark=false}) {
 const color=LC(studentLevel);
 const [newWord,setNewWord]=useState("");
-const [filter,setFilter]=useState("all");
-const starred=savedWords.filter(w=>w.starred&&!w.mastered);
-const mastered=savedWords.filter(w=>w.mastered);
-const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count,fromChat:true})),...savedWords.map(w=>({word:w.word,count:0,fromChat:false}))].map(w=>[w.word,w])).values()];
+const [showTranslation,setShowTranslation]=useState(true);
+const [categorized,setCategorized]=useState(null);
+const [loadingCat,setLoadingCat]=useState(false);
+const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];
 const toggle=(word,key)=>setSavedWords(p=>{const ex=p.find(w=>w.word===word);if(ex)return p.map(w=>w.word===word?{...w,[key]:!w[key],starred:key==="mastered"&&!w.mastered?false:key==="starred"?!w.starred:w.starred}:w);return[...p,{word,starred:key==="starred",mastered:key==="mastered"}];});
 const addWord=()=>{const w=newWord.trim().toLowerCase();if(!w)return;if(!savedWords.find(x=>x.word===w))setSavedWords(p=>[...p,{word:w,starred:false,mastered:false,manual:true}]);setNewWord("");};
-const display=filter==="starred"?starred:filter==="mastered"?mastered:allWords.filter(w=>filter!=="active"||!savedWords.find(s=>s.word===w.word&&s.mastered));
+
+const categorize=async()=>{
+  if(allWords.length===0)return;
+  setLoadingCat(true);
+  try{
+    const wordList=allWords.map(w=>w.word).join(", ");
+    const r=await callClaude(
+      [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
+      "You are an Italian teacher. Given a list of Italian words, group them into categories and provide English translations. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak'}]},{category:'Luoghi',words:[{it:'citta',en:'city'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
+    );
+    const start=r.indexOf("[");const end=r.lastIndexOf("]");
+    if(start===-1||end===-1)throw new Error("no array");
+    const parsed=JSON.parse(r.slice(start,end+1));
+    if(Array.isArray(parsed)&&parsed.length>0)setCategorized(parsed);
+  }catch{setCategorized(null);}
+  setLoadingCat(false);
+};
+
+useEffect(()=>{if(allWords.length>0)categorize();},[allWords.length]);
+
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
-<div className={cx.row}><p className="text-sm font-semibold">🗂️ Vocabulary</p><span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{allWords.length} words</span></div>
-<div className="flex gap-1.5 flex-wrap">{[["all","All"],["active","Active"],["starred","⭐ Starred"],["mastered","✅ Mastered"]].map(([v,l])=><button key={v} onClick={()=>setFilter(v)} className="px-3 py-1 rounded-full text-xs font-medium" style={{background:filter===v?color:"#f3f4f6",color:filter===v?"white":"#6b7280"}}>{l}</button>)}</div>
-<div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word to learn..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
-{display.length===0?<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">{filter==="starred"?"No starred words yet.":filter==="mastered"?"No mastered words yet.":"Chat in Italian to build your vocabulary!"}</p></div>:
-<div className={cx.card}><div className="space-y-1">{display.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className={"flex-1 text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.word}</span>{w.count>0&&<span className="text-xs text-gray-300">{w.count}×</span>}<button onClick={()=>toggle(w.word,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button></div>);})}</div></div>}
-{mastered.length>0&&filter!=="mastered"&&<p className="text-xs text-gray-300 text-center">{mastered.length} word{mastered.length!==1?"s":""} mastered ✅</p>}
+<div className={cx.row}>
+  <p className="text-sm font-semibold">🗂️ Vocabulary</p>
+  <div className="flex items-center gap-2">
+    <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{allWords.length} words</span>
+    <button onClick={()=>setShowTranslation(t=>!t)} className="text-xs px-3 py-1 rounded-full font-medium" style={{background:showTranslation?color:"#f3f4f6",color:showTranslation?"white":"#6b7280"}}>{showTranslation?"🇮🇹 + 🇬🇧":"🇮🇹 only"}</button>
+  </div>
+</div>
+<div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
+{allWords.length===0?<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">Chat in Italian to build your vocabulary!</p></div>:
+loadingCat?<div className={cx.card+" p-6 text-center"}><p className="text-sm text-gray-400">Organizing your vocabulary...</p></div>:
+categorized?categorized.map((cat,ci)=>(
+  <div key={ci} className={cx.card}>
+    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{cat.category}</p>
+    <div className="space-y-1">
+      {(cat.words||[]).map((w,wi)=>{
+        const sw=savedWords.find(s=>s.word===w.it)||{};
+        return(
+          <div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+            <div className="flex-1 min-w-0">
+              <span className={"text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.it}</span>
+              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}</span>}
+            </div>
+            <button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button>
+            <button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button>
+            <button onClick={()=>toggle(w.it,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)):
+<div className={cx.card}><div className="space-y-1">{allWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className={"flex-1 text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.word}</span><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button></div>);})}</div></div>}
 </div>);}
 
 const DEFAULT_EX = [
@@ -1264,7 +1309,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 </div>
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} dark={dark}/>}
-{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords}/>}
+{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} dark={dark}/>}
 {tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
