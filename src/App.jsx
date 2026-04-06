@@ -508,7 +508,8 @@ return(
 {silent.length>0&&(
 <div className="rounded-xl px-4 py-3 space-y-2" style={{background:dark?"#431407":"#fff7ed"}}>
 <p className="text-xs font-semibold text-orange-600">⚠️ {silent.map(s=>s.name).join(", ")} — no practice this week</p>
-<button onClick={async()=>{await Promise.all(silent.map(s=>Promise.all([onSendMsg(s.email,"🔔 Ciao "+s.name.split(" ")[0]+"! Non ti vedo da un po' — anche solo 5 minuti oggi fanno la differenza! Forza! 💪"),fetch("/api/send-reminder",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:s.email,name:s.name})})])));setReminderSent(true);setTimeout(()=>setReminderSent(false),3000);}}
+<button onClick={async()=>{await Promise.all(silent.map(s=>{const msg="🔔 Ciao "+s.name.split(" ")[0]+"! Non ti vedo da un po' — anche solo 5 minuti oggi fanno la differenza! Forza! 💪";return Promise.all([onSendMsg(s.email,msg),fetch("/api/send-reminder",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:s.email,name:s.name})})]);  }));setReminderSent(true);setTimeout(()=>setReminderSent(false),3000);}} className="w-full py-2 rounded-xl text-xs font-semibold transition-all" style={{background:reminderSent?"#dcfce7":"#f97316",color:reminderSent?"#16a34a":"white"}}>{reminderSent?"✓ Reminders sent!":"🔔 Send reminder to all inactive"}</button>
+</div>
 )}
 </div>
 );
