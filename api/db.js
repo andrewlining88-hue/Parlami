@@ -46,6 +46,8 @@ const toDb = (d) => ({
   progress: d.progress || 0,
   badge_count: d.badgeCount || 0,
   last_monthly_clean: d.lastMonthlyClean || '',
+  email_verified: d.emailVerified || false,
+  verification_token: d.verificationToken || null,
 });
 
 const fromDb = (d) => ({
@@ -74,6 +76,8 @@ const fromDb = (d) => ({
   progress: d.progress || 0,
   badgeCount: d.badge_count || 0,
   lastMonthlyClean: d.last_monthly_clean || '',
+  emailVerified: d.email_verified || false,
+  verificationToken: d.verification_token || null,
 });
 
 export default async function handler(req, res) {
