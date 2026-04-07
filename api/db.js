@@ -46,8 +46,6 @@ const toDb = (d) => ({
   progress: d.progress || 0,
   badge_count: d.badgeCount || 0,
   last_monthly_clean: d.lastMonthlyClean || '',
-  email_verified: d.emailVerified || false,
-  verification_token: d.verificationToken || null,
 });
 
 const fromDb = (d) => ({
