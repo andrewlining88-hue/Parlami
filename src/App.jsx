@@ -748,7 +748,7 @@ const categorize=async()=>{
   setLoadingCat(false);
 };
 
-useEffect(()=>{if(allWords.length>0)categorize();},[allWords.length]);
+useEffect(()=>{if(allWords.length>0&&!categorized&&!loadingCat)categorize();},[allWords.length,vocabWords,savedWords]);
 useEffect(()=>{
   if(!showPhonetic||!categorized)return;
   const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
