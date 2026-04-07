@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parlami-v1';
+const CACHE_NAME = 'parlami-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html'
