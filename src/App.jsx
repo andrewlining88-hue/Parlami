@@ -1013,7 +1013,7 @@ const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [l
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
 const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
-const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);
+const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);
 const fileRef=useRef(null),endRef=useRef(null);
 const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
@@ -1059,8 +1059,8 @@ useEffect(()=>{BADGES.forEach(b=>{if(badges.includes(b.id))return;const p=b.type
 const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:true,hasPassword:!!d.passwordHash,name:d.name||""}:{exists:false};};
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
 const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
-setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");
-
+setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);
+if(!d.emailVerified)return"unverified";
 return"ok";};
 
 useEffect(()=>{
@@ -1071,11 +1071,12 @@ useEffect(()=>{
     setName(savedName);
     loadData(savedEmail,savedHash).then(r=>{
       if(r==="ok") setView("student");
+      else if(r==="unverified") setView("pending");
     }).catch(()=>{});
   }
 },[]);
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
-const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}setView("student");}else{setLoginErr("Account not found.");setStep("identify");}};
+const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"||r==="unverified"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}setView(r==="ok"?"student":"pending");}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
 const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
@@ -1226,7 +1227,7 @@ if(view==="onboarding"){
 const LEVELS_OB=[{id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},{id:"A2",label:"I know some basics",desc:"I can say simple phrases"},{id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},{id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"}];
 const GOALS=[{id:"travel",label:"Travel & holidays"},{id:"living",label:"Living in Italy"},{id:"family",label:"Family & friends"},{id:"work",label:"Work & business"},{id:"fun",label:"Just for fun"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
-const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(()=>{});setView("student");};
+const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
 return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-sm">
 <div className="text-center mb-8"><div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div><p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p><p className="text-sm text-gray-400 mt-1">3 quick questions</p><div className="flex justify-center space-x-2 mt-3">{[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div></div>
@@ -1234,6 +1235,20 @@ return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark
 {onboardStep===1&&<div><p className="font-semibold mb-4 text-center">What is your main goal?</p><div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left font-medium text-sm transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>{g.label}</button>)}</div></div>}
 {onboardStep===2&&<div><p className="font-semibold mb-4 text-center">How many messages per day?</p><div className="grid grid-cols-2 gap-3">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-4 rounded-xl border-2 text-center transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="text-2xl font-bold">{d.label}</p><p className="text-xs text-gray-400">{d.desc}</p></button>)}</div></div>}
 </div></div>);}
+if(view==="pending") return(
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
+<DarkStyle dark={dark}/>
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm text-center">
+<div className="text-5xl mb-4">📧</div>
+<h2 className="text-xl font-bold mb-2">Check your email!</h2>
+<p className="text-sm text-gray-500 mb-2">We sent a verification link to:</p>
+<p className="text-sm font-semibold text-gray-800 mb-6">{email}</p>
+<p className="text-xs text-gray-400 mb-6">Click the link in the email to verify your account and start using Parlami.</p>
+<button onClick={async()=>{setResendSent(false);await fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})});setResendSent(true);setTimeout(()=>setResendSent(false),3000);}} className="w-full py-3 rounded-xl text-sm font-semibold text-white mb-3" style={{background:resendSent?"#16a34a":"#1a1a2e"}}>{resendSent?"✓ Email sent!":"Resend verification email"}</button>
+<button onClick={logout} className="w-full py-3 rounded-xl text-sm text-gray-400 border border-gray-200">Log out</button>
+</div>
+</div>
+);
 if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
 if(view==="login") return (
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
