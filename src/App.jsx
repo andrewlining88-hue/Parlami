@@ -1166,8 +1166,11 @@ const completeOnboarding=async(goal,lvl,daily)=>{
   setStudentGoal(goal);
   setLevel(lvl);
   setDailyGoal(daily);
-  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
-  setView("student");
+  const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
+  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
+  setDailyGoal(daily);setMsgs([welcomeMsg]);
+  fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));
+  setView("pending");
 };
 return(
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
