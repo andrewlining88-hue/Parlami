@@ -748,7 +748,7 @@ const categorize=async()=>{
   setLoadingCat(false);
 };
 
-useEffect(()=>{if(activeWords.length>0)categorize();},[activeWords.length]);
+useEffect(()=>{setCategorized(null);if(vocabWords.length>0||savedWords.filter(w=>!w.mastered).length>0)categorize();},[vocabWords.length]);
 useEffect(()=>{
   if(!showPhonetic||!categorized)return;
   const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
@@ -797,27 +797,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 <div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
 {allWords.length===0?<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">Chat in Italian to build your vocabulary!</p></div>:
 loadingCat?<div className={cx.card+" p-6 text-center"}><p className="text-sm text-gray-400">Organizing your vocabulary...</p></div>:
-categorized?categorized.map((cat,ci)=>(
-  <div key={ci} className={cx.card}>
-    <p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#C8102E"}}>{cat.category}</p>
-    <div className="space-y-1">
-      {(cat.words||[]).map((w,wi)=>{
-        const sw=savedWords.find(s=>s.word===w.it)||{};
-        return(
-          <div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-            <div className="flex-1 min-w-0">
-              <span className={"text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.it}</span>
-              {showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{showPhonetic&&w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}
-            </div>
-            <button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button>
-            <button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button>
-            <button onClick={()=>toggle(w.it,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-)):
+categorized?<>{categorized.map((cat,ci)=>{const activeInCat=(cat.words||[]).filter(w=>!(savedWords.find(s=>s.word===w.it)?.mastered));if(activeInCat.length===0)return null;return(<div key={ci} className={cx.card}><p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#C8102E"}}>{cat.category}</p><div className="space-y-1">{activeInCat.map((w,wi)=>{const sw=savedWords.find(s=>s.word===w.it)||{};return(<div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><div className="flex-1 min-w-0"><span className="text-sm font-medium">{w.it}</span>{showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{showPhonetic&&w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}</div><button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.it,"mastered")} className="text-base" title="Mastered">✅</button></div>);})}</div></div>);})}{(()=>{const masteredWords=allWords.filter(w=>savedWords.find(s=>s.word===w.word)?.mastered);if(masteredWords.length===0)return null;return(<div className={cx.card}><p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#16a34a"}}>✅ Mastered ({masteredWords.length})</p><div className="space-y-1">{masteredWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};const catWord=categorized.flatMap(c=>c.words||[]).find(cw=>cw.it===w.word);return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><div className="flex-1 min-w-0"><span className="text-sm font-medium text-gray-400 line-through">{w.word}</span>{showTranslation&&catWord?.en&&<span className="text-xs text-gray-300 ml-2">– {catWord.en}</span>}</div><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Unmark">○</button></div>);})}</div></div>);})()}</> :
 <div className={cx.card}><div className="space-y-1">{allWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className={"flex-1 text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.word}</span><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button></div>);})}</div></div>}
 </div>);}
 
