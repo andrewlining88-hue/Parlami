@@ -727,15 +727,15 @@ const [showTranslation,setShowTranslation]=useState(true);
 const [showPhonetic,setShowPhonetic]=useState(false);
 const [categorized,setCategorized]=useState(null);
 const [loadingCat,setLoadingCat]=useState(false);
-const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];
+const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];const activeWords=allWords.filter(w=>!(savedWords.find(s=>s.word===w.word)?.mastered));
 const toggle=(word,key)=>setSavedWords(p=>{const ex=p.find(w=>w.word===word);if(ex)return p.map(w=>w.word===word?{...w,[key]:!w[key],starred:key==="mastered"&&!w.mastered?false:key==="starred"?!w.starred:w.starred}:w);return[...p,{word,starred:key==="starred",mastered:key==="mastered"}];});
 const addWord=()=>{const w=newWord.trim().toLowerCase();if(!w)return;if(!savedWords.find(x=>x.word===w))setSavedWords(p=>[...p,{word:w,starred:false,mastered:false,manual:true}]);setNewWord("");};
 
 const categorize=async()=>{
-  if(allWords.length===0)return;
+  if(activeWords.length===0)return;
   setLoadingCat(true);
   try{
-    const wordList=allWords.map(w=>w.word).join(", ");
+    const wordList=activeWords.map(w=>w.word).join(", ");
     const r=await callClaude(
       [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
       "You are an Italian teacher. Given a list of Italian words, group them into categories and provide English translations. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak'}]},{category:'Luoghi',words:[{it:'citta',en:'city'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
@@ -748,7 +748,7 @@ const categorize=async()=>{
   setLoadingCat(false);
 };
 
-useEffect(()=>{if(allWords.length>0&&!categorized&&!loadingCat)categorize();},[allWords.length,vocabWords,savedWords]);
+useEffect(()=>{if(activeWords.length>0)categorize();},[activeWords.length]);
 useEffect(()=>{
   if(!showPhonetic||!categorized)return;
   const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
