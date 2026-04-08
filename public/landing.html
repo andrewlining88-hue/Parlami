@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parlami — Practice Italian Between Lessons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1a1a2e;
+      --green: #009246;
+      --red: #ce2b37;
+      --cream: #faf9f7;
+      --gray: #6b7280;
+      --light: #f3f2ef;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--navy);
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      background: rgba(250, 249, 247, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(26,26,46,0.06);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .nav-logo-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--navy);
+      letter-spacing: 0.02em;
+    }
+
+    .nav-login {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+      text-decoration: none;
+      padding: 8px 20px;
+      border: 1px solid rgba(26,26,46,0.2);
+      border-radius: 100px;
+      transition: all 0.2s;
+    }
+
+    .nav-login:hover {
+      background: var(--navy);
+      color: white;
+      border-color: var(--navy);
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(ellipse 60% 50% at 20% 60%, rgba(0,146,70,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 30%, rgba(206,43,55,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .flag-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.1s forwards;
+    }
+
+    .flag-stripe {
+      width: 3px;
+      height: 24px;
+      border-radius: 2px;
+    }
+
+    .hero-tag {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--navy);
+      margin-bottom: 12px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--red);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 300;
+      color: var(--gray);
+      margin-bottom: 48px;
+      max-width: 440px;
+      line-height: 1.6;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy);
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 16px 36px;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+      transition: all 0.25s;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.5s forwards;
+    }
+
+    .hero-cta:hover {
+      background: #2d2d4e;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(26,26,46,0.2);
+    }
+
+    .hero-cta svg {
+      transition: transform 0.2s;
+    }
+
+    .hero-cta:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* SCREEN MOCKUP */
+    .mockup-wrap {
+      margin-top: 80px;
+      width: 100%;
+      max-width: 340px;
+      opacity: 0;
+      animation: fadeUp 1s 0.7s forwards;
+    }
+
+    .mockup {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(26,26,46,0.12), 0 4px 16px rgba(26,26,46,0.06);
+      overflow: hidden;
+      border: 1px solid rgba(26,26,46,0.06);
+    }
+
+    .mockup-header {
+      background: white;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mockup-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--navy);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .mockup-name { font-size: 13px; font-weight: 600; color: var(--navy); }
+    .mockup-sub { font-size: 11px; color: var(--gray); }
+
+    .mockup-chat {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #fafafa;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .chat-ai {
+      background: white;
+      color: var(--navy);
+      border: 1px solid #f0f0f0;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-user {
+      background: var(--navy);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-it {
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .mockup-input {
+      padding: 12px 16px;
+      background: white;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mockup-input-bar {
+      flex: 1;
+      height: 36px;
+      background: #f5f5f5;
+      border-radius: 100px;
+    }
+
+    .mockup-send {
+      width: 36px;
+      height: 36px;
+      background: var(--navy);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 100px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 48px;
+      text-align: center;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: rgba(26,26,46,0.06);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .feature {
+      background: var(--cream);
+      padding: 40px 32px;
+      transition: background 0.2s;
+    }
+
+    .feature:hover { background: white; }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--navy);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* QUOTE */
+    .quote-section {
+      padding: 80px 24px;
+      text-align: center;
+      background: var(--navy);
+      color: white;
+    }
+
+    .quote-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.3;
+      max-width: 700px;
+      margin: 0 auto 24px;
+      opacity: 0.9;
+    }
+
+    .quote-author {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.1em;
+    }
+
+    /* HOW IT WORKS */
+    .how {
+      padding: 100px 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step {
+      display: flex;
+      gap: 32px;
+      padding: 40px 0;
+      border-bottom: 1px solid rgba(26,26,46,0.08);
+    }
+
+    .step:last-child { border-bottom: none; }
+
+    .step-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 300;
+      color: rgba(26,26,46,0.12);
+      line-height: 1;
+      min-width: 48px;
+    }
+
+    .step-content {}
+
+    .step-title {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* CTA BOTTOM */
+    .cta-bottom {
+      padding: 100px 24px;
+      text-align: center;
+      position: relative;
+    }
+
+    .cta-bottom::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent, rgba(26,26,46,0.15));
+    }
+
+    .cta-bottom-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 300;
+      color: var(--navy);
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+
+    .cta-bottom-sub {
+      font-size: 15px;
+      color: var(--gray);
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 32px 48px;
+      border-top: 1px solid rgba(26,26,46,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-left {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--navy);
+    }
+
+    .footer-right {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .step { gap: 20px; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: 100px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <img src="/icons/web-app-manifest-192x192.png" alt="Parlami" />
+      <span class="nav-logo-text">Parlami</span>
+    </a>
+    <a href="/app" class="nav-login">Log in</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="flag-bar">
+      <div class="flag-stripe" style="background:#009246"></div>
+      <div class="flag-stripe" style="background:#f4f4f4"></div>
+      <div class="flag-stripe" style="background:#ce2b37"></div>
+    </div>
+    <p class="hero-tag">AI-powered Italian practice</p>
+    <h1 class="hero-title">Parla.<br><em>Ogni giorno.</em></h1>
+    <p class="hero-subtitle">Practice Italian between your lessons with Dante, your personal AI tutor — available anytime, on any device.</p>
+    <a href="/app" class="hero-cta">
+      Log in to Parlami
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+    <!-- MOCKUP -->
+    <div class="mockup-wrap">
+      <div class="mockup">
+        <div class="mockup-header">
+          <div class="mockup-avatar">🇮🇹</div>
+          <div>
+            <div class="mockup-name">Dante</div>
+            <div class="mockup-sub">Your Italian tutor</div>
+          </div>
+        </div>
+        <div class="mockup-chat">
+          <div class="chat-bubble chat-ai">
+            Ciao! Come stai oggi? Let's practice the <span class="chat-it">passato prossimo</span> — tell me what you did this weekend!
+          </div>
+          <div class="chat-bubble chat-user">
+            Sono andato al mercato con mia moglie 🛒
+          </div>
+          <div class="chat-bubble chat-ai">
+            Perfetto! Great use of <span class="chat-it">sono andato</span> — notice how <span class="chat-it">andare</span> uses <span class="chat-it">essere</span>, not <span class="chat-it">avere</span>. What did you buy?
+          </div>
+        </div>
+        <div class="mockup-input">
+          <div class="mockup-input-bar"></div>
+          <div class="mockup-send">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8h12M10 4l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <p class="section-label">What you get</p>
+    <div class="features-grid">
+      <div class="feature">
+        <span class="feature-icon">💬</span>
+        <h3 class="feature-title">Chat with Dante</h3>
+        <p class="feature-desc">A warm, patient AI tutor who corrects your mistakes naturally — the way a real teacher would.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">📈</span>
+        <h3 class="feature-title">Track progress</h3>
+        <p class="feature-desc">See your vocabulary grow, your streak build, and your level advance — day by day.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">✍️</span>
+        <h3 class="feature-title">Daily exercises</h3>
+        <p class="feature-desc">Fill-in-the-blank, multiple choice and vocab drills — all tailored to your exact level.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <section class="quote-section">
+    <p class="quote-text">"The secret to learning Italian is simple — practice a little, every single day."</p>
+    <p class="quote-author">— Andrei, Italian teacher</p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <p class="section-label" style="text-align:left; margin-bottom: 48px;">How it works</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <p class="step-title">Create your account</p>
+          <p class="step-desc">Sign up in under a minute. Choose your level, your goal, and how much you want to practice each day.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <p class="step-title">Chat with Dante daily</p>
+          <p class="step-desc">Talk about anything — your day, Italian culture, grammar questions. Dante adapts to your level and corrects you naturally.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <p class="step-title">Watch yourself improve</p>
+          <p class="step-desc">Your vocabulary grows, your streak builds, and your confidence in Italian grows — one conversation at a time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TUTOR SECTION -->
+  <section class="cta-bottom">
+    <h2 class="cta-bottom-title">Learn with a<br><em style="font-family:'Cormorant Garamond',serif; font-style:italic;">real teacher.</em></h2>
+    <p class="cta-bottom-sub" style="max-width:480px;margin:0 auto 16px;">Parlami was built by Andrei, a professional Italian teacher with over 10 years of experience. Book a private lesson and get access to Parlami as part of your learning journey.</p>
+    <p style="font-size:13px;color:var(--gray);font-weight:400;">Contact your teacher to get started.</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-left">Parlami</span>
+    <span class="footer-right">© 2026 Parlami. All rights reserved.</span>
+  </footer>
+
+</body>
+</html>
