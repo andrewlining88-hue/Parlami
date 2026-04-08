@@ -485,7 +485,7 @@ return(
 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Week of {wd[0].slice(5).replace("-","/")} – {wd[6].slice(5).replace("-","/")}</p>
 <div className="grid grid-cols-3 gap-2">
 {[[practiced.length+"/"+students.length,"Practiced","✅"],[total,"Messages","💬"],[silent.length,"Inactive","😴"]].map(([v,l,ic])=>(
-<div key={l} className="rounded-xl p-3 text-center" style={{background:dark?"#374151":"#f9fafb"}}><p className="text-lg">{ic}</p><p className="text-lg font-bold">{v}</p><p className={cx.xs4}>{l}</p></div>
+<div key={l} className="rounded-xl p-3 text-center" style={{background:dark?"#374151":"#faf9f7"}}><p className="text-lg">{ic}</p><p className="text-lg font-bold">{v}</p><p className={cx.xs4}>{l}</p></div>
 ))}
 </div>
 {best&&<div className="rounded-xl px-4 py-3 text-sm" style={{background:dark?"#052e16":"#f0fdf4"}}><span className="text-green-600 font-semibold">🏆 </span><span className="text-green-700">{best.name} — {best.msgs7} msgs, {best.days} days</span></div>}
@@ -546,7 +546,7 @@ setInsights(r);
 setLoadingInsights(false);
 };
 return (
-<div className={"min-h-screen flex flex-col"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}><DarkStyle dark={dark}/>
+<div className={"min-h-screen flex flex-col"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",color:dark?"#faf9f7":"#111827"}}><DarkStyle dark={dark}/>
 {confirmRm&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center"><p className="text-3xl mb-3">🗑️</p><p className="font-semibold mb-1">Remove {confirmRm.name}?</p><div className="flex space-x-2 mt-4"><button onClick={()=>setConfirmRm(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">No</button><button onClick={()=>{onRemove(confirmRm.email);if(sel?.email===confirmRm.email)setSel(null);setConfirmRm(null);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#ef4444"}}>Remove</button></div></div></div>}
 {resetModal&&<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}><div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4 text-center">{resetDone?<><p className="text-3xl mb-3">✅</p><p className="font-semibold mb-2">Password reset</p><p className="text-lg font-bold tracking-widest bg-gray-50 rounded-xl py-2 px-4 mb-4">parlami2026</p><button onClick={()=>{setResetModal(null);setResetDone(false);}} className={cx.btn} style={{background:"#1a1a2e"}}>Done</button></>:<><p className="text-3xl mb-3">🔑</p><p className="font-semibold mb-4">Reset password for {resetModal.name}?</p><div className="flex space-x-2"><button onClick={()=>setResetModal(null)} className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200">Cancel</button><button onClick={async()=>{await onResetPw(resetModal.email);setResetDone(true);}} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#f97316"}}>Reset</button></div></>}</div></div>}
 <div style={{background:dark?"#1f2937":"white",borderColor:dark?"#374151":"#f3f4f6"}} className="border-b px-6 py-4 flex items-center justify-between">
@@ -591,11 +591,11 @@ return (
 <div><p className="font-semibold">{sel.name} {sel.emailVerified?<span title="Email verified">✅</span>:<span title="Email not verified">⚠️</span>}</p><p className={cx.xs4}>{sel.email}</p></div>
 </div>
 <div className="grid grid-cols-3 gap-2">
-<div className="rounded-xl p-3" style={{background:dark?"#374151":"#f9fafb"}}><select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level ✎</p></div>
+<div className="rounded-xl p-3" style={{background:dark?"#374151":"#faf9f7"}}><select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level ✎</p></div>
 {[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>{
 const clickable=["Messages","Vocab","Badges","Tests"].includes(l);
 return(
-<div key={l} className={"rounded-xl p-3 transition-all "+(clickable?"cursor-pointer hover:opacity-80":"")} onClick={()=>clickable&&setActiveDetail(activeDetail===l?null:l)} style={{background:activeDetail===l?LC(sel.level):dark?"#374151":"#f9fafb"}}>
+<div key={l} className={"rounded-xl p-3 transition-all "+(clickable?"cursor-pointer hover:opacity-80":"")} onClick={()=>clickable&&setActiveDetail(activeDetail===l?null:l)} style={{background:activeDetail===l?LC(sel.level):dark?"#374151":"#faf9f7"}}>
 <p className={"text-sm font-semibold "+(activeDetail===l?"text-white":"")}>{v}</p>
 <p className={(activeDetail===l?"text-white opacity-75":"text-gray-400")+" text-xs mt-0.5"}>{l}</p>
 </div>
@@ -603,7 +603,7 @@ return(
 </div>
 
 {activeDetail==="Messages"&&(
-<div className="rounded-xl border overflow-hidden" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="rounded-xl border overflow-hidden" style={{background:dark?"#111827":"#faf9f7",borderColor:dark?"#374151":"#e5e7eb"}}>
 <div className="px-3 py-2 border-b text-xs font-semibold text-gray-400" style={{borderColor:dark?"#374151":"#e5e7eb"}}>💬 Chat history — read only</div>
 <div className="overflow-y-auto p-3 space-y-2" style={{maxHeight:"350px"}}>
 {(!sel.messages||sel.messages.length===0)&&<p className="text-xs text-gray-400 text-center py-4">No messages yet</p>}
@@ -617,7 +617,7 @@ return(
 )}
 
 {activeDetail==="Vocab"&&(
-<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#faf9f7",borderColor:dark?"#374151":"#e5e7eb"}}>
 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🗂️ Vocabulary ({(sel.savedWords||[]).length} words)</p>
 {(!sel.savedWords||sel.savedWords.length===0)?<p className="text-xs text-gray-400 text-center py-2">No vocabulary saved yet</p>:
 <div className="flex flex-wrap gap-2">{(sel.savedWords||[]).map((w,i)=><span key={i} className="px-2 py-1 rounded-lg text-xs font-medium text-white" style={{background:LC(sel.level)}}>{w.word||w}</span>)}</div>}
@@ -625,17 +625,17 @@ return(
 )}
 
 {activeDetail==="Badges"&&(
-<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#faf9f7",borderColor:dark?"#374151":"#e5e7eb"}}>
 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">🏅 Badges ({(sel.badges||[]).length}/{BADGES.length})</p>
 <div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=(sel.badges||[]).includes(b.id);return(
-<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100")} style={{background:u?"#fefce8":dark?"#1f2937":"#f9fafb"}}>
+<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100")} style={{background:u?"#fefce8":dark?"#1f2937":"#faf9f7"}}>
 <div className="flex items-center space-x-2"><span className={"text-lg "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold "+(u?"text-gray-800":"text-gray-400")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div>
 </div>);})}</div>
 </div>
 )}
 
 {activeDetail==="Tests"&&(
-<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#f9fafb",borderColor:dark?"#374151":"#e5e7eb"}}>
+<div className="rounded-xl border p-3" style={{background:dark?"#111827":"#faf9f7",borderColor:dark?"#374151":"#e5e7eb"}}>
 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">📝 Tests Passed</p>
 {(!sel.testsPassed||sel.testsPassed.length===0)?<p className="text-xs text-gray-400 text-center py-2">No tests passed yet</p>:
 <div className="flex flex-wrap gap-2">{(sel.testsPassed||[]).map(l=><span key={l} className="px-3 py-1.5 rounded-full text-xs font-bold text-white" style={{background:LC(l)}}>{l} ✓</span>)}</div>}
@@ -709,7 +709,7 @@ const hm=Array.from({length:28},(_,i)=>{const d=new Date(today);d.setDate(d.getD
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className="rounded-2xl p-5 text-white" style={{background:"#1a1a2e"}}><div className="flex justify-between items-start mb-4"><div><p className="text-xs opacity-50 mb-1">Current level</p><p className="text-4xl font-bold">{studentLevel}</p><p className="text-xs opacity-50 mt-1">{LN(studentLevel)}</p></div><div className="text-right"><p className="text-xs opacity-50 mb-1">Progress</p><p className="text-2xl font-bold">{lp}%</p><p className="text-xs opacity-50 mt-1">{Math.max(0,LEVEL_REQ[studentLevel]-umc)} msgs left</p></div></div><div className="w-full rounded-full h-1" style={{background:"rgba(255,255,255,0.15)"}}><div className="h-1 rounded-full" style={{width:lp+"%",background:color}}/></div></div>
 <div className={cx.card+" space-y-4"}><div className={cx.row}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">📊 Activity</p><div className="flex rounded-xl overflow-hidden border border-gray-100">{[["week","Week"],["month","Month"],["all","All"]].map(([v,l])=>(<button key={v} onClick={()=>setChartFilter(v)} className="px-3 py-1.5 text-xs font-medium" style={{background:chartFilter===v?color:"transparent",color:chartFilter===v?"white":"#9ca3af"}}>{l}</button>))}</div></div>
-<div className="grid grid-cols-3 gap-2">{[[tot,chartFilter==="week"?"This week":chartFilter==="month"?"This month":"All time","💬"],[ad,"Active days","📅"],[bd.count,"Best day","🏆"]].map(([val,label,icon])=>(<div key={label} className="rounded-xl p-2.5 text-center" style={{background:dark?"#374151":"#f9fafb"}}><p>{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
+<div className="grid grid-cols-3 gap-2">{[[tot,chartFilter==="week"?"This week":chartFilter==="month"?"This month":"All time","💬"],[ad,"Active days","📅"],[bd.count,"Best day","🏆"]].map(([val,label,icon])=>(<div key={label} className="rounded-xl p-2.5 text-center" style={{background:dark?"#374151":"#faf9f7"}}><p>{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
 {tot===0?<p className="text-sm text-gray-400 text-center py-4">No messages in this period yet</p>:<><div className="flex items-end gap-px" style={{height:"64px"}}>{data.map((d,i)=><div key={i} className="flex-1 flex flex-col items-center"><div className="w-full rounded-t" style={{height:d.count>0?Math.max(d.count/mx*100,6)+"%":"2px",background:d.count===0?"#f3f4f6":d.date===todayStr?color:color+"99"}}/></div>)}</div><div className="flex gap-px">{data.map((d,i)=><div key={i} className="flex-1 text-center">{d.label&&<p style={{fontSize:"9px",color:"#d1d5db"}}>{d.label}</p>}</div>)}</div></>}
 <div className="grid gap-1" style={{gridTemplateColumns:"repeat(28,1fr)"}}>{hm.map((d,i)=><div key={i} className="rounded-sm aspect-square" style={{background:d.count===0?"#f3f4f6":color,opacity:d.count===0?1:Math.min(0.2+d.count*0.15,1),outline:d.k===todayStr?"2px solid "+color:"none",outlineOffset:"1px"}}/>)}</div>
 {ad>0&&<div className="rounded-xl px-3 py-2.5 text-xs font-medium text-center" style={{background:color+"15",color}}>{ad>=7?"🔥 You're on a roll!":ad>=4?"⭐ Great consistency!":ad>=2?"👍 Good start — practice every day!":"💡 Even 5 minutes a day makes a difference!"}</div>}</div>
@@ -919,7 +919,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
                   {(ex.o||[]).map((opt,j) => {
                     const isC = opt === ex.a;
                     const isSel = inp[i] === opt;
-                    let bg = "#f9fafb", br = "#e5e7eb", co = "#374151";
+                    let bg = "#faf9f7", br = "#e5e7eb", co = "#374151";
                     if (isDone) {
                       if (isC) { bg="#dcfce7"; br="#86efac"; co="#16a34a"; }
                       else if (isSel) { bg="#fee2e2"; br="#fca5a5"; co="#dc2626"; }
@@ -1153,7 +1153,7 @@ const completeOnboarding=async(goal,lvl,daily)=>{
   setView("pending");
 };
 return(
-<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}>
 <DarkStyle dark={dark}/>
 <div className="w-full max-w-sm">
 <div className="text-center mb-8">
@@ -1211,7 +1211,7 @@ const LEVELS_OB=[{id:"A1",label:"Complete beginner",desc:"I know very little or 
 const GOALS=[{id:"travel",label:"Travel & holidays"},{id:"living",label:"Living in Italy"},{id:"family",label:"Family & friends"},{id:"work",label:"Work & business"},{id:"fun",label:"Just for fun"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
 const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
-return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
+return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-sm">
 <div className="text-center mb-8"><div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div><p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p><p className="text-sm text-gray-400 mt-1">3 quick questions</p><div className="flex justify-center space-x-2 mt-3">{[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div></div>
 {onboardStep===0&&<div><p className="font-semibold mb-4 text-center">How would you describe your Italian?</p><div className="space-y-2">{LEVELS_OB.map(l=><button key={l.id} onClick={()=>{setLevel(l.id);setOnboardStep(1);}} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="font-medium text-sm">{l.label}</p><p className="text-xs text-gray-400">{l.desc}</p></button>)}</div></div>}
@@ -1219,7 +1219,7 @@ return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark
 {onboardStep===2&&<div><p className="font-semibold mb-4 text-center">How many messages per day?</p><div className="grid grid-cols-2 gap-3">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-4 rounded-xl border-2 text-center transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="text-2xl font-bold">{d.label}</p><p className="text-xs text-gray-400">{d.desc}</p></button>)}</div></div>}
 </div></div>);}
 if(view==="pending") return(
-<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}>
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}>
 <DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm text-center">
 <div className="text-5xl mb-4">📧</div>
@@ -1234,7 +1234,7 @@ if(view==="pending") return(
 );
 if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
 if(view==="login") return (
-<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb"}}><DarkStyle dark={dark}/>
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}><DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
 <div className="flex flex-col items-center mb-8"><button onClick={()=>setShowTeacher(t=>!t)} className="focus:outline-none"><Logo size={64}/></button><h1 className="text-xl font-bold mt-4">Parlami</h1><p className={cx.xs4+" mt-1"}>Practice Italian between lessons</p></div>
 {step==="identify"&&<div className="space-y-3 mb-4"><input type="text" value={email} onChange={e=>{setEmail(e.target.value.toLowerCase());setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&email.trim()&&handleIdentify()} placeholder="Email address" className={cx.input}/><button onClick={handleIdentify} disabled={!email.trim()} className={cx.btn} style={{background:"#1a1a2e"}}>Continue →</button></div>}
@@ -1249,7 +1249,7 @@ if(view==="login") return (
 </div>
 );
 return (
-<div className={"flex flex-col h-screen"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#f9fafb",color:dark?"#f9fafb":"#111827"}}><DarkStyle dark={dark}/>
+<div className={"flex flex-col h-screen"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",color:dark?"#faf9f7":"#111827"}}><DarkStyle dark={dark}/>
 {showTest&&<TestModal level={level} onClose={()=>setShowTest(false)} onPass={passTest} onFail={failTest}/>}
 {showChangePw&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
@@ -1278,7 +1278,7 @@ return (
 <div className={cx.row+" mb-5"}><p className="font-semibold">Daily Goal</p><button onClick={()=>{setShowGoalPicker(false);setCustomGoal("");}}><X className="w-4 h-4 text-gray-400"/></button></div>
 <p className={cx.xs4+" mb-4"}>How many messages do you want to send each day?</p>
 <div className="grid grid-cols-4 gap-2 mb-4">
-{[5,10,20,30].map(g=><button key={g} onClick={()=>{setDailyGoal(g);setShowGoalPicker(false);}} className="py-2.5 rounded-xl text-sm font-semibold border transition-all" style={{background:dailyGoal===g?LC(level):"#f9fafb",color:dailyGoal===g?"white":"#374151",borderColor:dailyGoal===g?LC(level):"#e5e7eb"}}>{g}</button>)}
+{[5,10,20,30].map(g=><button key={g} onClick={()=>{setDailyGoal(g);setShowGoalPicker(false);}} className="py-2.5 rounded-xl text-sm font-semibold border transition-all" style={{background:dailyGoal===g?LC(level):"#faf9f7",color:dailyGoal===g?"white":"#374151",borderColor:dailyGoal===g?LC(level):"#e5e7eb"}}>{g}</button>)}
 </div>
 <div className="flex space-x-2">
 <input type="number" min="1" max="100" value={customGoal} onChange={e=>setCustomGoal(e.target.value)} placeholder="Custom…" className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-gray-400"/>
