@@ -993,7 +993,7 @@ const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [l
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
 const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
-const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);
+const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);
 const fileRef=useRef(null),endRef=useRef(null);
 const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
@@ -1056,7 +1056,7 @@ useEffect(()=>{
   }
 },[]);
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else if(!hasInvite){setLoginErr("No account found. Ask your teacher for an invite link.");}else setStep("newuser");setLoginErr("");};
-const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"||r==="unverified"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}setView(r==="ok"?"student":"pending");}else{setLoginErr("Account not found.");setStep("identify");}};
+const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"||r==="unverified"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}const dest=r==="ok"?"student":"pending";if(dest==="student"){const isFirst=!localStorage.getItem("parlami_toured");if(isFirst){setTourStep(0);localStorage.setItem("parlami_toured","1");}}setView(dest);}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
 const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
@@ -1124,17 +1124,17 @@ const passTest=async l=>{const newTests=[...testsPassed,l];const ni=LEVELS.index
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
 if(view==="onboarding") {
 const LEVELS_OB=[
-  {id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},
-  {id:"A2",label:"I know some basics",desc:"I can say simple phrases"},
-  {id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},
-  {id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"},
+  {id:"A1",label:"Beginner",desc:"I know very little or no Italian"},
+  {id:"A2",label:"Elementary",desc:"I can say simple phrases"},
+  {id:"B1",label:"Intermediate",desc:"I can talk about familiar topics"},
+  {id:"B2",label:"Upper intermediate",desc:"I can discuss most topics"},
 ];
 const GOALS=[
-  {id:"travel",label:"✈️ Travel & holidays"},
-  {id:"living",label:"🏠 Living in Italy"},
-  {id:"family",label:"👨‍👩‍👧 Family & friends"},
-  {id:"work",label:"💼 Work & business"},
-  {id:"fun",label:"🎉 Just for fun"},
+  {id:"travel",label:"Travel & holidays",icon:"✈️"},
+  {id:"living",label:"Living in Italy",icon:"🏠"},
+  {id:"family",label:"Family & friends",icon:"👨‍👩‍👧"},
+  {id:"work",label:"Work & business",icon:"💼"},
+  {id:"fun",label:"Just for fun",icon:"🎉"},
 ];
 const DAILY=[
   {v:5,label:"5",desc:"Casual"},
@@ -1142,81 +1142,88 @@ const DAILY=[
   {v:20,label:"20",desc:"Intensive"},
   {v:30,label:"30",desc:"Serious"},
 ];
+const goalWelcome={
+  travel:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. I heard you want to travel to Italy — perfect! Let's make sure you can order a coffee, ask for directions and charm the locals. Tell me: where in Italy would you love to go?",
+  living:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Living in Italy is a dream — and I'm here to help make it real. Let's start with the everyday Italian you'll actually need. Tell me a bit about yourself: cosa fai nella vita?",
+  family:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante. How wonderful that Italian connects you to family and friends! Let's chat — tell me about someone special in your life. In Italian, of course! 😊",
+  work:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Business Italian — let's get professional. Tell me: what do you do for work? Cosa fai di lavoro?",
+  fun:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante — and I love teaching Italian to people who just love the language! No pressure, no tests, just good conversation. Tell me: cosa ti piace fare nel tempo libero?",
+};
 const completeOnboarding=async(goal,lvl,daily)=>{
   setStudentGoal(goal);
   setLevel(lvl);
   setDailyGoal(daily);
-  const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
+  const txt=goalWelcome[goal]||"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. Sono qui per aiutarti a praticare ogni giorno — chatta con me liberamente, fai domande, fai errori (è così che si impara! 😄). Pronto? Come stai oggi?";
+  const welcomeMsg={id:1,text:txt,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
   await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
   setDailyGoal(daily);setMsgs([welcomeMsg]);
   fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));
   setView("pending");
 };
+const steps=["Your Italian","Your goal","Daily practice"];
 return(
-<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}>
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",fontFamily:"'DM Sans',sans-serif"}}>
 <DarkStyle dark={dark}/>
-<div className="w-full max-w-sm">
-<div className="text-center mb-8">
-  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div>
-  <p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p>
-  <p className="text-sm text-gray-400 mt-1">Quick setup — 3 steps</p>
-  <div className="flex justify-center space-x-2 mt-3">
-    {[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
+<div className="w-full max-w-xs">
+  <div className="text-center mb-10">
+    <Logo size={48}/>
+    <p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p>
+    <p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p>
+    <div className="flex justify-center gap-1.5 mt-5">
+      {[0,1,2].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>i?32:onboardStep===i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
+    </div>
+    <p className="text-xs mt-2" style={{color:"#d1d5db"}}>{steps[onboardStep]}</p>
   </div>
-</div>
-{onboardStep===0&&(
-<div>
-  <p className="font-semibold mb-4 text-center">How would you describe your Italian?</p>
+  {onboardStep===0&&(
   <div className="space-y-2">
     {LEVELS_OB.map(l=>(
-      <button key={l.id} onClick={()=>setOnboardStep(1)||setLevel(l.id)} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        <p className="font-medium text-sm">{l.label}</p>
-        <p className="text-xs text-gray-400">{l.desc}</p>
+      <button key={l.id} onClick={()=>{setLevel(l.id);setOnboardStep(1);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+        <p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{l.label}</p>
+        <p className="text-xs mt-0.5" style={{color:"#9ca3af"}}>{l.desc}</p>
       </button>
     ))}
   </div>
-</div>
-)}
-{onboardStep===1&&(
-<div>
-  <p className="font-semibold mb-4 text-center">What is your main goal?</p>
+  )}
+  {onboardStep===1&&(
   <div className="space-y-2">
     {GOALS.map(g=>(
-      <button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all hover:border-gray-400 font-medium text-sm" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        {g.label}
+      <button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all flex items-center gap-3" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+        <span className="text-lg">{g.icon}</span>
+        <p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{g.label}</p>
       </button>
     ))}
   </div>
-</div>
-)}
-{onboardStep===2&&(
-<div>
-  <p className="font-semibold mb-4 text-center">How many messages per day?</p>
-  <div className="grid grid-cols-2 gap-3 mb-6">
-    {DAILY.map(d=>(
-      <button key={d.v} onClick={()=>completeOnboarding(studentGoal,level,d.v)} className="py-4 rounded-xl border-2 text-center transition-all hover:border-gray-400" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>
-        <p className="text-2xl font-bold">{d.label}</p>
-        <p className="text-xs text-gray-400">{d.desc}</p>
-      </button>
-    ))}
+  )}
+  {onboardStep===2&&(
+  <div>
+    <p className="text-xs text-center mb-4" style={{color:"#9ca3af"}}>How many messages do you want to send each day?</p>
+    <div className="grid grid-cols-2 gap-2">
+      {DAILY.map(d=>(
+        <button key={d.v} onClick={()=>completeOnboarding(studentGoal,level,d.v)} className="py-5 rounded-2xl text-center transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+          <p className="text-3xl font-semibold" style={{color:"#1a1a2e"}}>{d.label}</p>
+          <p className="text-xs mt-1" style={{color:"#9ca3af"}}>{d.desc}</p>
+        </button>
+      ))}
+    </div>
   </div>
-</div>
-)}
+  )}
 </div>
 </div>
 );
 }
 if(view==="onboarding"){
-const LEVELS_OB=[{id:"A1",label:"Complete beginner",desc:"I know very little or no Italian"},{id:"A2",label:"I know some basics",desc:"I can say simple phrases"},{id:"B1",label:"Simple conversations",desc:"I can talk about familiar topics"},{id:"B2",label:"Intermediate or above",desc:"I can discuss most topics"}];
-const GOALS=[{id:"travel",label:"Travel & holidays"},{id:"living",label:"Living in Italy"},{id:"family",label:"Family & friends"},{id:"work",label:"Work & business"},{id:"fun",label:"Just for fun"}];
+const LEVELS_OB=[{id:"A1",label:"Beginner",desc:"I know very little or no Italian"},{id:"A2",label:"Elementary",desc:"I can say simple phrases"},{id:"B1",label:"Intermediate",desc:"I can talk about familiar topics"},{id:"B2",label:"Upper intermediate",desc:"I can discuss most topics"}];
+const GOALS=[{id:"travel",label:"Travel & holidays",icon:"✈️"},{id:"living",label:"Living in Italy",icon:"🏠"},{id:"family",label:"Family & friends",icon:"👨‍👩‍👧"},{id:"work",label:"Work & business",icon:"💼"},{id:"fun",label:"Just for fun",icon:"🎉"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
-const finishOnboard=async(daily)=>{const welcomeMsg={id:1,text:"Ciao "+name.split(" ")[0]+"! 👋 Sono Dante, l'assistente AI del tuo insegnante Andrei. Sono qui per aiutarti a praticare l'italiano tra una lezione e l'altra — chatta con me in italiano, fai domande, fai errori (è così che si impara! 😄). Il tuo insegnante Andrei controllerà i tuoi progressi e ti lascerà note e vocaboli da praticare. Pronto? Come stai oggi?",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
-return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}><DarkStyle dark={dark}/>
-<div className="w-full max-w-sm">
-<div className="text-center mb-8"><div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:"#1a1a2e"}}><span className="text-3xl">🇮🇹</span></div><p className="text-2xl font-bold">Benvenuto, {name.split(" ")[0]}!</p><p className="text-sm text-gray-400 mt-1">3 quick questions</p><div className="flex justify-center space-x-2 mt-3">{[0,1,2].map(i=><div key={i} className="w-8 h-1.5 rounded-full" style={{background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div></div>
-{onboardStep===0&&<div><p className="font-semibold mb-4 text-center">How would you describe your Italian?</p><div className="space-y-2">{LEVELS_OB.map(l=><button key={l.id} onClick={()=>{setLevel(l.id);setOnboardStep(1);}} className="w-full px-4 py-3 rounded-xl border-2 text-left transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="font-medium text-sm">{l.label}</p><p className="text-xs text-gray-400">{l.desc}</p></button>)}</div></div>}
-{onboardStep===1&&<div><p className="font-semibold mb-4 text-center">What is your main goal?</p><div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3 rounded-xl border-2 text-left font-medium text-sm transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}>{g.label}</button>)}</div></div>}
-{onboardStep===2&&<div><p className="font-semibold mb-4 text-center">How many messages per day?</p><div className="grid grid-cols-2 gap-3">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-4 rounded-xl border-2 text-center transition-all" style={{borderColor:"#e5e7eb",background:dark?"#1f2937":"white"}}><p className="text-2xl font-bold">{d.label}</p><p className="text-xs text-gray-400">{d.desc}</p></button>)}</div></div>}
+const goalWelcome2={travel:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. I heard you want to travel to Italy — perfect! Let's make sure you can order a coffee, ask for directions and charm the locals. Tell me: where in Italy would you love to go?",living:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Living in Italy is a dream — and I'm here to help make it real. Let's start with the everyday Italian you'll actually need. Tell me a bit about yourself: cosa fai nella vita?",family:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante. How wonderful that Italian connects you to family and friends! Let's chat — tell me about someone special in your life. In Italian, of course! 😊",work:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Business Italian — let's get professional. Tell me: what do you do for work? Cosa fai di lavoro?",fun:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante — and I love teaching Italian to people who just love the language! No pressure, no tests, just good conversation. Tell me: cosa ti piace fare nel tempo libero?"};
+const finishOnboard=async(daily)=>{const g=studentGoal;const txt=goalWelcome2[g]||"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. Sono qui per aiutarti a praticare ogni giorno — chatta con me liberamente, fai domande, fai errori (è così che si impara! 😄). Pronto? Come stai oggi?";const welcomeMsg={id:1,text:txt,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
+const steps2=["Your Italian","Your goal","Daily practice"];
+return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",fontFamily:"'DM Sans',sans-serif"}}><DarkStyle dark={dark}/>
+<div className="w-full max-w-xs">
+<div className="text-center mb-10"><Logo size={48}/><p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p><p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p><div className="flex justify-center gap-1.5 mt-5">{[0,1,2].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>=i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div><p className="text-xs mt-2" style={{color:"#d1d5db"}}>{steps2[onboardStep]}</p></div>
+{onboardStep===0&&<div className="space-y-2">{LEVELS_OB.map(l=><button key={l.id} onClick={()=>{setLevel(l.id);setOnboardStep(1);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{l.label}</p><p className="text-xs mt-0.5" style={{color:"#9ca3af"}}>{l.desc}</p></button>)}</div>}
+{onboardStep===1&&<div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all flex items-center gap-3" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><span className="text-lg">{g.icon}</span><p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{g.label}</p></button>)}</div>}
+{onboardStep===2&&<div><p className="text-xs text-center mb-4" style={{color:"#9ca3af"}}>How many messages do you want to send each day?</p><div className="grid grid-cols-2 gap-2">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-5 rounded-2xl text-center transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><p className="text-3xl font-semibold" style={{color:"#1a1a2e"}}>{d.label}</p><p className="text-xs mt-1" style={{color:"#9ca3af"}}>{d.desc}</p></button>)}</div></div>}
 </div></div>);}
 if(view==="pending") return(
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}>
@@ -1265,6 +1272,30 @@ return (
 </div></>
 )}
 </div>
+</div>
+)}
+{tourStep>=0&&(
+<div className="fixed inset-0 z-50" style={{background:"rgba(0,0,0,0.6)"}}>
+  {[
+    {tab:"Chat",icon:"💬",pos:"left",desc:"Chat with Dante in Italian every day. Ask questions, make mistakes — that's how you learn!"},
+    {tab:"Progress",icon:"📈",pos:"center",desc:"Track your streak, vocabulary, badges and level. Your progress is saved automatically."},
+    {tab:"Vocab",icon:"📖",pos:"center",desc:"All the Italian words you've used, organized by category with translations."},
+    {tab:"Exercises",icon:"✍️",pos:"right",desc:"Daily exercises tailored to your level — fill in the blanks and multiple choice."},
+  ].map((t,i)=>tourStep===i&&(
+    <div key={i}>
+      <div className="absolute bottom-24 left-0 right-0 flex justify-center px-6">
+        <div className="bg-white rounded-2xl p-6 max-w-xs w-full shadow-2xl">
+          <p className="text-2xl mb-2">{t.icon}</p>
+          <p className="font-semibold text-base mb-1.5" style={{color:"#1a1a2e"}}>{t.tab}</p>
+          <p className="text-sm leading-relaxed" style={{color:"#6b7280"}}>{t.desc}</p>
+          <div className="flex items-center justify-between mt-5">
+            <div className="flex gap-1">{[0,1,2,3].map(d=><div key={d} className="w-1.5 h-1.5 rounded-full" style={{background:d===tourStep?"#1a1a2e":"#e5e7eb"}}/>)}</div>
+            <button onClick={()=>tourStep<3?setTourStep(tourStep+1):setTourStep(-1)} className="px-5 py-2 rounded-xl text-sm font-semibold text-white" style={{background:"#1a1a2e"}}>{tourStep<3?"Next →":"Got it!"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
 </div>
 )}
 {badgeNotif&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="flex items-center space-x-3 px-5 py-3 rounded-2xl shadow-lg text-white text-sm font-medium" style={{background:"#1a1a2e"}}><span className="text-2xl">{badgeNotif.icon}</span><span>Badge unlocked: {badgeNotif.name}</span></div></div>}
