@@ -33,16 +33,16 @@ const DarkToggle = ({dark, setDark}) => (
 );
 const LEVEL_REQ = { A1:1000, A2:2000, B1:3500, B2:5500, C1:8000, C2:12000 };
 const DarkStyle = ({dark}) => dark ? <style>{`
-  .dark-app .bg-white { background: #1f2937 !important; color: #f9fafb !important; }
+  .dark-app .bg-white { background: #1f2937 !important; color: #faf9f7 !important; }
   .dark-app .border-gray-100 { border-color: #374151 !important; }
   .dark-app .border-gray-200 { border-color: #4b5563 !important; }
   .dark-app .text-gray-800, .dark-app .text-gray-700 { color: #e5e7eb !important; }
   .dark-app .text-gray-600, .dark-app .text-gray-500 { color: #9ca3af !important; }
   .dark-app .text-gray-400, .dark-app .text-gray-300 { color: #6b7280 !important; }
-  .dark-app .text-gray-900 { color: #f9fafb !important; }
+  .dark-app .text-gray-900 { color: #faf9f7 !important; }
   .dark-app .bg-gray-50 { background: #111827 !important; }
   .dark-app .bg-gray-100 { background: #1f2937 !important; }
-  .dark-app input, .dark-app textarea { background: #374151 !important; color: #f9fafb !important; border-color: #4b5563 !important; }
+  .dark-app input, .dark-app textarea { background: #374151 !important; color: #faf9f7 !important; border-color: #4b5563 !important; }
   .dark-app input::placeholder { color: #9ca3af !important; }
   .dark-app .rounded-2xl.border { background: #2d3748 !important; border-color: #4b5563 !important; color: #f1f5f9 !important; }
   .dark-app .rounded-xl.border { background: #2d3748 !important; border-color: #4b5563 !important; color: #f1f5f9 !important; }
