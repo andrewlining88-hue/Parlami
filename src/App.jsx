@@ -829,7 +829,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
       try{
         const words = shuffled.map(w=>w.word).join(", ");
         const r = await callClaude([{role:"user",content:"Translate these Italian words to English: "+words}],
-          "Return ONLY a valid JSON object mapping each Italian word to its English translation. Example: {"parlare":"to speak","casa":"house"}. No extra text.");
+          "Return ONLY a valid JSON object mapping each Italian word to its English translation. Example: {parlare:to speak, casa:house}. No extra text.");
         const s=r.indexOf("{");const e=r.lastIndexOf("}");
         if(s!==-1&&e!==-1){const map=JSON.parse(r.slice(s,e+1));setTranslations(map);}
       }catch{}
@@ -869,7 +869,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
       const r=await callClaude([{role:"user",content:"STUDENT LEVEL: "+studentLevel+". "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+seed}],
         "You are an Italian teacher. Create exercises at exactly "+studentLevel+" level. "+
         (studentLevel==="A1"?"A1: Only present tense, very simple sentences.":studentLevel==="A2"?"A2: Present and simple past, everyday vocabulary.":studentLevel==="B1"?"B1: Must use passato prossimo, imperfetto or condizionale. Never simple present as answer.":studentLevel==="B2"?"B2: Use congiuntivo, conditional, complex structures.":"C1/C2: Idiomatic expressions, advanced grammar.")+
-        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank (NO typing — include a word bank): {"type":"fill","s":"sentence with ___","a":"correct answer","wb":["correct answer","wrong1","wrong2","wrong3"]} — shuffle the wb array. 3 multiple choice: {"type":"mc","q":"question","o":["opt1","opt2","opt3","opt4"],"a":"correct option"}. No other text.");
+        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank with word bank: {type:fill,s:sentence with ___,a:correct,wb:[correct,wrong1,wrong2,wrong3]}. 3 multiple choice: {type:mc,q:question,o:[opt1,opt2,opt3,opt4],a:correct}. No other text.");
       const start=r.indexOf("[");const end=r.lastIndexOf("]");
       if(start===-1||end===-1)throw new Error("no array");
       const arr=JSON.parse(r.slice(start,end+1));
