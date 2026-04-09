@@ -1166,7 +1166,7 @@ return(
 <DarkStyle dark={dark}/>
 <div className="w-full max-w-xs">
   <div className="text-center mb-10">
-    <Logo size={48}/>
+    <div className="flex justify-center"><Logo size={48}/></div>
     <p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p>
     <p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p>
     <div className="flex justify-center gap-1.5 mt-5">
@@ -1220,7 +1220,7 @@ const finishOnboard=async(daily)=>{const g=studentGoal;const txt=goalWelcome2[g]
 const steps2=["Your Italian","Your goal","Daily practice"];
 return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",fontFamily:"'DM Sans',sans-serif"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-xs">
-<div className="text-center mb-10"><Logo size={48}/><p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p><p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p><div className="flex justify-center gap-1.5 mt-5">{[0,1,2].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>=i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div><p className="text-xs mt-2" style={{color:"#d1d5db"}}>{steps2[onboardStep]}</p></div>
+<div className="text-center mb-10"><div className="flex justify-center"><Logo size={48}/></div><p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p><p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p><div className="flex justify-center gap-1.5 mt-5">{[0,1,2].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>=i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}</div><p className="text-xs mt-2" style={{color:"#d1d5db"}}>{steps2[onboardStep]}</p></div>
 {onboardStep===0&&<div className="space-y-2">{LEVELS_OB.map(l=><button key={l.id} onClick={()=>{setLevel(l.id);setOnboardStep(1);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{l.label}</p><p className="text-xs mt-0.5" style={{color:"#9ca3af"}}>{l.desc}</p></button>)}</div>}
 {onboardStep===1&&<div className="space-y-2">{GOALS.map(g=><button key={g.id} onClick={()=>{setStudentGoal(g.id);setOnboardStep(2);}} className="w-full px-4 py-3.5 rounded-2xl text-left transition-all flex items-center gap-3" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><span className="text-lg">{g.icon}</span><p className="font-medium text-sm" style={{color:"#1a1a2e"}}>{g.label}</p></button>)}</div>}
 {onboardStep===2&&<div><p className="text-xs text-center mb-4" style={{color:"#9ca3af"}}>How many messages do you want to send each day?</p><div className="grid grid-cols-2 gap-2">{DAILY.map(d=><button key={d.v} onClick={()=>finishOnboard(d.v)} className="py-5 rounded-2xl text-center transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}><p className="text-3xl font-semibold" style={{color:"#1a1a2e"}}>{d.label}</p><p className="text-xs mt-1" style={{color:"#9ca3af"}}>{d.desc}</p></button>)}</div></div>}
