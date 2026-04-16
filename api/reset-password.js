@@ -3,8 +3,11 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 
 function hashPw(pw) {
   let h = 0;
-  for (let i = 0; i < pw.length; i++) { h = Math.imul(31, h) + pw.charCodeAt(i) | 0; }
-  return Math.abs(h).toString(36);
+  for (let i = 0; i < pw.length; i++) {
+    h = ((h << 5) - h) + pw.charCodeAt(i);
+    h |= 0;
+  }
+  return 'h' + Math.abs(h).toString(36);
 }
 
 export default async function handler(req, res) {
