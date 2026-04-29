@@ -433,7 +433,7 @@ async function startQuiz() {
       signal: controller.signal,
       body: JSON.stringify({
         system: 'You are an Italian quiz master. Generate exactly 10 trivia questions for a ' + playerLevel + ' (' + LEVEL_NAMES[playerLevel] + ') Italian learner. Include 5 Italian language questions (vocabulary, grammar, phrases) and 5 Italian culture questions (food, cities, history, art). Return ONLY a valid JSON array, nothing else — no markdown, no backticks, no explanation. Each item must be: {"q":"question","options":["a","b","c","d"],"answer":"exact matching option","category":"language or culture","explanation":"one sentence"}',
-        messages: [{ role: 'user', content: 'Generate 10 quiz questions for level ' + playerLevel }]
+        messages: [{ role: 'user', content: 'Generate 10 DIFFERENT quiz questions for level ' + playerLevel + '. Session ID: ' + Math.random().toString(36).slice(2) + '. Make sure topics and questions are completely different from any previous set. Vary the themes broadly.' }]
       })
     });
     clearTimeout(timeout);
