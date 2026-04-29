@@ -23,6 +23,23 @@ const Markdown = ({text, dark=false}) => {
   const lines = clean.split("\n").filter(l => l.trim());
   return <>{lines.map((line,i) => renderLine(line,i))}</>;
 };
+const FormattedParagraphs = ({text, dark=false, accentColor="#6366f1"}) => {
+  if(!text) return null;
+  const blocks = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  return (
+    <div className="space-y-2">
+      {blocks.map((block, i) => {
+        const isLabel = /^[A-Za-z][^.!?\n]{0,40}:$/.test(block);
+        if(isLabel) return (
+          <p key={i} className={"text-xs font-bold uppercase tracking-wider "+(i>0?"mt-3":"")} style={{color:accentColor}}>{block.replace(/:$/,"")}</p>
+        );
+        return (
+          <p key={i} className="text-sm leading-relaxed" style={{color:dark?"#d1d5db":"#4b5563"}}>{block}</p>
+        );
+      })}
+    </div>
+  );
+};
 const DarkToggle = ({dark, setDark}) => (
   <button onClick={()=>{setDark(d=>{const n=!d;localStorage.setItem("parlami_dark",n?"1":"0");return n;});}} 
     className="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-all"
@@ -526,7 +543,7 @@ const genReport = async () => {
 setLoadingReport(true);setReport("");
 try{
 const recentMsgs=(sel.messages||[]).slice(-40).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
-const r=await callClaude([{role:"user",content:"Student name: "+sel.name+"\nLevel: "+sel.level+(sel.lessonNote?"\nRecent lesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?"\nRecent vocabulary: "+sel.lessonVocab:"")+"\nRecent chat:\n"+recentMsgs}],"You are Andrei, a professional Italian teacher writing a short personal progress note directly to your student. Use their first name. Structure it as: 1) A warm personal opening acknowledging their progress and specific strengths you see from their recent conversations. 2) One line starting with What we will focus on next — a clear specific direction. 3) One line starting with Recommended activity — one practical out-of-class suggestion. 4) A short warm closing with their name. Keep the whole thing to 5-6 sentences max. No bullet symbols, no markdown. Speak directly to them, be warm and specific, not generic.");
+const r=await callClaude([{role:"user",content:"Student name: "+sel.name+"\nLevel: "+sel.level+(sel.lessonNote?"\nRecent lesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?"\nRecent vocabulary: "+sel.lessonVocab:"")+"\nRecent chat:\n"+recentMsgs}],"You are Andrei, a professional Italian teacher writing a short personal progress note directly to your student. Use their first name. Use plain text only — no markdown, no bullet points, no asterisks. Structure it using exactly these four section labels, each on its own line followed by a colon, then the content as one or two sentences on the next line. Leave a blank line between sections:\n\nHow you're doing:\n\nWhat we'll focus on next:\n\nRecommended activity:\n\nKeep it up:\n\nBe warm, specific, and encouraging. Max 30 words per section. Speak directly to them.");
 setReport(r);
 }
 catch{setReport("Unable to generate.");}
@@ -539,7 +556,7 @@ const recentMsgs=(sel.messages||[]).slice(-40).map(m=>(m.sender==="user"?"Studen
 if(!recentMsgs.trim()){setInsights("No chat history yet for this student.");setLoadingInsights(false);return;}
 const r=await callClaude(
 [{role:"user",content:"Student: "+sel.name+"\nLevel: "+sel.level+"\nRecent conversation:\n"+recentMsgs}],
-"You are an expert Italian teacher analysing a student's chat history. Write a concise teaching insight report for the teacher (not the student). Cover: 1) Main grammar mistakes you notice 2) Vocabulary gaps 3) What is improving 4) Specific suggestions for the next lesson. Be direct and practical. Use plain text, no markdown symbols. Max 150 words."
+"You are an expert Italian teacher analysing a student's chat history. Write a concise teaching insight report for the teacher (not the student). Use plain text only — no markdown, no bullet points, no asterisks. Structure your response using exactly these four section labels, each on its own line followed by a colon, then the content as a short paragraph on the next line. Leave a blank line between sections:\n\nGrammar Mistakes:\n\nVocabulary Gaps:\n\nWhat's Improving:\n\nNext Lesson:\n\nBe direct and practical. Max 40 words per section."
 );
 setInsights(r);
 }catch{setInsights("Unable to generate insights.");}
@@ -674,9 +691,9 @@ return(
 </div>
 <div>
 <button onClick={genReport} disabled={loadingReport} className={cx.btn} style={{background:"#1a1a2e"}}>{loadingReport?"Generating...":"✨ Generate AI Progress Report"}</button>
-{report&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">AI Report</p>{report}</div>}
+{report&&<div className="mt-3 rounded-xl p-4" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">✨ AI Progress Report</p><FormattedParagraphs text={report} dark={dark} accentColor="#1a1a2e"/></div>}
 <button onClick={genInsights} disabled={loadingInsights} className={cx.btn+" mt-2"} style={{background:"#4f46e5"}}>{loadingInsights?"Analysing...":"🧠 Dante's Teaching Insights"}</button>
-{insights&&<div className="mt-3 rounded-xl p-4 text-sm text-gray-600 leading-relaxed" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-semibold text-indigo-400 uppercase tracking-wide mb-2">🧠 Teaching Insights</p>{insights}</div>}
+{insights&&<div className="mt-3 rounded-xl p-4" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-bold text-indigo-400 uppercase tracking-wide mb-3">🧠 Teaching Insights</p><FormattedParagraphs text={insights} dark={dark} accentColor="#6366f1"/></div>}
 </div>
 <div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <p className="text-xs font-semibold text-gray-500">✉️ Message to {sel.name}</p>
