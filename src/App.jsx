@@ -539,6 +539,7 @@ const [vocabText,setVocabText]=useState("");const [vocabSaved,setVocabSaved]=use
 const [showWeekly,setShowWeekly]=useState(false);
 const [msgText,setMsgText]=useState("");const [msgSent,setMsgSent]=useState(false);
 const [reminderSent,setReminderSent]=useState(false);
+const [homework,setHomework]=useState("");const [loadingHomework,setLoadingHomework]=useState(false);const [homeworkCopied,setHomeworkCopied]=useState(false);
 const genReport = async () => {
 setLoadingReport(true);setReport("");
 try{
@@ -561,6 +562,18 @@ const r=await callClaude(
 setInsights(r);
 }catch{setInsights("Unable to generate insights.");}
 setLoadingInsights(false);
+};
+const genHomework = async () => {
+setLoadingHomework(true);setHomework("");setHomeworkCopied(false);
+try{
+const context=insights||"No specific insights — generate based on level "+sel.level;
+const r=await callClaude(
+[{role:"user",content:"Student: "+sel.name+"\nLevel: "+sel.level+(sel.lessonNote?"\nLesson topic: "+sel.lessonNote:"")+(sel.lessonVocab?"\nVocabulary studied: "+sel.lessonVocab:"")+"\nTeaching insights:\n"+context}],
+"You are an Italian teacher creating a targeted homework sheet. Based on the teaching insights, create exactly 10 exercises targeting this student's specific weaknesses. Plain text only — no markdown, no asterisks, no bullet symbols.\n\nUse exactly these four section labels, each on its own line followed by a colon, with a blank line before each section:\n\nFill in the Blank:\n3 Italian sentences each with one gap (___). Number them 1-3. Put the correct answer in parentheses at the end of each line.\n\nTranslation:\n3 English sentences to translate to Italian. Number them 1-3. Put the correct answer in parentheses at the end of each line.\n\nCorrect the Mistake:\n2 Italian sentences each containing one grammar error. Number them 1-2. Put the correction in parentheses at the end.\n\nFree Writing:\n2 short prompts asking the student to write 2-3 sentences using the target grammar or vocabulary. Number them 1-2. No answers needed.\n\nMake all exercises directly relevant to the weaknesses identified in the insights."
+);
+setHomework(r);
+}catch{setHomework("Unable to generate homework.");}
+setLoadingHomework(false);
 };
 return (
 <div className={"min-h-screen flex flex-col"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",color:dark?"#faf9f7":"#111827"}}><DarkStyle dark={dark}/>
@@ -585,7 +598,7 @@ return (
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
 {students.map((s,i)=>(
-<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);setActiveDetail(null);}}>
+<div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setHomework("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);setActiveDetail(null);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
 <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{background:LC(s.level)}}>{(s.name||"?")[0].toUpperCase()}</div>
@@ -694,6 +707,26 @@ return(
 {report&&<div className="mt-3 rounded-xl p-4" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">✨ AI Progress Report</p><FormattedParagraphs text={report} dark={dark} accentColor="#1a1a2e"/></div>}
 <button onClick={genInsights} disabled={loadingInsights} className={cx.btn+" mt-2"} style={{background:"#4f46e5"}}>{loadingInsights?"Analysing...":"🧠 Dante's Teaching Insights"}</button>
 {insights&&<div className="mt-3 rounded-xl p-4" style={{background:dark?"#1f2937":"#fafafa"}}><p className="text-xs font-bold text-indigo-400 uppercase tracking-wide mb-3">🧠 Teaching Insights</p><FormattedParagraphs text={insights} dark={dark} accentColor="#6366f1"/></div>}
+{insights&&(
+<div className="mt-2">
+<button onClick={genHomework} disabled={loadingHomework} className={cx.btn} style={{background:"#059669"}}>{loadingHomework?"Generating homework...":"📝 Generate Homework from Insights"}</button>
+{homework&&(
+<div className="mt-3 rounded-xl p-4" style={{background:dark?"#1f2937":"#fafafa"}}>
+<div className="flex items-center justify-between mb-3">
+<p className="text-xs font-bold uppercase tracking-wide" style={{color:"#059669"}}>📝 Homework Sheet — {sel.name}</p>
+<button onClick={()=>{
+const plain=homework.split("\n").map(l=>l.trim()).filter(Boolean).join("\n");
+navigator.clipboard.writeText("HOMEWORK — "+sel.name+" ("+sel.level+")\n\n"+plain);
+setHomeworkCopied(true);setTimeout(()=>setHomeworkCopied(false),2500);
+}} className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all" style={{background:homeworkCopied?"#dcfce7":"#059669",color:homeworkCopied?"#16a34a":"white"}}>
+{homeworkCopied?"✓ Copied!":"📋 Copy"}
+</button>
+</div>
+<FormattedParagraphs text={homework} dark={dark} accentColor="#059669"/>
+</div>
+)}
+</div>
+)}
 </div>
 <div className="rounded-xl border border-gray-100 p-3 space-y-2" style={{background:dark?"#1f2937":"#fafafa"}}>
 <p className="text-xs font-semibold text-gray-500">✉️ Message to {sel.name}</p>
