@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parlami — Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf9f7;
+    --navy: #1a1a2e;
+    --red: #C8102E;
+    --border: #e5e7eb;
+    --gray: #6b7280;
+    --card: #ffffff;
+    --gold: #f59e0b;
+    --silver: #9ca3af;
+    --bronze: #b45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  /* HEADER */
+  .header { display: flex; align-items: center; justify-content: space-between; }
+  .logo-row { display: flex; align-items: center; gap: 10px; }
+  .logo-row h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; }
+  .back-btn { font-size: 12px; font-weight: 600; color: var(--gray); text-decoration: none; border: 1.5px solid var(--border); padding: 6px 14px; border-radius: 100px; transition: border-color 0.15s; }
+  .back-btn:hover { border-color: var(--navy); color: var(--navy); }
+
+  /* TITLE */
+  .page-title { text-align: center; }
+  .page-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 700; }
+  .page-title p { font-size: 13px; color: var(--gray); margin-top: 4px; }
+  .month-badge { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: var(--navy); color: white; padding: 4px 12px; border-radius: 100px; }
+
+  /* TABS */
+  .tabs { display: flex; background: white; border: 1px solid var(--border); border-radius: 14px; padding: 4px; gap: 4px; }
+  .tab-btn { flex: 1; padding: 9px; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; background: transparent; color: var(--gray); }
+  .tab-btn.active { background: var(--navy); color: white; }
+
+  /* PODIUM */
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; padding: 0 8px; }
+  .podium-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .podium-item.first { order: 2; }
+  .podium-item.second { order: 1; }
+  .podium-item.third { order: 3; }
+  .podium-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; flex-shrink: 0; position: relative; }
+  .podium-item.first .podium-avatar { width: 64px; height: 64px; font-size: 24px; }
+  .crown { position: absolute; top: -14px; font-size: 18px; }
+  .podium-name { font-size: 12px; font-weight: 700; text-align: center; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .podium-val { font-size: 11px; color: var(--gray); text-align: center; }
+  .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: white; }
+  .podium-item.first .podium-block { height: 72px; background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .podium-item.second .podium-block { height: 52px; background: linear-gradient(135deg, #9ca3af, #6b7280); }
+  .podium-item.third .podium-block { height: 40px; background: linear-gradient(135deg, #b45309, #92400e); }
+
+  /* LIST */
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .list-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s;
+  }
+  .list-item.is-you { border-color: var(--navy); background: #f8faff; }
+  .rank { font-size: 13px; font-weight: 700; color: var(--gray); min-width: 24px; text-align: center; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: white; flex-shrink: 0; }
+  .info { flex: 1; min-width: 0; }
+  .info-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .you-tag { font-size: 10px; font-weight: 700; background: var(--navy); color: white; padding: 2px 7px; border-radius: 100px; }
+  .info-level { font-size: 11px; color: var(--gray); margin-top: 1px; }
+  .val { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .val-label { font-size: 10px; color: var(--gray); text-align: right; }
+
+  /* LOADING */
+  .loading-card { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 48px; text-align: center; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--navy); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-card p { font-size: 13px; color: var(--gray); }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px; font-size: 13px; color: var(--gray); }
+
+  /* FOOTER */
+  .footer { text-align: center; font-size: 12px; color: var(--gray); }
+  .footer a { color: var(--navy); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-row">
+      <svg width="32" height="32" viewBox="0 0 80 80" fill="none">
+        <rect width="80" height="80" rx="20" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+        <rect x="4" y="4" width="21" height="72" rx="6" fill="#009246"/>
+        <rect x="25" y="4" width="30" height="72" fill="white"/>
+        <rect x="55" y="4" width="21" height="72" rx="6" fill="#CE2B37"/>
+        <rect x="14" y="18" width="52" height="44" rx="10" fill="white" fill-opacity="0.97"/>
+        <text x="40" y="51" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="32" fill="#1a1a2e">P</text>
+      </svg>
+      <h1>Parlami</h1>
+    </div>
+    <a href="/app" class="back-btn">← App</a>
+  </div>
+
+  <div class="page-title">
+    <h2>🏆 Leaderboard</h2>
+    <p>Who's putting in the work?</p>
+    <span class="month-badge" id="month-label">All Time</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('streak')">🔥 Streak</button>
+    <button class="tab-btn" onclick="switchTab('messages')">💬 All Time</button>
+  </div>
+
+  <div id="board-container">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <p>Loading leaderboard…</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Keep practicing to climb the ranks! <a href="/app">Open Parlami →</a></p>
+  </div>
+
+</div>
+
+<script>
+const LEVEL_COLORS = {
+  A1:'#16a34a', A2:'#65a30d', B1:'#ca8a04', B2:'#ea580c', C1:'#dc2626', C2:'#9333ea'
+};
+const LEVEL_NAMES = {
+  A1:'Beginner', A2:'Elementary', B1:'Intermediate', B2:'Upper Int.', C1:'Advanced', C2:'Mastery'
+};
+
+let allStudents = [];
+let currentTab = 'streak';
+let currentEmail = localStorage.getItem('parlami_email') || '';
+
+function getMonthLabel() {
+  return new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+function getThisMonthPrefix() {
+  return new Date().toISOString().slice(0, 7); // "2026-04"
+}
+
+function firstName(name) {
+  return (name || '?').split(' ')[0];
+}
+
+function monthlyMessages(student) {
+  const prefix = getThisMonthPrefix();
+  return (student.messages || []).filter(m => m.sender === 'user' && (m.date || '').startsWith(prefix)).length;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', (i === 0 && tab === 'streak') || (i === 1 && tab === 'messages'));
+  });
+  renderBoard();
+}
+
+function renderBoard() {
+  const container = document.getElementById('board-container');
+
+  let sorted;
+  if (currentTab === 'streak') {
+    sorted = [...allStudents]
+      .map(s => ({ ...s, _val: s.streak || 0, _label: 'day streak' }))
+      .filter(s => s._val > 0)
+      .sort((a, b) => b._val - a._val);
+  } else {
+    sorted = [...allStudents]
+      .map(s => ({ ...s, _val: s.messageCount || 0, _label: 'messages' }))
+      .filter(s => s._val > 0)
+      .sort((a, b) => b._val - a._val);
+  }
+
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty">No activity yet.<br>Be the first on the board! 🇮🇹</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Podium (top 3)
+  if (sorted.length >= 2) {
+    const top3 = sorted.slice(0, 3);
+    const medals = ['🥇', '🥈', '🥉'];
+    const positions = top3.length === 1 ? [top3[0]] : top3.length === 2 ? [top3[1], top3[0]] : [top3[1], top3[0], top3[2]];
+    const posClasses = top3.length === 2 ? ['second', 'first'] : ['second', 'first', 'third'];
+
+    html += '<div class="podium">';
+    positions.forEach((s, i) => {
+      const cls = posClasses[i];
+      const origIdx = top3.indexOf(s);
+      const color = LEVEL_COLORS[s.level] || '#1a1a2e';
+      const isYou = s.email === currentEmail;
+      html += `
+        <div class="podium-item ${cls}">
+          <div class="podium-avatar" style="background:${color}">
+            ${cls === 'first' ? '<span class="crown">👑</span>' : ''}
+            ${firstName(s.name)[0].toUpperCase()}
+          </div>
+          <div class="podium-name">${firstName(s.name)}${isYou ? ' (you)' : ''}</div>
+          <div class="podium-val">${s._val} ${s._label}</div>
+          <div class="podium-block">${medals[origIdx]}</div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Rest of list (rank 4+, or all if <2 for podium)
+  const listStart = sorted.length >= 2 ? 3 : 0;
+  if (sorted.slice(listStart).length > 0) {
+    html += '<div class="list">';
+    sorted.slice(listStart).forEach((s, i) => {
+      const rank = listStart + i + 1;
+      const color = LEVEL_COLORS[s.level] || '#1a1a2e';
+      const isYou = s.email === currentEmail;
+      html += `
+        <div class="list-item ${isYou ? 'is-you' : ''}">
+          <div class="rank">${rank}</div>
+          <div class="avatar" style="background:${color}">${firstName(s.name)[0].toUpperCase()}</div>
+          <div class="info">
+            <div class="info-name">
+              ${firstName(s.name)}
+              ${isYou ? '<span class="you-tag">You</span>' : ''}
+            </div>
+            <div class="info-level">${s.level} — ${LEVEL_NAMES[s.level] || ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="val">${s._val}</div>
+            <div class="val-label">${s._label}</div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Show logged-in user's position if they're not in top visible
+  if (currentEmail) {
+    const myRank = sorted.findIndex(s => s.email === currentEmail);
+    if (myRank === -1) {
+      html += `<div class="empty" style="padding:16px;font-size:12px;">You're not on the board yet — start practicing to join! 💪</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+async function loadLeaderboard() {
+
+  try {
+    const r = await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', data: {} })
+    });
+    const d = await r.json();
+    allStudents = (d.students || []).filter(s => s.name);
+    renderBoard();
+  } catch(e) {
+    document.getElementById('board-container').innerHTML =
+      '<div class="loading-card"><p>❌ Could not load leaderboard — please try again.</p></div>';
+  }
+}
+
+loadLeaderboard();
+</script>
+</body>
+</html>
