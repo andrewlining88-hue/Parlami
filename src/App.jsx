@@ -1002,6 +1002,7 @@ function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringM
         <p className="text-sm font-semibold">Practice</p>
         <div className="flex items-center gap-2">
           {allVocab.length>=3&&<button onClick={startFlashcards} className="text-xs px-3 py-1.5 rounded-lg font-semibold border" style={{borderColor:"#e5e7eb",color:"#1a1a2e"}}>🃏 Flashcards</button>}
+          <button onClick={()=>window.open("/game","_blank")} className="text-xs px-3 py-1.5 rounded-lg font-semibold border" style={{borderColor:"#C8102E",color:"#C8102E"}}>🎮 Quiz</button>
           <button onClick={generate} disabled={busy} className="text-xs px-3 py-1.5 rounded-lg font-semibold text-white disabled:opacity-50" style={{background:"#1a1a2e"}}>{busy?"...":"New"}</button>
         </div>
       </div>
