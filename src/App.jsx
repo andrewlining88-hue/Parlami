@@ -12,21 +12,12 @@ const Markdown = ({text, dark=false}) => {
     .replace(/^[-*]\s/gm, "")
     .replace(/---/g, "")
     .trim();
-  const renderSegment = (seg, j) => {
-    const urlReg = /(https?:\/\/[^\s]+|parlami\.chat\/[^\s]*)/g;
-    if(!urlReg.test(seg)) return seg;
-    const parts = seg.split(/(https?:\/\/[^\s]+|parlami\.chat\/[^\s]*)/g);
-    return parts.map((p, k) => /^(https?:\/\/|parlami\.chat\/)/.test(p)
-      ? <a key={k} href={p.startsWith("http")?p:"https://"+p} target="_blank" rel="noopener noreferrer" style={{color:"#C8102E",fontWeight:"600",textDecoration:"underline"}}>{p}</a>
-      : p
-    );
-  };
   const renderLine = (line, i) => {
-    if(!line.includes("[it]")) return <p key={i} className={i>0?"mt-1":""}>{renderSegment(line,0)}</p>;
+    if(!line.includes("[it]")) return <p key={i} className={i>0?"mt-1":""}>{line}</p>;
     const parts = line.split(/\[it\]|\[\/it\]/);
     return <p key={i} className={i>0?"mt-1":""}>{parts.map((part,j) => j%2===1
       ? <strong key={j} style={{color:dark?"#60a5fa":"#1a1a2e",fontWeight:"700"}}>{part}</strong>
-      : renderSegment(part,j)
+      : part
     )}</p>;
   };
   const lines = clean.split("\n").filter(l => l.trim());
@@ -1123,7 +1114,7 @@ const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilte
 const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
-const fileRef=useRef(null),endRef=useRef(null),sessionMsgRef=useRef(0),nudgeIdxRef=useRef(0);
+const fileRef=useRef(null),endRef=useRef(null);
 const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
 const todayStr0=new Date().toISOString().slice(0,10);
@@ -1221,25 +1212,10 @@ try{
 const hist=msgs.slice(-12).map(m=>({role:m.sender==="user"?"user":"assistant",content:m.text}));
 let uc=[];if(f){if(f.type==="pdf")uc.push({type:"document",source:{type:"base64",media_type:"application/pdf",data:f.data}});else uc.push({type:"image",source:{type:"base64",media_type:f.mediaType,data:f.data}});}
 uc.push({type:"text",text:txt||"Please review and help me practice."});hist.push({role:"user",content:uc});
-const np=lessonNote?"LESSON TOPIC (set by Andrei): \""+lessonNote+"\". Open with this topic and weave it naturally into the conversation. Once you have covered it sufficiently, move on organically — do NOT keep returning to it. Treat it as a starting point, not a script to repeat.":"";
-const vp=lessonVocab?"LESSON VOCABULARY (set by Andrei): \""+lessonVocab+"\". Introduce and practise these words naturally early in the conversation. Once used and understood, move on — do not repeat the same vocabulary drills. If the student uses these words correctly later, acknowledge it briefly and continue.":"";
-const mp=recurringMistakes.length>0?"RECURRING MISTAKES TO WATCH: "+recurringMistakes.map((m,i)=>(i+1)+". "+m).join("; ")+". Correct gently once if they appear, then move on.":"";
-const NUDGES=[
-  {feature:"leaderboard",msg:"By the way, did you know Parlami has a leaderboard? You can see how your streak ranks against other students — check it out at parlami.chat/leaderboard 🏆"},
-  {feature:"quiz game",msg:"Feel like a quick challenge? There's a fun Italian quiz at parlami.chat/game — test your language and culture knowledge! 🎮"},
-  {feature:"flashcards",msg:"A great way to lock in what we've been practising: try the Flashcards in the Exercises tab — it uses your saved vocabulary! 🃏"},
-  {feature:"exercises",msg:"The Exercises tab has fill-in-the-blank and multiple choice practice based on your lessons — worth checking out when you want a different kind of practice! ✏️"},
-  {feature:"vocab tab",msg:"Don't forget your Vocab tab — every word you've learned is saved there, and you can hear the pronunciation too! 📚"}
-];
-sessionMsgRef.current+=1;
-const sessionCount=sessionMsgRef.current;
-let nudgeInstruction="";
-if(sessionCount>0&&sessionCount%10===0){
-  const nudge=NUDGES[nudgeIdxRef.current%NUDGES.length];
-  nudgeIdxRef.current+=1;
-  nudgeInstruction=" FEATURE NUDGE (include naturally at the END of your response, after the main conversation — make it feel casual and friendly, not like an ad): \""+nudge.msg+"\"";
-}
-const sys="You are Dante, the AI Italian tutor created by Andrei, a professional Italian teacher. You are warm, encouraging, patient and passionate about Italian — but you ARE a teacher, not just a friend. Your job is to help "+name+" practice Italian between their lessons with Andrei. Student level: "+LN(level)+" ("+level+"). "+(studentGoal?"Learning goal: "+studentGoal+". Keep this in mind when choosing topics and vocabulary. ":"")+np+" "+vp+" "+mp+" TEACHING APPROACH: "+(lessonNote||lessonVocab?"Start with the lesson topic and vocabulary set by Andrei. Cover them naturally, then let the conversation evolve — do not stay stuck on the same point once it has been practised. ":"Follow the student's lead — no fixed topic today, be curious and explore what they want to talk about. ")+"Keep mental track of everything covered in this conversation — grammar points practised, vocabulary used, questions asked. NEVER repeat a question or grammar point you have already covered in this session, unless the student explicitly asks to practise it again or Andrei has added it to the lesson notes. React to what the student actually says and build forward naturally. Vary your encouragement — sometimes just move on without praising. When a student does well, be genuinely warm but not over the top. CORRECTIONS: Correct max one mistake per message. Do it briefly and in English if it helps clarity — for example: 'Just a small note — in Italian we say [it]sono andato[/it] not [it]ho andato[/it] because andare uses essere.' Then move on. Let minor errors slide if the meaning is clear. Never list or number corrections. GRAMMAR EXPLANATIONS: When explaining a grammar rule, keep it short, clear and in English. One rule at a time. LANGUAGE: "+(level==="A1"?"Speak mostly in English. Introduce only 1-2 Italian words or phrases per message, always translated.":level==="A2"?"Mix English and Italian. Keep Italian phrases short and always translate them in brackets.":level==="B1"?"Speak mostly Italian. Use English only for grammar explanations.":"Speak entirely in Italian.")+" STRICT FORMAT RULES — NEVER BREAK: 1) NO markdown ever. No **, no *, no #, no bullet points, no numbered lists. 2) Wrap ALL Italian words or phrases in [it]...[/it] tags. 3) Keep responses SHORT — A1=1-2 sentences. A2=2-3 sentences. B1/B2=3-4 sentences. C1/C2=4-5 sentences. 4) Always end with one question that follows naturally from the conversation — never a question you already asked this session. 5) Never correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress). Never ask for their name."+nudgeInstruction;
+const np=lessonNote?"LAST LESSON NOTES: \""+lessonNote+"\". Reference naturally.":"";
+const vp=lessonVocab?"LESSON VOCABULARY: \""+lessonVocab+"\". Encourage use of these words, correct gently if misused.":"";
+const mp=recurringMistakes.length>0?"RECURRING MISTAKES: "+recurringMistakes.map((m,i)=>(i+1)+". "+m).join("; ")+". Correct gently once if they appear.":"";
+const sys="You are Dante, the AI Italian tutor created by Andrei, a professional Italian teacher. You are warm, encouraging, patient and passionate about Italian — but you ARE a teacher, not just a friend. Your job is to help "+name+" practice Italian between their lessons with Andrei. Student level: "+LN(level)+" ("+level+"). "+(studentGoal?"Learning goal: "+studentGoal+". Keep this in mind when choosing topics and vocabulary. ":"")+np+" "+vp+" "+mp+" TEACHING APPROACH: Always base the conversation on the lesson vocabulary and topic set by Andrei — this is the priority. React to what the student actually said and build on the conversation — never repeat a question you already asked. Vary your encouragement — sometimes just move the conversation forward naturally without praising. When a student does well, be genuinely warm but not over the top. CORRECTIONS: Correct max one mistake per message. Do it briefly and in English if it helps clarity — for example: 'Just a small note — in Italian we say [it]sono andato[/it] not [it]ho andato[/it] because andare uses essere.' Then move on. Let minor errors slide if the meaning is clear. Never list or number corrections. GRAMMAR EXPLANATIONS: When explaining a grammar rule, keep it short, clear and in English. One rule at a time. LANGUAGE: "+(level==="A1"?"Speak mostly in English. Introduce only 1-2 Italian words or phrases per message, always translated.":level==="A2"?"Mix English and Italian. Keep Italian phrases short and always translate them in brackets.":level==="B1"?"Speak mostly Italian. Use English only for grammar explanations.":"Speak entirely in Italian.")+" STRICT FORMAT RULES — NEVER BREAK: 1) NO markdown ever. No **, no *, no #, no bullet points, no numbered lists. 2) Wrap ALL Italian words or phrases in [it]...[/it] tags. 3) Keep responses SHORT — A1=1-2 sentences. A2=2-3 sentences. B1/B2=3-4 sentences. C1/C2=4-5 sentences. 4) Always end with one question that follows naturally from the lesson topic and conversation. 5) Never correct English loanwords used in Italian (drink, cocktail, computer, smartphone, sport, bar, ok, wifi, stress). Never ask for their name.";
 const reply=await callClaude(hist,sys);
 if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);setTyping(false);return;}
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
