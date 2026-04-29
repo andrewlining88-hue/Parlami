@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parlami Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf9f7;
+    --navy: #1a1a2e;
+    --red: #C8102E;
+    --green: #16a34a;
+    --gray: #6b7280;
+    --border: #e5e7eb;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .screen { display: none; width: 100%; max-width: 480px; }
+  .screen.active { display: flex; flex-direction: column; gap: 20px; }
+
+  /* LOGO */
+  .logo-row { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  .logo-row h1 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .subtitle { text-align: center; color: var(--gray); font-size: 13px; }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .card-sub { font-size: 13px; color: var(--gray); line-height: 1.5; }
+
+  /* LEVEL BADGE */
+  .level-pill {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: var(--navy);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%;
+    padding: 13px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+  }
+  .btn-secondary:hover { border-color: var(--navy); }
+
+  /* SELECT */
+  select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: var(--navy); }
+  label { font-size: 12px; font-weight: 600; color: var(--gray); letter-spacing: 0.3px; margin-bottom: 6px; display: block; }
+
+  /* LOADING */
+  .loading-wrap { text-align: center; padding: 40px 0; }
+  .loading-wrap p { font-size: 13px; color: var(--gray); margin-top: 16px; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PROGRESS BAR */
+  .progress-track { width: 100%; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--navy); border-radius: 4px; transition: width 0.4s ease; }
+
+  /* QUIZ HEADER */
+  .quiz-meta { display: flex; align-items: center; justify-content: space-between; }
+  .q-counter { font-size: 12px; font-weight: 600; color: var(--gray); }
+
+  /* CATEGORY BADGE */
+  .cat-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px;
+    letter-spacing: 0.3px;
+  }
+  .cat-badge.language { background: #eff6ff; color: #2563eb; }
+  .cat-badge.culture { background: #fef2f2; color: var(--red); }
+
+  /* TIMER */
+  .timer-row { display: flex; align-items: center; gap: 10px; }
+  .timer-text { font-size: 13px; font-weight: 700; min-width: 24px; text-align: right; }
+  .timer-track { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .timer-fill { height: 100%; background: var(--navy); border-radius: 4px; transition: width 1s linear, background 0.3s; }
+
+  /* QUESTION */
+  .q-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 16px 0;
+  }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--navy); background: #f8fafc; }
+  .option-btn:disabled { cursor: not-allowed; }
+  .option-btn.correct { border-color: #86efac; background: #f0fdf4; color: var(--green); font-weight: 600; }
+  .option-btn.wrong { border-color: #fca5a5; background: #fef2f2; color: var(--red); }
+  .option-btn.dim { opacity: 0.35; }
+
+  /* EXPLANATION */
+  .explanation {
+    display: none;
+    font-size: 12px;
+    color: #4b5563;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  /* RESULT */
+  .result-hero { text-align: center; padding: 16px 0 8px; }
+  .result-stars { font-size: 28px; letter-spacing: 4px; margin-bottom: 8px; }
+  .result-score { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; line-height: 1; color: var(--navy); }
+  .result-score span { font-size: 22px; color: var(--gray); }
+  .result-msg { font-size: 14px; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+
+  /* BREAKDOWN */
+  .breakdown { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .bd-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1.4; }
+  .bd-item.correct { background: #f0fdf4; color: #166534; }
+  .bd-item.wrong { background: #fef2f2; color: #991b1b; }
+  .bd-icon { flex-shrink: 0; font-weight: 700; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); }
+
+  /* FLAG DECORATION */
+  .flag-strip { display: flex; height: 3px; border-radius: 2px; overflow: hidden; }
+  .flag-strip div { flex: 1; }
+
+  /* GUEST NOTICE */
+  .guest-notice {
+    font-size: 12px; color: var(--gray); text-align: center; padding: 10px;
+    background: #f9fafb; border-radius: 10px; line-height: 1.5;
+  }
+  .guest-notice a { color: var(--navy); font-weight: 600; }
+
+  /* TIMED OUT */
+  .timeout-msg { text-align: center; font-size: 12px; color: var(--red); font-weight: 600; padding: 8px; }
+</style>
+</head>
+<body>
+
+<!-- WELCOME SCREEN -->
+<div id="screen-welcome" class="screen">
+  <div class="logo-row">
+    <svg width="36" height="36" viewBox="0 0 80 80" fill="none">
+      <rect width="80" height="80" rx="20" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+      <rect x="4" y="4" width="21" height="72" rx="6" fill="#009246"/>
+      <rect x="25" y="4" width="30" height="72" fill="white"/>
+      <rect x="55" y="4" width="21" height="72" rx="6" fill="#CE2B37"/>
+      <rect x="14" y="18" width="52" height="44" rx="10" fill="white" fill-opacity="0.97"/>
+      <text x="40" y="51" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="32" fill="#1a1a2e">P</text>
+    </svg>
+    <h1>Parlami Quiz</h1>
+  </div>
+  <p class="subtitle">Test your Italian — language & culture</p>
+
+  <!-- Logged in section -->
+  <div id="logged-in-section" class="card" style="display:none">
+    <div style="margin-bottom:12px">
+      <span id="level-pill" class="level-pill" style="background:#e0e7ff;color:#3730a3">A1</span>
+    </div>
+    <p class="card-title">Ciao, <span id="player-name-display">there</span>! 👋</p>
+    <p class="card-sub" style="margin-top:4px">Ready for a <strong id="level-display">A1</strong> level quiz? 10 questions mixing Italian language and culture — let's see what you know!</p>
+  </div>
+
+  <!-- Guest section -->
+  <div id="guest-section" class="card" style="display:none">
+    <p class="card-title">Benvenuto! 🇮🇹</p>
+    <p class="card-sub" style="margin-bottom:16px">Pick your level to get started.</p>
+    <label for="guest-level">Your Italian Level</label>
+    <select id="guest-level">
+      <option value="A1">A1 — Beginner</option>
+      <option value="A2">A2 — Elementary</option>
+      <option value="B1" selected>B1 — Intermediate</option>
+      <option value="B2">B2 — Upper Intermediate</option>
+      <option value="C1">C1 — Advanced</option>
+      <option value="C2">C2 — Mastery</option>
+    </select>
+    <div style="margin-top:12px">
+      <div class="guest-notice">Log in to <a href="/app">Parlami</a> to have your level auto-detected and track your progress.</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startQuiz()">Start Quiz →</button>
+  <a href="/app" class="btn-secondary">← Back to Parlami</a>
+</div>
+
+<!-- LOADING SCREEN -->
+<div id="screen-loading" class="screen">
+  <div class="logo-row">
+    <svg width="36" height="36" viewBox="0 0 80 80" fill="none">
+      <rect width="80" height="80" rx="20" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+      <rect x="4" y="4" width="21" height="72" rx="6" fill="#009246"/>
+      <rect x="25" y="4" width="30" height="72" fill="white"/>
+      <rect x="55" y="4" width="21" height="72" rx="6" fill="#CE2B37"/>
+      <rect x="14" y="18" width="52" height="44" rx="10" fill="white" fill-opacity="0.97"/>
+      <text x="40" y="51" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="32" fill="#1a1a2e">P</text>
+    </svg>
+    <h1>Parlami Quiz</h1>
+  </div>
+  <div class="card loading-wrap">
+    <div class="spinner"></div>
+    <p>Dante is preparing your quiz…</p>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="screen-quiz" class="screen">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="quiz-meta">
+      <span class="q-counter" id="q-counter">Question 1 of 10</span>
+    </div>
+    <span id="cat-badge" class="cat-badge language">🗣️ Language</span>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="q-progress" style="width:0%"></div>
+  </div>
+
+  <div class="timer-row">
+    <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+    <span class="timer-text" id="timer-text">15</span>
+  </div>
+
+  <div class="card">
+    <p class="q-text" id="q-text">Loading question…</p>
+    <div class="options" id="q-options"></div>
+    <div class="explanation" id="explanation"></div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="screen-results" class="screen">
+  <div class="logo-row">
+    <svg width="36" height="36" viewBox="0 0 80 80" fill="none">
+      <rect width="80" height="80" rx="20" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+      <rect x="4" y="4" width="21" height="72" rx="6" fill="#009246"/>
+      <rect x="25" y="4" width="30" height="72" fill="white"/>
+      <rect x="55" y="4" width="21" height="72" rx="6" fill="#CE2B37"/>
+      <rect x="14" y="18" width="52" height="44" rx="10" fill="white" fill-opacity="0.97"/>
+      <text x="40" y="51" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="32" fill="#1a1a2e">P</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="result-hero">
+      <div class="result-stars" id="result-stars">⭐⭐⭐</div>
+      <div class="result-score" id="result-score">8<span>/10</span></div>
+      <p class="result-msg" id="result-msg"></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p style="font-size:12px;font-weight:700;color:var(--gray);letter-spacing:0.3px;text-transform:uppercase;margin-bottom:12px;">Question Breakdown</p>
+    <div class="breakdown" id="result-breakdown"></div>
+  </div>
+
+  <button class="btn-primary" onclick="restartQuiz()">Play Again</button>
+  <a href="/app" class="btn-secondary">← Back to Parlami</a>
+</div>
+
+<script>
+let playerName = '';
+let playerLevel = 'A1';
+let playerEmail = '';
+let questions = [];
+let currentQ = 0;
+let score = 0;
+let answers = [];
+let timer = null;
+let timeLeft = 15;
+let isGuest = false;
+let answered = false;
+
+const LEVEL_COLORS = {
+  A1:'#16a34a', A2:'#65a30d', B1:'#ca8a04', B2:'#ea580c', C1:'#dc2626', C2:'#9333ea'
+};
+const LEVEL_NAMES = {
+  A1:'Beginner', A2:'Elementary', B1:'Intermediate', B2:'Upper Intermediate', C1:'Advanced', C2:'Mastery'
+};
+
+function show(id) {
+  ['welcome','loading','quiz','results'].forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  const target = document.getElementById('screen-' + id);
+  target.style.display = 'flex';
+  target.classList.add('active');
+}
+
+async function init() {
+  const email = localStorage.getItem('parlami_email');
+  const name = localStorage.getItem('parlami_name');
+
+  if (email && name) {
+    playerEmail = email;
+    playerName = name;
+    isGuest = false;
+    // Fetch level from Supabase via db API
+    try {
+      const r = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get', data: { email } })
+      });
+      const d = await r.json();
+      if (d.student?.level) playerLevel = d.student.level;
+    } catch {}
+    // Show logged-in welcome
+    document.getElementById('player-name-display').textContent = playerName.split(' ')[0];
+    document.getElementById('level-display').textContent = playerLevel + ' — ' + LEVEL_NAMES[playerLevel];
+    const pill = document.getElementById('level-pill');
+    pill.textContent = playerLevel;
+    pill.style.background = LEVEL_COLORS[playerLevel] + '20';
+    pill.style.color = LEVEL_COLORS[playerLevel];
+    document.getElementById('logged-in-section').style.display = 'block';
+    document.getElementById('guest-section').style.display = 'none';
+  } else {
+    isGuest = true;
+    document.getElementById('logged-in-section').style.display = 'none';
+    document.getElementById('guest-section').style.display = 'block';
+  }
+  show('welcome');
+}
+
+async function startQuiz() {
+  if (isGuest) {
+    playerLevel = document.getElementById('guest-level').value;
+    playerName = 'Player';
+  }
+  show('loading');
+  document.querySelector('#screen-loading .card p').textContent = 'Dante is preparing your quiz…';
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 40000);
+
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        system: 'You are an Italian quiz master. Generate exactly 10 trivia questions for a ' + playerLevel + ' (' + LEVEL_NAMES[playerLevel] + ') Italian learner. Include 5 Italian language questions (vocabulary, grammar, phrases) and 5 Italian culture questions (food, cities, history, art). Return ONLY a valid JSON array, nothing else — no markdown, no backticks, no explanation. Each item must be: {"q":"question","options":["a","b","c","d"],"answer":"exact matching option","category":"language or culture","explanation":"one sentence"}',
+        messages: [{ role: 'user', content: 'Generate 10 quiz questions for level ' + playerLevel }]
+      })
+    });
+    clearTimeout(timeout);
+    const d = await r.json();
+    const text = (d.text || '').replace(/```json|```/g, '').trim();
+    const start = text.indexOf('[');
+    const end = text.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('No JSON array found');
+    const parsed = JSON.parse(text.slice(start, end + 1));
+    if (!Array.isArray(parsed) || parsed.length < 3) throw new Error('Not enough questions');
+    questions = parsed.slice(0, 10);
+    currentQ = 0;
+    score = 0;
+    answers = [];
+    showQuestion();
+    show('quiz');
+  } catch(e) {
+    clearTimeout(timeout);
+    const msg = e.name === 'AbortError' ? 'Request timed out — please try again.' : 'Could not load questions — please try again.';
+    document.querySelector('#screen-loading .card p').textContent = '❌ ' + msg;
+    document.querySelector('#screen-loading .card .spinner').style.display = 'none';
+    setTimeout(() => {
+      document.querySelector('#screen-loading .card .spinner').style.display = 'block';
+      show('welcome');
+    }, 2500);
+  }
+}
+
+function showQuestion() {
+  answered = false;
+  const q = questions[currentQ];
+  const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+
+  document.getElementById('q-counter').textContent = 'Question ' + (currentQ + 1) + ' of ' + questions.length;
+
+  const badge = document.getElementById('cat-badge');
+  const isLang = q.category === 'language';
+  badge.textContent = isLang ? '🗣️ Language' : '🇮🇹 Culture';
+  badge.className = 'cat-badge ' + (isLang ? 'language' : 'culture');
+
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-progress').style.width = (currentQ / questions.length * 100) + '%';
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('explanation').textContent = '';
+
+  const optEl = document.getElementById('q-options');
+  optEl.innerHTML = '';
+  shuffled.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(opt, q.answer, q.explanation, btn, optEl);
+    optEl.appendChild(btn);
+  });
+
+  // Timer
+  clearInterval(timer);
+  timeLeft = 15;
+  updateTimer();
+  timer = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (!answered) {
+        answered = true;
+        // Time's up — show timeout
+        Array.from(optEl.children).forEach(btn => {
+          btn.disabled = true;
+          if (btn.textContent === q.answer) btn.classList.add('correct');
+          else btn.classList.add('dim');
+        });
+        const exp = document.getElementById('explanation');
+        exp.textContent = '⏱ Time\'s up! The correct answer was: ' + q.answer;
+        exp.style.display = 'block';
+        answers.push({ q: q.q, isCorrect: false, answer: q.answer });
+        setTimeout(next, 2200);
+      }
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  document.getElementById('timer-text').textContent = timeLeft;
+  const fill = document.getElementById('timer-fill');
+  fill.style.width = (timeLeft / 15 * 100) + '%';
+  fill.style.background = timeLeft > 5 ? 'var(--navy)' : 'var(--red)';
+}
+
+function selectAnswer(selected, correct, explanation, clickedBtn, optEl) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timer);
+
+  const isCorrect = selected === correct;
+  if (isCorrect) score++;
+  answers.push({ q: questions[currentQ].q, isCorrect, answer: correct });
+
+  Array.from(optEl.children).forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correct) btn.classList.add('correct');
+    else if (btn === clickedBtn) btn.classList.add('wrong');
+    else btn.classList.add('dim');
+  });
+
+  const exp = document.getElementById('explanation');
+  exp.textContent = (isCorrect ? '✓ ' : '✗ ') + (explanation || '');
+  exp.style.display = 'block';
+
+  setTimeout(next, 2000);
+}
+
+function next() {
+  if (currentQ + 1 < questions.length) {
+    currentQ++;
+    showQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  clearInterval(timer);
+  document.getElementById('q-progress').style.width = '100%';
+
+  const pct = score / questions.length;
+  const stars = pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
+  const msgs = {
+    3: 'Perfetto! You aced it!',
+    2: 'Molto bene! Great work!',
+    1: 'Keep practicing — you\'ll get there!'
+  };
+
+  document.getElementById('result-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('result-score').innerHTML = score + '<span>/' + questions.length + '</span>';
+  document.getElementById('result-msg').textContent = (isGuest ? '' : playerName.split(' ')[0] + ', ') + msgs[stars];
+
+  const breakdown = document.getElementById('result-breakdown');
+  breakdown.innerHTML = answers.map(a => `
+    <div class="bd-item ${a.isCorrect ? 'correct' : 'wrong'}">
+      <span class="bd-icon">${a.isCorrect ? '✓' : '✗'}</span>
+      <span>${a.q}</span>
+    </div>
+  `).join('');
+
+  show('results');
+}
+
+function restartQuiz() {
+  show('welcome');
+}
+
+init();
+</script>
+</body>
+</html>
