@@ -851,12 +851,12 @@ categorized?<>{categorized.map((cat,ci)=>{const activeInCat=(cat.words||[]).filt
 <div className={cx.card}><div className="space-y-1">{allWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className={"flex-1 text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.word}</span><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button></div>);})}</div></div>}
 </div>);}
 
-function ExercisesTab({studentLevel,vocabWords,lessonNote,lessonVocab,recurringMistakes=[]}) {
+function ExercisesTab({studentLevel,vocabWords,savedWords=[],lessonNote,lessonVocab,recurringMistakes=[]}) {
   const color = LC(studentLevel);
   const [mode,setMode] = useState("practice"); // "flashcards" | "practice"
 
   // ── FLASHCARD STATE ──
-  const allVocab = (vocabWords||[]).filter(w=>w.word&&w.word.length>2);
+  const allVocab = [...new Map([...(vocabWords||[]),...(savedWords||[])].filter(w=>w.word&&w.word.length>2).map(w=>[w.word,w])).values()];
   const [deck,setDeck] = useState([]);
   const [cardIdx,setCardIdx] = useState(0);
   const [flipped,setFlipped] = useState(false);
@@ -1506,7 +1506,7 @@ return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs f
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} dark={dark}/>}
 {tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} dark={dark}/>}
-{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
+{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
 );
