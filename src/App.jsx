@@ -1110,11 +1110,36 @@ const [level,setLevel]=useState("A1");const [badges,setBadges]=useState([]);cons
 const [streak,setStreak]=useState(0);const [lastDate,setLastDate]=useState(null);const [badgeNotif,setBadgeNotif]=useState(null);
 const [showTest,setShowTest]=useState(false);const [testsPassed,setTestsPassed]=useState([]);const [testFailedAt,setTestFailedAt]=useState({});const [students,setStudents]=useState([]);
 const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [lessonNote,setLessonNote]=useState("");const [lessonVocab,setLessonVocab]=useState("");
+const [vocabBadge,setVocabBadge]=useState(0);const [exerciseBadge,setExerciseBadge]=useState(false);const [progressBadge,setProgressBadge]=useState(false);
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
 const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
 const fileRef=useRef(null),endRef=useRef(null);
+const prevVocabLen=useRef(null);const prevBadgesLen=useRef(null);const prevTipsLen=useRef(null);
+// Exercise badge — once per day
+useEffect(()=>{
+  const last=localStorage.getItem("parlami_exercise_last_visit");
+  const today=new Date().toDateString();
+  if(last!==today) setExerciseBadge(true);
+},[]);
+// Vocab badge — when new words added after initial load
+useEffect(()=>{
+  if(prevVocabLen.current===null){prevVocabLen.current=vocabWords.length;return;}
+  if(vocabWords.length>prevVocabLen.current) setVocabBadge(v=>v+(vocabWords.length-prevVocabLen.current));
+  prevVocabLen.current=vocabWords.length;
+},[vocabWords]);
+// Progress badge — new badge earned or new tip
+useEffect(()=>{
+  if(prevBadgesLen.current===null){prevBadgesLen.current=badges.length;return;}
+  if(badges.length>prevBadgesLen.current) setProgressBadge(true);
+  prevBadgesLen.current=badges.length;
+},[badges]);
+useEffect(()=>{
+  if(prevTipsLen.current===null){prevTipsLen.current=tipLog.length;return;}
+  if(tipLog.length>prevTipsLen.current) setProgressBadge(true);
+  prevTipsLen.current=tipLog.length;
+},[tipLog]);
 const umc=msgs.filter(m=>m.sender==="user").length;
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[level]*100),100);
 const todayStr0=new Date().toISOString().slice(0,10);
@@ -1385,6 +1410,12 @@ if(view==="login") return (
 </div>
 </div>
 );
+const handleTabClick=(t)=>{
+  setTab(t);
+  if(t==="vocab") setVocabBadge(0);
+  if(t==="exercises"){setExerciseBadge(false);localStorage.setItem("parlami_exercise_last_visit",new Date().toDateString());}
+  if(t==="progress") setProgressBadge(false);
+};
 return (
 <div className={"flex flex-col h-screen"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",color:dark?"#faf9f7":"#111827"}}><DarkStyle dark={dark}/>
 {showTest&&<TestModal level={level} onClose={()=>setShowTest(false)} onPass={passTest} onFail={failTest}/>}
@@ -1453,7 +1484,7 @@ return (
 if(t==="chat"){
 const pct=Math.min(todayCount/dailyGoal,1), r=10, circ=2*Math.PI*r, done=todayCount>=dailyGoal;
 return(
-<button key={t} onClick={()=>setTab(t)} className={"flex-1 py-2.5 text-xs font-medium transition-colors flex flex-col items-center space-y-0.5 "+(tab===t?"text-gray-900 border-b-2 border-gray-900":"text-gray-400 hover:text-gray-600")}>
+<button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-2.5 text-xs font-medium transition-colors flex flex-col items-center space-y-0.5 "+(tab===t?"text-gray-900 border-b-2 border-gray-900":"text-gray-400 hover:text-gray-600")}>
 <div className="relative w-6 h-6 cursor-pointer" onClick={e=>{e.stopPropagation();setShowGoalPicker(true);}}>
 <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r={r} fill="none" stroke="#f3f4f6" strokeWidth="2.5"/><circle cx="12" cy="12" r={r} fill="none" stroke={done?"#22c55e":LC(level)} strokeWidth="2.5" strokeDasharray={circ} strokeDashoffset={circ*(1-pct)} strokeLinecap="round" transform="rotate(-90 12 12)"/></svg>
 <span className="absolute inset-0 flex items-center justify-center" style={{fontSize:"7px",fontWeight:700,color:done?"#22c55e":LC(level)}}>{todayCount}</span>
@@ -1462,7 +1493,8 @@ return(
 </button>
 );
 }
-return <button key={t} onClick={()=>setTab(t)} className={"flex-1 py-3 text-xs font-medium transition-colors "+(tab===t?"text-gray-900 border-b-2 border-gray-900":"text-gray-400 hover:text-gray-600")}>{l}</button>;
+const badge = t==="vocab"&&vocabBadge>0 ? <span className="absolute -top-1 -right-2.5 bg-red-500 text-white rounded-full flex items-center justify-center font-bold" style={{fontSize:"8px",minWidth:"14px",height:"14px",padding:"0 3px"}}>{vocabBadge}</span> : (t==="exercises"&&exerciseBadge)||(t==="progress"&&progressBadge) ? <span className="absolute -top-0.5 -right-1.5 w-2 h-2 bg-red-500 rounded-full"></span> : null;
+return <button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-3 text-xs font-medium transition-colors "+(tab===t?"text-gray-900 border-b-2 border-gray-900":"text-gray-400 hover:text-gray-600")}><span className="relative inline-block">{l}{badge}</span></button>;
 })}
 </div>
 {tab==="chat"&&(
