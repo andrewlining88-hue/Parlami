@@ -761,7 +761,7 @@ useEffect(()=>{
   fetch("/api/db",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"list",data:{}})})
     .then(r=>r.json()).then(d=>{
       const students=d.students||[];
-      const sorted=[...students].sort((a,b)=>(b.streak||0)-(a.streak||0));
+      const sorted=[...students].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0));
       const pos=sorted.findIndex(s=>s.email===email)+1;
       setLbPos(pos>0?pos:null);
     }).catch(()=>{});
@@ -804,7 +804,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className={cx.card+" text-center"}>
 <p className="text-2xl mb-2">📋</p>
 <p className="text-xs font-semibold text-gray-500">Dante's Report</p>
-<p className="text-xs text-gray-400 mt-1">Your first report will appear after {25-(totalMsgCount%25)} more messages</p>
+<p className="text-xs text-gray-400 mt-1">{totalMsgCount%25===0&&totalMsgCount>0?"Generating your report…":`Your first report will appear after ${25-(totalMsgCount%25)} more messages`}</p>
 </div>
 )}
 <div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">💡 Tips from Dante</p>{tipLog.length>0&&<span className="text-xs bg-indigo-50 text-indigo-400 px-2 py-0.5 rounded-full">{tipLog.length}</span>}</div>{tipLog.length===0?<p className="text-xs text-gray-300 text-center py-3">Tips will appear here every 5 messages.</p>:<div className="space-y-2">{tipLog.map((t,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#1e1b4b":"#f5f3ff"}}><Star className="w-3 h-3 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/><div><p className="text-xs text-indigo-700 leading-relaxed">{t.text}</p><p className="text-xs text-indigo-300 mt-0.5">{t.date}</p></div></div>)}</div>}</div>
@@ -1189,7 +1189,7 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,studentReport]);
 useEffect(()=>{
 if(view!=="student"||!email)return;
 const interval=setInterval(async()=>{
@@ -1287,7 +1287,7 @@ if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the ser
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
 if(newTotal>0&&newTotal%25===0){
-  const recentMsgs=allMsgs.slice(-25).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
+  const recentMsgs=msgs.slice(-25).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
   callClaude(
     [{role:"user",content:"Student name: "+name+"\nLevel: "+level+"\nRecent conversation:\n"+recentMsgs}],
     "You are Dante, the AI Italian tutor. Write a short warm personal progress report directly to this student in plain text only — no markdown, no asterisks, no bullets. Use exactly these 3 section labels each on its own line followed by a colon, with the content on the next line and a blank line between sections:\n\nWhat's Going Well:\n\nKeep Working On:\n\nThis Week's Challenge:\n\nBe personal, specific and encouraging. Max 80 words total. Speak directly to the student."
