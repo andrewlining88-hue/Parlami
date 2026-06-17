@@ -752,11 +752,37 @@ function ProgressTab({messages,studentLevel,practiceStreak,vocabularyCount,tests
 const umc=messages.filter(m=>m.sender==="user").length,color=LC(studentLevel);
 const today=new Date(),todayStr=today.toISOString().slice(0,10);
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[studentLevel]*100),100);
+const thisMonth=new Date().toISOString().slice(0,7);
+const msgsThisMonth=messages.filter(m=>m.sender==="user"&&(m.date||"").startsWith(thisMonth)).length;
+const [lbPos,setLbPos]=useState(null);
+useEffect(()=>{
+  const email=localStorage.getItem("parlami_email");
+  if(!email)return;
+  fetch("/api/db",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"list",data:{}})})
+    .then(r=>r.json()).then(d=>{
+      const students=d.students||[];
+      const sorted=[...students].sort((a,b)=>(b.streak||0)-(a.streak||0));
+      const pos=sorted.findIndex(s=>s.email===email)+1;
+      setLbPos(pos>0?pos:null);
+    }).catch(()=>{});
+},[]);
 const getData=()=>{const days=chartFilter==="week"?7:chartFilter==="month"?30:null;if(days)return Array.from({length:days},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-(days-1-i));const k=d.toISOString().slice(0,10);return{date:k,count:activityLog.find(x=>x.date===k)?.count||0,label:i===days-1?"Today":days===7?d.toLocaleDateString([],{weekday:"short"}):d.getDate()===1||i===0?d.toLocaleDateString([],{day:"numeric",month:"short"}):""};});if(!activityLog.length)return[];const wm={};activityLog.forEach(({date,count})=>{const d=new Date(date),ws=new Date(d);ws.setDate(d.getDate()-d.getDay());const k=ws.toISOString().slice(0,10);wm[k]=(wm[k]||0)+count;});return Object.entries(wm).sort(([a],[b])=>a.localeCompare(b)).map(([date,count])=>({date,count,label:new Date(date).toLocaleDateString([],{day:"numeric",month:"short"})}));};
 const data=getData(),mx=Math.max(...data.map(d=>d.count),1);
 const tot=data.reduce((s,d)=>s+d.count,0),ad=data.filter(d=>d.count>0).length,bd=data.reduce((b,d)=>d.count>b.count?d:b,{count:0});
 const hm=Array.from({length:28},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-(27-i));const k=d.toISOString().slice(0,10);return{k,count:activityLog.find(x=>x.date===k)?.count||0};});
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+<div className="rounded-2xl p-4" style={{background:dark?"#1f2937":"white",border:"1px solid",borderColor:dark?"#374151":"#f0f0f0"}}>
+<p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Your Progress</p>
+<div className="grid grid-cols-2 gap-3">
+{[["🔥",practiceStreak,"Day streak"],["📚",vocabularyCount,"Words learned"],["💬",msgsThisMonth,"Messages this month"],["🏆",lbPos??"—","Leaderboard rank"]].map(([icon,val,label])=>(
+<div key={label} className="rounded-xl p-3 text-center" style={{background:dark?"#111827":"#faf9f7"}}>
+<p className="text-xl mb-1">{icon}</p>
+<p className="text-xl font-bold" style={{color:"#1a1a2e"}}>{val}</p>
+<p className="text-xs text-gray-400 mt-0.5">{label}</p>
+</div>
+))}
+</div>
+</div>
 <div className="rounded-2xl p-5 text-white" style={{background:"#1a1a2e"}}><div className="flex justify-between items-start mb-4"><div><p className="text-xs opacity-50 mb-1">Current level</p><p className="text-4xl font-bold">{studentLevel}</p><p className="text-xs opacity-50 mt-1">{LN(studentLevel)}</p></div><div className="text-right"><p className="text-xs opacity-50 mb-1">Progress</p><p className="text-2xl font-bold">{lp}%</p><p className="text-xs opacity-50 mt-1">{Math.max(0,LEVEL_REQ[studentLevel]-umc)} msgs left</p></div></div><div className="w-full rounded-full h-1" style={{background:"rgba(255,255,255,0.15)"}}><div className="h-1 rounded-full" style={{width:lp+"%",background:color}}/></div></div>
 <div className={cx.card+" space-y-4"}><div className={cx.row}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">📊 Activity</p><div className="flex rounded-xl overflow-hidden border border-gray-100">{[["week","Week"],["month","Month"],["all","All"]].map(([v,l])=>(<button key={v} onClick={()=>setChartFilter(v)} className="px-3 py-1.5 text-xs font-medium" style={{background:chartFilter===v?color:"transparent",color:chartFilter===v?"white":"#9ca3af"}}>{l}</button>))}</div></div>
 <div className="grid grid-cols-3 gap-2">{[[tot,chartFilter==="week"?"This week":chartFilter==="month"?"This month":"All time","💬"],[ad,"Active days","📅"],[bd.count,"Best day","🏆"]].map(([val,label,icon])=>(<div key={label} className="rounded-xl p-2.5 text-center" style={{background:dark?"#374151":"#faf9f7"}}><p>{icon}</p><p className="text-lg font-bold">{val}</p><p className={cx.xs4}>{label}</p></div>))}</div>
