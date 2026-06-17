@@ -748,7 +748,7 @@ setHomeworkCopied(true);setTimeout(()=>setHomeworkCopied(false),2500);
 </div>
 );
 }
-function ProgressTab({messages,studentLevel,practiceStreak,vocabularyCount,testsPassed,unlockedBadges,chartFilter,setChartFilter,activityLog,onShowTest,recurringMistakes,tipLog,testFailedAt,totalMsgCount,studentReport,dark=false}) {
+function ProgressTab({messages,studentLevel,practiceStreak,vocabularyCount,testsPassed,unlockedBadges,chartFilter,setChartFilter,activityLog,onShowTest,recurringMistakes,tipLog,testFailedAt,totalMsgCount,studentReport,onGenReport,dark=false}) {
 const umc=messages.filter(m=>m.sender==="user").length,color=LC(studentLevel);
 const today=new Date(),todayStr=today.toISOString().slice(0,10);
 const lp=Math.min(Math.floor(umc/LEVEL_REQ[studentLevel]*100),100);
@@ -798,13 +798,14 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <p className="text-xs text-gray-400">{studentReport.date}</p>
 </div>
 <FormattedParagraphs text={studentReport.text} dark={dark} accentColor="#6366f1"/>
-<p className="text-xs text-gray-300 mt-3 text-center">Generated after {studentReport.msgCount} messages · Updates every 25 messages</p>
+<button onClick={onGenReport} className="mt-3 w-full py-2 rounded-xl text-xs font-semibold text-indigo-400 border border-indigo-100 hover:bg-indigo-50 transition-colors">🔄 Refresh Report</button>
 </div>
 ):(
 <div className={cx.card+" text-center"}>
 <p className="text-2xl mb-2">📋</p>
-<p className="text-xs font-semibold text-gray-500">Dante's Report</p>
-<p className="text-xs text-gray-400 mt-1">{totalMsgCount%25===0&&totalMsgCount>0?"Generating your report…":`Your first report will appear after ${25-(totalMsgCount%25)} more messages`}</p>
+<p className="text-xs font-semibold text-gray-500 mb-1">Dante's Report</p>
+<p className="text-xs text-gray-400 mb-3">Get a personal progress report from Dante based on your recent conversations.</p>
+<button onClick={onGenReport} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white" style={{background:"#6366f1"}}>Get My Report from Dante</button>
 </div>
 )}
 <div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">💡 Tips from Dante</p>{tipLog.length>0&&<span className="text-xs bg-indigo-50 text-indigo-400 px-2 py-0.5 rounded-full">{tipLog.length}</span>}</div>{tipLog.length===0?<p className="text-xs text-gray-300 text-center py-3">Tips will appear here every 5 messages.</p>:<div className="space-y-2">{tipLog.map((t,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#1e1b4b":"#f5f3ff"}}><Star className="w-3 h-3 mt-0.5 flex-shrink-0" style={{color:"#6366f1"}}/><div><p className="text-xs text-indigo-700 leading-relaxed">{t.text}</p><p className="text-xs text-indigo-300 mt-0.5">{t.date}</p></div></div>)}</div>}</div>
@@ -1286,16 +1287,6 @@ const reply=await callClaude(hist,sys);
 if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);setTyping(false);return;}
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
-if(newTotal>0&&newTotal%25===0){
-  const recentMsgs=msgs.slice(-25).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
-  callClaude(
-    [{role:"user",content:"Student name: "+name+"\nLevel: "+level+"\nRecent conversation:\n"+recentMsgs}],
-    "You are Dante, the AI Italian tutor. Write a short warm personal progress report directly to this student in plain text only — no markdown, no asterisks, no bullets. Use exactly these 3 section labels each on its own line followed by a colon, with the content on the next line and a blank line between sections:\n\nWhat's Going Well:\n\nKeep Working On:\n\nThis Week's Challenge:\n\nBe personal, specific and encouraging. Max 80 words total. Speak directly to the student."
-  ).then(text=>{
-    const report={text,date:new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"}),msgCount:newTotal};
-    setStudentReport(report);
-  }).catch(()=>{});
-}
 if(newTotal%10===0){const re=msgs.slice(-20).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");try{const ex=await callClaude([{role:"user",content:"Previous mistakes tracked: "+JSON.stringify(recurringMistakes)+"\n\nRecent conversation:\n"+re}],"Italian teacher. Analyse the recent conversation carefully. Return a JSON object with two keys: {\"add\": [new recurring mistakes you notice, max 2], \"remove\": [mistakes from the previous list that the student is now getting right consistently]}. Return ONLY the JSON object. IMPORTANT: Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are normal and accepted in Italian. If nothing to add or remove, use empty arrays.");const parsed=JSON.parse(ex.replace(/^[^{]*\{/,"{").replace(/\}[^}]*$/,"}").trim());setRecurringMistakes(p=>{let updated=p.filter(m=>!(parsed.remove||[]).some(r=>r.toLowerCase().includes(m.toLowerCase().slice(0,15))||m.toLowerCase().includes(r.toLowerCase().slice(0,15))));updated=[...new Set([...updated,...(parsed.add||[])])].slice(0,5);return updated;});}catch{}}
 if(newTotal%5===0){
   const recentExchange=msgs.slice(-10).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
@@ -1461,6 +1452,18 @@ if(view==="login") return (
 </div>
 </div>
 );
+const genStudentReport=async()=>{
+  const recentMsgs=msgs.map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
+  try{
+    const text=await callClaude(
+      [{role:"user",content:"Student name: "+name+"\nLevel: "+level+"\nTotal messages: "+totalMsgCount+"\nRecent conversation:\n"+recentMsgs}],
+      "You are Dante, the AI Italian tutor. Write a short warm personal progress report directly to this student in plain text only — no markdown, no asterisks, no bullets. Use exactly these 3 section labels each on its own line followed by a colon, with the content on the next line and a blank line between sections:\n\nWhat's Going Well:\n\nKeep Working On:\n\nThis Week's Challenge:\n\nBe personal, specific and encouraging. Max 80 words total. Speak directly to the student."
+    );
+    const report={text,date:new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"}),msgCount:totalMsgCount};
+    setStudentReport(report);
+    const d=await load("student:"+email);if(d){d.studentReport=report;await store("student:"+email,d);}
+  }catch(e){console.error("report error",e);}
+};
 const handleTabClick=(t)=>{
   setTab(t);
   if(t==="vocab") setVocabBadge(0);
@@ -1587,7 +1590,7 @@ return <button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-3 t
 </div>
 </div>
 )}
-{tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} studentReport={studentReport} dark={dark}/>}
+{tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} studentReport={studentReport} onGenReport={genStudentReport} dark={dark}/>}
 {tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} dark={dark}/>}
 {tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
