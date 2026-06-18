@@ -1335,31 +1335,29 @@ const sys="You are Dante, the AI Italian tutor created by Andrei, a professional
 const reply=await callClaude(hist,sys);
 if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);setTyping(false);return;}
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
-if(reply.includes("[it]")){
-  const SKIP=new Set("per dal del dei gli con tra fra anche come dove quando cosa chi poi più così già mai sempre ancora ogni altro altra altri altre stesso stessa questi quelle quello quella questo quella quel una uno degli delle questo quella degli delle nelle negli sulla sulle sullo sugli essere avere fare dire dare stare andare venire sapere vedere sentire questa quello".split(" "));
-  const danteWords=(reply.match(/\[it\](.*?)\[\/it\]/g)||[])
-    .map(t=>t.replace(/\[it\]|\[\/it\]/g,"").replace(/[!?,.:;"""'''«»\-()]/g,"").toLowerCase().trim())
-    .filter(w=>w.length>=4&&!SKIP.has(w));
-  const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)]);
-  const newWords=[...new Set(danteWords.filter(w=>!knownWords.has(w)))].sort((a,b)=>b.length-a.length).slice(0,2);
-  if(newWords.length>0){
-    const today=new Date().toISOString().slice(0,10);
-    let transMap={};
-    try{
-      const r=await callClaude(
-        [{role:"user",content:"Translate these Italian words to English: "+newWords.join(", ")}],
-        "Return ONLY a valid JSON object mapping each Italian word to its English translation. Example: {\"parlare\":\"to speak\",\"casa\":\"house\"}. No extra text."
-      );
-      const s=r.indexOf("{");const e=r.lastIndexOf("}");
-      if(s!==-1&&e!==-1)transMap=JSON.parse(r.slice(s,e+1));
-    }catch{}
-    setTodaysWords(p=>{
-      const updated=[...p];
-      for(const w of newWords){if(!updated.find(t=>t.word===w))updated.push({word:w,date:today,starred:false,mastered:false,en:transMap[w]||""});}
-      return updated;
-    });
-    setVocabBadge(v=>v+newWords.length);
-  }
+if(reply.length>20){
+  try{
+    const cleanReply=reply.replace(/\[it\]|\[\/it\]/g,"");
+    const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)]);
+    const r=await callClaude(
+      [{role:"user",content:"Italian text: "+cleanReply+"\n\nKnown words to exclude: "+[...knownWords].join(", ")}],
+      "You are an Italian teacher. From this Italian text, pick the 1 or 2 most useful NEW vocabulary words for a language learner to know. Choose meaningful content words — nouns, verbs, adjectives — not common function words like per, con, tra, che, non. Return ONLY a valid JSON array. Format: [{\"it\":\"parola\",\"en\":\"translation\"}]. Maximum 2 words. No other text."
+    );
+    const start=r.indexOf("[");const end=r.lastIndexOf("]");
+    if(start!==-1&&end!==-1){
+      const words=JSON.parse(r.slice(start,end+1));
+      const today=new Date().toISOString().slice(0,10);
+      const newWords=words.filter(w=>w.it&&w.it.length>=3&&!knownWords.has(w.it.toLowerCase()));
+      if(newWords.length>0){
+        setTodaysWords(p=>{
+          const updated=[...p];
+          for(const w of newWords){if(!updated.find(t=>t.word===w.it.toLowerCase()))updated.push({word:w.it.toLowerCase(),date:today,starred:false,mastered:false,en:w.en||""});}
+          return updated;
+        });
+        setVocabBadge(v=>v+newWords.length);
+      }
+    }
+  }catch(e){console.error("vocab extract error",e);}
 }
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
 if(newTotal%10===0){const re=msgs.slice(-20).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");try{const ex=await callClaude([{role:"user",content:"Previous mistakes tracked: "+JSON.stringify(recurringMistakes)+"\n\nRecent conversation:\n"+re}],"Italian teacher. Analyse the recent conversation carefully. Return a JSON object with two keys: {\"add\": [new recurring mistakes you notice, max 2], \"remove\": [mistakes from the previous list that the student is now getting right consistently]}. Return ONLY the JSON object. IMPORTANT: Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are normal and accepted in Italian. If nothing to add or remove, use empty arrays.");const parsed=JSON.parse(ex.replace(/^[^{]*\{/,"{").replace(/\}[^}]*$/,"}").trim());setRecurringMistakes(p=>{let updated=p.filter(m=>!(parsed.remove||[]).some(r=>r.toLowerCase().includes(m.toLowerCase().slice(0,15))||m.toLowerCase().includes(r.toLowerCase().slice(0,15))));updated=[...new Set([...updated,...(parsed.add||[])])].slice(0,5);return updated;});}catch{}}
