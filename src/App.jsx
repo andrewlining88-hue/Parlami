@@ -886,12 +886,13 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 <div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
 {todaysWords.length>0&&(
 <div className={cx.card} style={{borderColor:"#fde68a",borderWidth:"1.5px"}}>
-<p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#d97706"}}>⭐ Today's Words ({todaysWords.length})</p>
-<p className="text-xs text-gray-400 mb-3">New words from Dante today — they'll move to your main vocab tomorrow.</p>
+<p className="text-sm font-bold uppercase tracking-wide mb-1" style={{color:"#d97706"}}>⭐ Today's Words ({todaysWords.length})</p>
+<p className="text-xs text-gray-400 mb-3">New words from Dante today — they'll move to your vocab tomorrow.</p>
 <div className="space-y-1">{todaysWords.map((w,i)=>(
 <div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
 <div className="flex-1 min-w-0">
 <span className={"text-sm font-medium "+(w.mastered?"line-through text-gray-300":"")}>{w.word}</span>
+{w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}</span>}
 </div>
 <button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80">🔊</button>
 <button onClick={()=>setTodaysWords(p=>p.map((t,j)=>j===i?{...t,starred:!t.starred}:t))} className="text-base">{w.starred?"⭐":"☆"}</button>
@@ -1271,8 +1272,7 @@ let finalSaved=d.savedWords||[];
 if(oldWords.length>0){
   const merged=[...finalSaved];
   for(const w of oldWords){if(!merged.find(s=>s.word===w.word))merged.push({word:w.word,starred:w.starred||false,mastered:w.mastered||false});}
-  finalSaved=merged;
-  d.savedWords=merged;d.todaysWords=todayOnly;
+  finalSaved=merged;d.savedWords=merged;d.todaysWords=todayOnly;
   await store("student:"+e,d);
 }
 setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(finalSaved);setTodaysWords(todayOnly);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});
@@ -1336,12 +1336,28 @@ const reply=await callClaude(hist,sys);
 if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);setTyping(false);return;}
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 if(reply.includes("[it]")){
-  const danteWords=(reply.match(/\[it\](.*?)\[\/it\]/g)||[]).map(t=>t.replace(/\[it\]|\[\/it\]/g,"").toLowerCase().trim().split(/\s+/)).flat();
+  const SKIP=new Set("per dal del dei gli con tra fra anche come dove quando cosa chi poi più così già mai sempre ancora ogni altro altra altri altre stesso stessa questi quelle quello quella questo quella quel una uno degli delle questo quella degli delle nelle negli sulla sulle sullo sugli essere avere fare dire dare stare andare venire sapere vedere sentire questa quello".split(" "));
+  const danteWords=(reply.match(/\[it\](.*?)\[\/it\]/g)||[])
+    .map(t=>t.replace(/\[it\]|\[\/it\]/g,"").replace(/[!?,.:;"""'''«»\-()]/g,"").toLowerCase().trim())
+    .filter(w=>w.length>=4&&!SKIP.has(w));
   const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)]);
-  const newWords=danteWords.filter(w=>w.length>2&&!knownWords.has(w));
+  const newWords=[...new Set(danteWords.filter(w=>!knownWords.has(w)))].sort((a,b)=>b.length-a.length).slice(0,2);
   if(newWords.length>0){
     const today=new Date().toISOString().slice(0,10);
-    setTodaysWords(p=>{const updated=[...p];for(const w of newWords){if(!updated.find(t=>t.word===w))updated.push({word:w,date:today,starred:false,mastered:false});}return updated;});
+    let transMap={};
+    try{
+      const r=await callClaude(
+        [{role:"user",content:"Translate these Italian words to English: "+newWords.join(", ")}],
+        "Return ONLY a valid JSON object mapping each Italian word to its English translation. Example: {\"parlare\":\"to speak\",\"casa\":\"house\"}. No extra text."
+      );
+      const s=r.indexOf("{");const e=r.lastIndexOf("}");
+      if(s!==-1&&e!==-1)transMap=JSON.parse(r.slice(s,e+1));
+    }catch{}
+    setTodaysWords(p=>{
+      const updated=[...p];
+      for(const w of newWords){if(!updated.find(t=>t.word===w))updated.push({word:w,date:today,starred:false,mastered:false,en:transMap[w]||""});}
+      return updated;
+    });
     setVocabBadge(v=>v+newWords.length);
   }
 }
