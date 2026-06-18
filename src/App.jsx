@@ -1307,6 +1307,12 @@ const sys="You are Dante, the AI Italian tutor created by Andrei, a professional
 const reply=await callClaude(hist,sys);
 if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the server is a little busy right now — please try sending your message again in a moment! 🙏",sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);setTyping(false);return;}
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
+if(reply.includes("[it]")){
+  const danteWords=(reply.match(/\[it\](.*?)\[\/it\]/g)||[]).map(t=>t.replace(/\[it\]|\[\/it\]/g,"").toLowerCase().trim().split(/\s+/)).flat();
+  const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word)]);
+  const hasNew=danteWords.some(w=>w.length>2&&!knownWords.has(w));
+  if(hasNew)setVocabBadge(v=>v+1);
+}
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
 if(newTotal%10===0){const re=msgs.slice(-20).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");try{const ex=await callClaude([{role:"user",content:"Previous mistakes tracked: "+JSON.stringify(recurringMistakes)+"\n\nRecent conversation:\n"+re}],"Italian teacher. Analyse the recent conversation carefully. Return a JSON object with two keys: {\"add\": [new recurring mistakes you notice, max 2], \"remove\": [mistakes from the previous list that the student is now getting right consistently]}. Return ONLY the JSON object. IMPORTANT: Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are normal and accepted in Italian. If nothing to add or remove, use empty arrays.");const parsed=JSON.parse(ex.replace(/^[^{]*\{/,"{").replace(/\}[^}]*$/,"}").trim());setRecurringMistakes(p=>{let updated=p.filter(m=>!(parsed.remove||[]).some(r=>r.toLowerCase().includes(m.toLowerCase().slice(0,15))||m.toLowerCase().includes(r.toLowerCase().slice(0,15))));updated=[...new Set([...updated,...(parsed.add||[])])].slice(0,5);return updated;});}catch{}}
 if(newTotal%5===0){
