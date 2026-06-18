@@ -1226,8 +1226,12 @@ const todayStr0=new Date().toISOString().slice(0,10);
 const todayCount=msgs.filter(m=>m.sender==="user"&&m.date===todayStr0).length;
 const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("save",{email,...v});}catch(e){console.error("store error",e);}};
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
-useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
-useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
+const initialScrollDone=useRef(false);
+useEffect(()=>{
+  if(msgs.length>0&&!initialScrollDone.current){initialScrollDone.current=true;setTimeout(()=>endRef.current?.scrollIntoView({behavior:"instant"}),100);}
+  else if(initialScrollDone.current){endRef.current?.scrollIntoView({behavior:"smooth"});}
+},[msgs]);
+useEffect(()=>{if(tab==="chat")setTimeout(()=>endRef.current?.scrollIntoView({behavior:"instant"}),50);},[tab]);
 useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,todaysWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,todaysWords,studentReport,categorizedVocab]);
 useEffect(()=>{
 if(view!=="student"||!email)return;
