@@ -1229,7 +1229,6 @@ useEffect(()=>{const wm={};msgs.filter(m=>m.sender==="user").forEach((m,i)=>{con
 useEffect(()=>{
 const IT_WORDS=new Set("il la lo i gli le un una dello della degli delle nel nella nei nelle sul sulla sui sulle dal dalla dai dalle col colla coi colle al alla ai alle sia che non sono hai ha abbiamo avete hanno essere fare dire dare stare andare venire sapere vedere sentire parlare capire mangiare bere dormire leggere scrivere studiare lavorare giocare trovare pensare volere potere dovere credere avere questo questa questi queste quello quella quelli quelle mio mia miei mie tuo tua tuoi tue suo sua suoi sue nostro nostra nostri nostre vostro vostra vostri vostre loro lui lei noi voi loro chi cosa come quando dove perché quanto quale bello bella buono buona grande piccolo piccola nuovo nuova vecchio vecchia primo prima secondo seconda molto pochi tanti tutti grazie prego scusi ciao arrivederci buongiorno buonasera buonanotte benvenuto benvenuta subito ancora sempre mai spesso oggi ieri domani adesso ora dopo prima qui lì casa lavoro scuola città paese vita giorno notte settimana mese anno tempo acqua pane vino caffè carne pesce frutta verdura pasta riso nome città strada numero telefono amico amica ragazzo ragazza uomo donna bambino bambina signore signora dottore professore studente studentessa italiano italiana italiano inglese francese spagnolo tedesco chiamo chiami chiama chiamiamo chiamate chiamano parlo parli parla parliamo parlate parlano vado vai va andiamo andate vanno vengo vieni viene veniamo venite vengono faccio fai fatto facciamo fate fanno so sai sa sappiamo sapete sanno voglio vuoi vuole vogliamo volete vogliono posso puoi può possiamo potete possono devo devi deve dobbiamo dovete devono".split(" "));
 const wm={};
-// Extract from user messages
 msgs.filter(m=>m.sender==="user").forEach(m=>{
   (m.text.toLowerCase().match(/[a-zàèéìòùü]{3,}/g)||[]).forEach(w=>{
     const hasAccent=/[àèéìòùü]/.test(w);
@@ -1239,15 +1238,6 @@ msgs.filter(m=>m.sender==="user").forEach(m=>{
       if(!wm[w])wm[w]={word:w,count:0};
       wm[w].count++;
     }
-  });
-});
-// Also extract Italian words from Dante's [it] tagged words
-msgs.filter(m=>m.sender==="ai").forEach(m=>{
-  const tagged=m.text.match(/\[it\](.*?)\[\/it\]/g)||[];
-  tagged.forEach(tag=>{
-    const w=tag.replace(/\[it\]|\[\/it\]/g,"").toLowerCase().trim();
-    if(w.length>=3&&!wm[w]){wm[w]={word:w,count:1};}
-    else if(w.length>=3){wm[w].count++;}
   });
 });
 const s=Object.values(wm).sort((a,b)=>b.count-a.count);
