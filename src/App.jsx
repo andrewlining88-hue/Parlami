@@ -812,71 +812,68 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">🔁 Dante is watching</p>{recurringMistakes.length>0&&<span className="text-xs bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full">{recurringMistakes.length}</span>}</div>{recurringMistakes.length===0?<p className="text-xs text-gray-300 text-center py-3">Dante will track recurring mistakes after a few sessions.</p>:<div className="space-y-2">{recurringMistakes.map((m,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#431407":"#fff7ed"}}><span className="text-orange-300 mt-0.5">⚠️</span><p className="text-xs text-orange-700 leading-relaxed">{m}</p></div>)}<p className="text-xs text-gray-300 pt-1">Dante will gently correct these when they come up.</p></div>}</div>
 <div className={cx.card}><div className={cx.row+" mb-3"}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Badges</p><p className="text-xs text-gray-300">{unlockedBadges.length}/{BADGES.length}</p></div><div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=unlockedBadges.includes(b.id);const raw=b.type==="messages"?umc:b.type==="streak"?practiceStreak:b.type==="tests"?testsPassed.length:vocabularyCount;const p=Math.min(raw/b.req*100,100);return(<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100 bg-gray-50")}><div className="flex items-center space-x-2 mb-1.5"><span className={"text-xl "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold truncate "+(u?"text-gray-800":"text-gray-500")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div><p className="text-xs text-gray-400 mb-1.5 leading-tight">{b.desc}</p>{!u&&<><div className="w-full rounded-full h-1" style={{background:"#e5e7eb"}}><div className="h-1 rounded-full" style={{width:p+"%",background:color}}/></div><p className="text-xs text-gray-300 mt-1">{raw.toLocaleString()} / {b.req.toLocaleString()}</p></>}</div>);})}</div></div>
 </div>);}
-function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,dark=false}) {
+function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,categorizedVocab,onSaveCategorized,dark=false}) {
 const color=LC(studentLevel);
 const [newWord,setNewWord]=useState("");
 const [showTranslation,setShowTranslation]=useState(true);
 const [showPhonetic,setShowPhonetic]=useState(false);
-const [categorized,setCategorized]=useState(null);
-const [loadingCat,setLoadingCat]=useState(false);
-const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];const activeWords=allWords.filter(w=>!(savedWords.find(s=>s.word===w.word)?.mastered));
+const [loading,setLoading]=useState(false);
+const [loadingMsg,setLoadingMsg]=useState("");
+
+const allWords=[...new Map([...vocabWords.map(w=>({word:w.word,count:w.count})),...savedWords.map(w=>({word:w.word,count:0}))].map(w=>[w.word,w])).values()];
+const activeWords=allWords.filter(w=>!(savedWords.find(s=>s.word===w.word)?.mastered));
+
 const toggle=(word,key)=>setSavedWords(p=>{const ex=p.find(w=>w.word===word);if(ex)return p.map(w=>w.word===word?{...w,[key]:!w[key],starred:key==="mastered"&&!w.mastered?false:key==="starred"?!w.starred:w.starred}:w);return[...p,{word,starred:key==="starred",mastered:key==="mastered"}];});
 const addWord=()=>{const w=newWord.trim().toLowerCase();if(!w)return;if(!savedWords.find(x=>x.word===w))setSavedWords(p=>[...p,{word:w,starred:false,mastered:false,manual:true}]);setNewWord("");};
 
-const categorize=async()=>{
-  if(activeWords.length===0)return;
-  setLoadingCat(true);
-  try{
-    const wordList=activeWords.map(w=>w.word).join(", ");
-    const r=await callClaude(
-      [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
-      "You are an Italian teacher. Given a list of Italian words, group them into categories and provide English translations. Return ONLY a JSON array. Example format: [{category:'Verbi',words:[{it:'parlare',en:'to speak'}]},{category:'Luoghi',words:[{it:'citta',en:'city'}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category. No extra text, just the JSON array."
-    );
-    const start=r.indexOf("[");const end=r.lastIndexOf("]");
-    if(start===-1||end===-1)throw new Error("no array");
-    const parsed=JSON.parse(r.slice(start,end+1));
-    if(Array.isArray(parsed)&&parsed.length>0)setCategorized(parsed);
-  }catch{setCategorized(null);}
-  setLoadingCat(false);
+const categorizeNew=async()=>{
+  const uncategorized=activeWords.filter(w=>!categorizedVocab[w.word]);
+  if(uncategorized.length===0)return;
+  setLoading(true);
+  const BATCH=20;
+  const batches=[];
+  for(let i=0;i<uncategorized.length;i+=BATCH) batches.push(uncategorized.slice(i,i+BATCH));
+  const updated={...categorizedVocab};
+  for(let b=0;b<batches.length;b++){
+    setLoadingMsg(batches.length>1?"Categorizing words... ("+(b+1)+"/"+batches.length+")":"Categorizing words...");
+    const wordList=batches[b].map(w=>w.word).join(", ");
+    try{
+      const r=await callClaude(
+        [{role:"user",content:"Categorize and translate these Italian words: "+wordList}],
+        "You are an Italian teacher. Given a list of Italian words, group them into categories, provide English translations and phonetic pronunciation for English speakers. Return ONLY a valid JSON array, no other text, no markdown. Format: [{\"category\":\"Verbi\",\"words\":[{\"it\":\"parlare\",\"en\":\"to speak\",\"ph\":\"par-LA-reh\"}]}]. Use categories: Verbi, Luoghi, Persone, Casa e Vita, Viaggio, Cibo, Espressioni, Altro. Every word must appear in exactly one category."
+      );
+      const start=r.indexOf("[");const end=r.lastIndexOf("]");
+      if(start===-1||end===-1)continue;
+      const parsed=JSON.parse(r.slice(start,end+1));
+      if(!Array.isArray(parsed))continue;
+      for(const cat of parsed){
+        for(const w of (cat.words||[])){
+          if(w.it) updated[w.it]={en:w.en||"",ph:w.ph||"",category:cat.category||"Altro"};
+        }
+      }
+    }catch(e){console.error("batch error:",e);}
+  }
+  await onSaveCategorized(updated);
+  setLoading(false);setLoadingMsg("");
 };
 
-useEffect(()=>{if(allWords.length>0&&!categorized&&!loadingCat){categorize();}},[allWords.length]);
 useEffect(()=>{
-  if(!showPhonetic||!categorized)return;
-  const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
-  if(hasPhonetics)return;
-  (async()=>{
-    try{
-      const wordsList=categorized.flatMap(c=>c.words||[]).map(w=>w.it).join(", ");
-      const r=await callClaude(
-        [{role:"user",content:"Phonetic pronunciation for English speakers: "+wordsList}],
-        "Return ONLY a valid JSON object mapping each Italian word to its phonetic pronunciation. Example: {\"parlare\":\"par-LA-reh\",\"casa\":\"KA-za\"}. No extra text."
-      );
-      const s=r.indexOf("{");const e=r.lastIndexOf("}");
-      if(s===-1||e===-1)return;
-      const map=JSON.parse(r.slice(s,e+1));
-      setCategorized(prev=>prev.map(cat=>({...cat,words:(cat.words||[]).map(w=>({...w,ph:map[w.it]||w.ph||""}))})));
-    }catch{}
-  })();
-},[showPhonetic,categorized]);
-useEffect(()=>{
-  if(!showPhonetic||!categorized)return;
-  const hasPhonetics=categorized.some(c=>(c.words||[]).some(w=>w.ph));
-  if(hasPhonetics)return;
-  (async()=>{
-    try{
-      const wordsList=categorized.flatMap(c=>c.words||[]).map(w=>w.it).join(", ");
-      const r=await callClaude(
-        [{role:"user",content:"Phonetic pronunciation for English speakers: "+wordsList}],
-        "Return ONLY a valid JSON object mapping each Italian word to its phonetic. Example: {\"parlare\":\"par-LA-reh\",\"casa\":\"KA-za\"}. No extra text."
-      );
-      const s=r.indexOf("{");const e=r.lastIndexOf("}");
-      if(s===-1||e===-1)return;
-      const map=JSON.parse(r.slice(s,e+1));
-      setCategorized(prev=>prev.map(cat=>({...cat,words:(cat.words||[]).map(w=>({...w,ph:map[w.it]||w.ph||""}))})));
-    }catch{}
-  })();
-},[showPhonetic,categorized]);
+  const uncategorized=activeWords.filter(w=>!categorizedVocab[w.word]);
+  if(uncategorized.length>0&&!loading) categorizeNew();
+},[allWords.length]);
+
+// Build category groups from saved dict
+const catGroups={};
+for(const w of activeWords){
+  const info=categorizedVocab[w.word];
+  const cat=info?.category||"";
+  if(!cat)continue;
+  if(!catGroups[cat])catGroups[cat]=[];
+  catGroups[cat].push({it:w.word,en:info.en||"",ph:info.ph||""});
+}
+const categories=Object.entries(catGroups).map(([category,words])=>({category,words}));
+const masteredWords=allWords.filter(w=>savedWords.find(s=>s.word===w.word)?.mastered);
+const uncategorizedWords=activeWords.filter(w=>!categorizedVocab[w.word]);
 
 return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 <div className={cx.row}>
@@ -887,11 +884,35 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
   </div>
 </div>
 <div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
-{allWords.length===0?<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">Chat in Italian to build your vocabulary!</p></div>:
-loadingCat?<div className={cx.card+" p-6 text-center"}><p className="text-sm text-gray-400">Organizing your vocabulary...</p></div>:
-categorized?<>{categorized.map((cat,ci)=>{const activeInCat=(cat.words||[]).filter(w=>!(savedWords.find(s=>s.word===w.it)?.mastered));if(activeInCat.length===0)return null;return(<div key={ci} className={cx.card}><p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#C8102E"}}>{cat.category}</p><div className="space-y-1">{activeInCat.map((w,wi)=>{const sw=savedWords.find(s=>s.word===w.it)||{};return(<div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><div className="flex-1 min-w-0"><span className="text-sm font-medium">{w.it}</span>{showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{showPhonetic&&w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}</div><button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.it,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.it,"mastered")} className="text-base" title="Mark as mastered">○</button></div>);})}</div></div>);})}{(()=>{const masteredWords=allWords.filter(w=>savedWords.find(s=>s.word===w.word)?.mastered);if(masteredWords.length===0)return null;return(<div className={cx.card}><p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#16a34a"}}>✅ Mastered ({masteredWords.length})</p><div className="space-y-1">{masteredWords.map((w,i)=>{const catWord=categorized.flatMap(c=>c.words||[]).find(cw=>cw.it===w.word);return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><div className="flex-1 min-w-0"><span className="text-sm font-medium text-gray-400 line-through">{w.word}</span>{showTranslation&&catWord?.en&&<span className="text-xs text-gray-300 ml-2">– {catWord.en}</span>}</div><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Unmark">○</button></div>);})}</div></div>);})()}</> :
-<div className={cx.card}><div className="space-y-1">{allWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className={"flex-1 text-sm font-medium "+(sw.mastered?"line-through text-gray-300":"")}>{w.word}</span><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80" title="Listen">🔊</button><button onClick={()=>toggle(w.word,"starred")} className="text-base" title="Star">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base" title="Mastered">{sw.mastered?"✅":"○"}</button></div>);})}</div></div>}
+{allWords.length===0?(<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">Chat in Italian to build your vocabulary!</p></div>):(
+<>
+{loading&&<div className={cx.card+" p-4 text-center"}><p className="text-sm text-gray-400">{loadingMsg||"Categorizing words..."}</p></div>}
+{categories.map((cat,ci)=>{
+  const sw_list=(cat.words||[]).filter(w=>!(savedWords.find(s=>s.word===w.it)?.mastered));
+  if(sw_list.length===0)return null;
+  return(<div key={ci} className={cx.card}>
+    <p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#C8102E"}}>{cat.category}</p>
+    <div className="space-y-1">{sw_list.map((w,wi)=>{const sw=savedWords.find(s=>s.word===w.it)||{};return(<div key={wi} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+      <div className="flex-1 min-w-0"><span className="text-sm font-medium">{w.it}</span>{showTranslation&&w.en&&<span className="text-xs text-gray-400 ml-2">– {w.en}{showPhonetic&&w.ph&&<span className="text-xs text-gray-300 ml-1">({w.ph})</span>}</span>}</div>
+      <button onClick={()=>speakText(w.it)} className="text-xs opacity-40 hover:opacity-80">🔊</button>
+      <button onClick={()=>toggle(w.it,"starred")} className="text-base">{sw.starred?"⭐":"☆"}</button>
+      <button onClick={()=>toggle(w.it,"mastered")} className="text-base">○</button>
+    </div>);})}</div>
+  </div>);
+})}
+{masteredWords.length>0&&(<div className={cx.card}>
+  <p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#16a34a"}}>✅ Mastered ({masteredWords.length})</p>
+  <div className="space-y-1">{masteredWords.map((w,i)=>{const info=categorizedVocab[w.word]||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+    <div className="flex-1 min-w-0"><span className="text-sm font-medium text-gray-400 line-through">{w.word}</span>{showTranslation&&info.en&&<span className="text-xs text-gray-300 ml-2">– {info.en}</span>}</div>
+    <button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80">🔊</button>
+    <button onClick={()=>toggle(w.word,"mastered")} className="text-base">○</button>
+  </div>);})}</div>
+</div>)}
+{!loading&&uncategorizedWords.length>0&&(<div className={cx.card}><p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#9ca3af"}}>Uncategorized</p><div className="space-y-1">{uncategorizedWords.map((w,i)=>{const sw=savedWords.find(s=>s.word===w.word)||{};return(<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0"><span className="flex-1 text-sm font-medium">{w.word}</span><button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80">🔊</button><button onClick={()=>toggle(w.word,"starred")} className="text-base">{sw.starred?"⭐":"☆"}</button><button onClick={()=>toggle(w.word,"mastered")} className="text-base">○</button></div>);})}</div></div>)}
+</>
+)}
 </div>);}
+
 
 function ExercisesTab({studentLevel,vocabWords,savedWords=[],lessonNote,lessonVocab,recurringMistakes=[]}) {
   const color = LC(studentLevel);
@@ -1154,7 +1175,7 @@ const [showTest,setShowTest]=useState(false);const [testsPassed,setTestsPassed]=
 const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [lessonNote,setLessonNote]=useState("");const [lessonVocab,setLessonVocab]=useState("");
 const [vocabBadge,setVocabBadge]=useState(0);const [exerciseBadge,setExerciseBadge]=useState(false);const [progressBadge,setProgressBadge]=useState(false);
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
-const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);const [studentReport,setStudentReport]=useState(null);const [loadingStudentReport,setLoadingStudentReport]=useState(false);
+const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);const [studentReport,setStudentReport]=useState(null);const [loadingStudentReport,setLoadingStudentReport]=useState(false);const [categorizedVocab,setCategorizedVocab]=useState({});
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
 const fileRef=useRef(null),endRef=useRef(null);
@@ -1190,7 +1211,7 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,studentReport]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,studentReport,categorizedVocab]);
 useEffect(()=>{
 if(view!=="student"||!email)return;
 const interval=setInterval(async()=>{
@@ -1226,7 +1247,7 @@ useEffect(()=>{BADGES.forEach(b=>{if(badges.includes(b.id))return;const p=b.type
 const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:true,hasPassword:!!d.passwordHash,name:d.name||""}:{exists:false};};
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
 const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
-setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);
+setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});
 if(!d.emailVerified)return"unverified";
 return"ok";};
 
@@ -1466,6 +1487,10 @@ const genStudentReport=async()=>{
   }catch(e){console.error("report error",e);}
   setLoadingStudentReport(false);
 };
+const saveCategorizedVocab=async(cv)=>{
+  setCategorizedVocab(cv);
+  try{const d=await load("student:"+email);if(d){d.categorizedVocab=cv;await store("student:"+email,d);}}catch(e){console.error("save categorized error",e);}
+};
 const handleTabClick=(t)=>{
   setTab(t);
   if(t==="vocab") setVocabBadge(0);
@@ -1593,7 +1618,7 @@ return <button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-3 t
 </div>
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} studentReport={studentReport} onGenReport={genStudentReport} loadingStudentReport={loadingStudentReport} dark={dark}/>}
-{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} dark={dark}/>}
+{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} categorizedVocab={categorizedVocab} onSaveCategorized={saveCategorizedVocab} dark={dark}/>}
 {tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
