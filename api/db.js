@@ -46,6 +46,9 @@ const toDb = (d) => ({
   progress: d.progress || 0,
   badge_count: d.badgeCount || 0,
   last_monthly_clean: d.lastMonthlyClean || '',
+  todays_words: d.todaysWords || [],
+  student_report: d.studentReport || null,
+  categorized_vocab: d.categorizedVocab || {},
 });
 
 const fromDb = (d) => ({
@@ -76,6 +79,9 @@ const fromDb = (d) => ({
   lastMonthlyClean: d.last_monthly_clean || '',
   emailVerified: d.email_verified || false,
   verificationToken: d.verification_token || null,
+  todaysWords: d.todays_words || [],
+  studentReport: d.student_report || null,
+  categorizedVocab: d.categorized_vocab || {},
 });
 
 export default async function handler(req, res) {
