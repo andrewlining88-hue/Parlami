@@ -812,7 +812,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 <div className={cx.card}><div className="flex items-center space-x-2 mb-3"><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">🔁 Dante is watching</p>{recurringMistakes.length>0&&<span className="text-xs bg-orange-50 text-orange-400 px-2 py-0.5 rounded-full">{recurringMistakes.length}</span>}</div>{recurringMistakes.length===0?<p className="text-xs text-gray-300 text-center py-3">Dante will track recurring mistakes after a few sessions.</p>:<div className="space-y-2">{recurringMistakes.map((m,i)=><div key={i} className="flex items-start space-x-2.5 px-3 py-2.5 rounded-xl" style={{background:dark?"#431407":"#fff7ed"}}><span className="text-orange-300 mt-0.5">⚠️</span><p className="text-xs text-orange-700 leading-relaxed">{m}</p></div>)}<p className="text-xs text-gray-300 pt-1">Dante will gently correct these when they come up.</p></div>}</div>
 <div className={cx.card}><div className={cx.row+" mb-3"}><p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Badges</p><p className="text-xs text-gray-300">{unlockedBadges.length}/{BADGES.length}</p></div><div className="grid grid-cols-2 gap-2">{BADGES.map(b=>{const u=unlockedBadges.includes(b.id);const raw=b.type==="messages"?umc:b.type==="streak"?practiceStreak:b.type==="tests"?testsPassed.length:vocabularyCount;const p=Math.min(raw/b.req*100,100);return(<div key={b.id} className={"rounded-xl p-3 border "+(u?"border-yellow-200 bg-yellow-50":"border-gray-100 bg-gray-50")}><div className="flex items-center space-x-2 mb-1.5"><span className={"text-xl "+(u?"":"grayscale opacity-40")}>{b.icon}</span><p className={"text-xs font-semibold truncate "+(u?"text-gray-800":"text-gray-500")}>{b.name}</p>{u&&<span className="ml-auto text-green-500 text-xs">✓</span>}</div><p className="text-xs text-gray-400 mb-1.5 leading-tight">{b.desc}</p>{!u&&<><div className="w-full rounded-full h-1" style={{background:"#e5e7eb"}}><div className="h-1 rounded-full" style={{width:p+"%",background:color}}/></div><p className="text-xs text-gray-300 mt-1">{raw.toLocaleString()} / {b.req.toLocaleString()}</p></>}</div>);})}</div></div>
 </div>);}
-function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,categorizedVocab,onSaveCategorized,dark=false}) {
+function VocabTab({vocabWords,studentLevel,savedWords,setSavedWords,todaysWords,setTodaysWords,categorizedVocab,onSaveCategorized,dark=false}) {
 const color=LC(studentLevel);
 const [newWord,setNewWord]=useState("");
 const [showTranslation,setShowTranslation]=useState(true);
@@ -884,6 +884,22 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
   </div>
 </div>
 <div className="flex gap-2"><input value={newWord} onChange={e=>setNewWord(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder="Add a word..." className={cx.input+" flex-1 text-sm"}/><button onClick={addWord} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{background:color}}>+</button></div>
+{todaysWords.length>0&&(
+<div className={cx.card} style={{borderColor:"#fde68a",borderWidth:"1.5px"}}>
+<p className="text-sm font-bold uppercase tracking-wide mb-2" style={{color:"#d97706"}}>⭐ Today's Words ({todaysWords.length})</p>
+<p className="text-xs text-gray-400 mb-3">New words from Dante today — they'll move to your main vocab tomorrow.</p>
+<div className="space-y-1">{todaysWords.map((w,i)=>(
+<div key={i} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+<div className="flex-1 min-w-0">
+<span className={"text-sm font-medium "+(w.mastered?"line-through text-gray-300":"")}>{w.word}</span>
+</div>
+<button onClick={()=>speakText(w.word)} className="text-xs opacity-40 hover:opacity-80">🔊</button>
+<button onClick={()=>setTodaysWords(p=>p.map((t,j)=>j===i?{...t,starred:!t.starred}:t))} className="text-base">{w.starred?"⭐":"☆"}</button>
+<button onClick={()=>setTodaysWords(p=>p.map((t,j)=>j===i?{...t,mastered:!t.mastered}:t))} className="text-base">{w.mastered?"✅":"○"}</button>
+</div>
+))}</div>
+</div>
+)}
 {allWords.length===0?(<div className={cx.card+" p-8 text-center"}><p className="text-2xl mb-2">📖</p><p className="text-sm text-gray-400">Chat in Italian to build your vocabulary!</p></div>):(
 <>
 {loading&&<div className={cx.card+" p-4 text-center"}><p className="text-sm text-gray-400">{loadingMsg||"Categorizing words..."}</p></div>}
@@ -1175,7 +1191,7 @@ const [showTest,setShowTest]=useState(false);const [testsPassed,setTestsPassed]=
 const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [lessonNote,setLessonNote]=useState("");const [lessonVocab,setLessonVocab]=useState("");
 const [vocabBadge,setVocabBadge]=useState(0);const [exerciseBadge,setExerciseBadge]=useState(false);const [progressBadge,setProgressBadge]=useState(false);
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
-const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);const [studentReport,setStudentReport]=useState(null);const [loadingStudentReport,setLoadingStudentReport]=useState(false);const [categorizedVocab,setCategorizedVocab]=useState({});
+const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);const [todaysWords,setTodaysWords]=useState([]);const [studentReport,setStudentReport]=useState(null);const [loadingStudentReport,setLoadingStudentReport]=useState(false);const [categorizedVocab,setCategorizedVocab]=useState({});
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
 const fileRef=useRef(null),endRef=useRef(null);
@@ -1211,7 +1227,7 @@ const store=async(k,v)=>{try{const email=k.replace("student:","");await dbCall("
 const load=async k=>{try{const email=k.replace("student:","");const d=await dbCall("get",{email});return d.student||null;}catch{return null;}};
 useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 useEffect(()=>{if(view==="student")endRef.current?.scrollIntoView({behavior:"instant"});},[view]);
-useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,studentReport,categorizedVocab]);
+useEffect(()=>{if(view!=="student"||!email)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,todaysWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,todaysWords,studentReport,categorizedVocab]);
 useEffect(()=>{
 if(view!=="student"||!email)return;
 const interval=setInterval(async()=>{
@@ -1247,7 +1263,19 @@ useEffect(()=>{BADGES.forEach(b=>{if(badges.includes(b.id))return;const p=b.type
 const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:true,hasPassword:!!d.passwordHash,name:d.name||""}:{exists:false};};
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
 const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
-setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(d.savedWords||[]);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});
+const today0=new Date().toISOString().slice(0,10);
+const tw=d.todaysWords||[];
+const todayOnly=tw.filter(w=>w.date===today0);
+const oldWords=tw.filter(w=>w.date!==today0);
+let finalSaved=d.savedWords||[];
+if(oldWords.length>0){
+  const merged=[...finalSaved];
+  for(const w of oldWords){if(!merged.find(s=>s.word===w.word))merged.push({word:w.word,starred:w.starred||false,mastered:w.mastered||false});}
+  finalSaved=merged;
+  d.savedWords=merged;d.todaysWords=todayOnly;
+  await store("student:"+e,d);
+}
+setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(finalSaved);setTodaysWords(todayOnly);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});
 if(!d.emailVerified)return"unverified";
 return"ok";};
 
@@ -1266,7 +1294,7 @@ useEffect(()=>{
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else setStep("newuser");setLoginErr("");};
 const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"||r==="unverified"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}const dest=r==="ok"?"student":"pending";if(dest==="student"){const isFirst=!localStorage.getItem("parlami_toured");if(isFirst){setTourStep(0);localStorage.setItem("parlami_toured","1");}}setView(dest);}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
-const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
+const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setTodaysWords([]);setShowChangePw(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
 useEffect(()=>{
 if(view!=="student")return;
@@ -1309,9 +1337,13 @@ if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the ser
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 if(reply.includes("[it]")){
   const danteWords=(reply.match(/\[it\](.*?)\[\/it\]/g)||[]).map(t=>t.replace(/\[it\]|\[\/it\]/g,"").toLowerCase().trim().split(/\s+/)).flat();
-  const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word)]);
-  const hasNew=danteWords.some(w=>w.length>2&&!knownWords.has(w));
-  if(hasNew)setVocabBadge(v=>v+1);
+  const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)]);
+  const newWords=danteWords.filter(w=>w.length>2&&!knownWords.has(w));
+  if(newWords.length>0){
+    const today=new Date().toISOString().slice(0,10);
+    setTodaysWords(p=>{const updated=[...p];for(const w of newWords){if(!updated.find(t=>t.word===w))updated.push({word:w,date:today,starred:false,mastered:false});}return updated;});
+    setVocabBadge(v=>v+newWords.length);
+  }
 }
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
 if(newTotal%10===0){const re=msgs.slice(-20).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");try{const ex=await callClaude([{role:"user",content:"Previous mistakes tracked: "+JSON.stringify(recurringMistakes)+"\n\nRecent conversation:\n"+re}],"Italian teacher. Analyse the recent conversation carefully. Return a JSON object with two keys: {\"add\": [new recurring mistakes you notice, max 2], \"remove\": [mistakes from the previous list that the student is now getting right consistently]}. Return ONLY the JSON object. IMPORTANT: Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are normal and accepted in Italian. If nothing to add or remove, use empty arrays.");const parsed=JSON.parse(ex.replace(/^[^{]*\{/,"{").replace(/\}[^}]*$/,"}").trim());setRecurringMistakes(p=>{let updated=p.filter(m=>!(parsed.remove||[]).some(r=>r.toLowerCase().includes(m.toLowerCase().slice(0,15))||m.toLowerCase().includes(r.toLowerCase().slice(0,15))));updated=[...new Set([...updated,...(parsed.add||[])])].slice(0,5);return updated;});}catch{}}
@@ -1624,7 +1656,7 @@ return <button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-3 t
 </div>
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={vocabCount} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} studentReport={studentReport} onGenReport={genStudentReport} loadingStudentReport={loadingStudentReport} dark={dark}/>}
-{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} categorizedVocab={categorizedVocab} onSaveCategorized={saveCategorizedVocab} dark={dark}/>}
+{tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} todaysWords={todaysWords} setTodaysWords={setTodaysWords} categorizedVocab={categorizedVocab} onSaveCategorized={saveCategorizedVocab} dark={dark}/>}
 {tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
