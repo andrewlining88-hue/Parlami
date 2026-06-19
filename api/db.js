@@ -49,6 +49,10 @@ const toDb = (d) => ({
   todays_words: d.todaysWords || [],
   student_report: d.studentReport || null,
   categorized_vocab: d.categorizedVocab || {},
+  subscription_status: d.subscriptionStatus || 'free',
+  stripe_customer_id: d.stripeCustomerId || null,
+  is_preply_student: d.isPreplyStudent || false,
+  trial_start: d.trialStart || null,
 });
 
 const fromDb = (d) => ({
@@ -82,6 +86,10 @@ const fromDb = (d) => ({
   todaysWords: d.todays_words || [],
   studentReport: d.student_report || null,
   categorizedVocab: d.categorized_vocab || {},
+  subscriptionStatus: d.subscription_status || 'free',
+  stripeCustomerId: d.stripe_customer_id || null,
+  isPreplyStudent: d.is_preply_student || false,
+  trialStart: d.trial_start || null,
 });
 
 export default async function handler(req, res) {
