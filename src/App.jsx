@@ -540,6 +540,10 @@ const [showWeekly,setShowWeekly]=useState(false);
 const [msgText,setMsgText]=useState("");const [msgSent,setMsgSent]=useState(false);
 const [reminderSent,setReminderSent]=useState(false);
 const [homework,setHomework]=useState("");const [loadingHomework,setLoadingHomework]=useState(false);const [homeworkCopied,setHomeworkCopied]=useState(false);
+const toggleFree=async(email,newVal)=>{
+  setSel(s=>s?{...s,isPreplyStudent:newVal}:s);
+  await onToggleFree(email,newVal);
+};
 const genReport = async () => {
 setLoadingReport(true);setReport("");
 try{
@@ -622,7 +626,7 @@ return (
 </div>
 <div className="grid grid-cols-3 gap-2">
 <div className="rounded-xl p-3" style={{background:dark?"#374151":"#faf9f7"}}><select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level ✎</p></div>
-<div className="rounded-xl p-3 cursor-pointer transition-all" onClick={()=>onToggleFree(sel.email,!sel.isPreplyStudent)} style={{background:sel.isPreplyStudent?"#dcfce7":dark?"#374151":"#faf9f7"}}><p className="text-sm font-semibold" style={{color:sel.isPreplyStudent?"#16a34a":"#9ca3af"}}>{sel.isPreplyStudent?"✅ Free":"❌ Paid"}</p><p className={cx.xs4+" mt-0.5"}>{sel.isPreplyStudent?"Preply student":"Tap to toggle"}</p></div>
+<div className="rounded-xl p-3 cursor-pointer transition-all" onClick={()=>toggleFree(sel.email,!sel.isPreplyStudent)} style={{background:sel.isPreplyStudent?"#dcfce7":dark?"#374151":"#faf9f7"}}><p className="text-sm font-semibold" style={{color:sel.isPreplyStudent?"#16a34a":"#9ca3af"}}>{sel.isPreplyStudent?"✅ Free":"❌ Paid"}</p><p className={cx.xs4+" mt-0.5"}>{sel.isPreplyStudent?"Preply student":"Tap to toggle"}</p></div>
 {[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>{
 const clickable=["Messages","Vocab","Badges","Tests"].includes(l);
 return(
@@ -1394,7 +1398,7 @@ const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordH
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
 const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};
-const handleToggleFree=async(e,val)=>{const d=await load("student:"+e);if(d){d.isPreplyStudent=val;d.subscriptionStatus=val?"free":d.subscriptionStatus;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,isPreplyStudent:val}:s));setSel(s=>s?{...s,isPreplyStudent:val}:s);}};
+const handleToggleFree=async(e,val)=>{const d=await load("student:"+e);if(d){d.isPreplyStudent=val;d.subscriptionStatus=val?"free":d.subscriptionStatus;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,isPreplyStudent:val}:s));}};
 const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){const tm={id:Date.now(),text:"👨‍🏫 "+msg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};d.messages=[...(d.messages||[]),tm];d.pendingMsg=null;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,messages:d.messages}:s));}};
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=async l=>{const newTests=[...testsPassed,l];const ni=LEVELS.indexOf(l)+1;const newLevel=ni<LEVELS.length?LEVELS[ni]:level;setTestsPassed(newTests);setLevel(newLevel);setShowTest(false);const d=await load("student:"+email);if(d){d.testsPassed=newTests;d.level=newLevel;await store("student:"+email,d);}};
