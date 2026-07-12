@@ -531,7 +531,7 @@ return(
 </div>
 );
 }
-function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg,onChangeLevel}) {
+function TeacherDash({dark,setDark,students,onLogout,onRemove,onResetPw,onSaveNote,onSaveVocab,onSendMsg,onChangeLevel,onToggleFree}) {
 const [sel,setSel]=useState(null);const [report,setReport]=useState("");const [loadingReport,setLoadingReport]=useState(false);const [showChat,setShowChat]=useState(false);const [insights,setInsights]=useState("");const [loadingInsights,setLoadingInsights]=useState(false);const [activeDetail,setActiveDetail]=useState(null);
 const [confirmRm,setConfirmRm]=useState(null);const [resetModal,setResetModal]=useState(null);const [resetDone,setResetDone]=useState(false);
 const [noteText,setNoteText]=useState("");const [noteSaved,setNoteSaved]=useState(false);const [showHistory,setShowHistory]=useState(false);
@@ -622,6 +622,7 @@ return (
 </div>
 <div className="grid grid-cols-3 gap-2">
 <div className="rounded-xl p-3" style={{background:dark?"#374151":"#faf9f7"}}><select value={sel.level} onChange={e=>onChangeLevel(sel.email,e.target.value)} className="text-sm font-semibold w-full bg-transparent border-none outline-none cursor-pointer" style={{color:LC(sel.level)}}>{["A1","A2","B1","B2","C1","C2"].map(l=><option key={l} value={l}>{l}</option>)}</select><p className={cx.xs4+" mt-0.5"}>Level ✎</p></div>
+<div className="rounded-xl p-3 cursor-pointer transition-all" onClick={()=>onToggleFree(sel.email,!sel.isPreplyStudent)} style={{background:sel.isPreplyStudent?"#dcfce7":dark?"#374151":"#faf9f7"}}><p className="text-sm font-semibold" style={{color:sel.isPreplyStudent?"#16a34a":"#9ca3af"}}>{sel.isPreplyStudent?"✅ Free":"❌ Paid"}</p><p className={cx.xs4+" mt-0.5"}>{sel.isPreplyStudent?"Preply student":"Tap to toggle"}</p></div>
 {[["Messages",sel.messageCount],["Streak",sel.streak+"d"],["Vocab",sel.vocabCount],["Badges",sel.badgeCount+"/"+BADGES.length],["Tests",sel.testsPassed?.join(", ")||"—"]].map(([l,v])=>{
 const clickable=["Messages","Vocab","Badges","Tests"].includes(l);
 return(
@@ -1182,7 +1183,12 @@ const speakText = async (text) => {
 };
 export default function App() {
 const [dark,setDark]=useState(()=>{try{return localStorage.getItem("parlami_dark")==="1";}catch{return false;}});
-const [view,setView]=useState("login");const [name,setName]=useState(()=>{try{return localStorage.getItem("parlami_name")||"";}catch{return "";}});const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
+const [view,setView]=useState(()=>{
+  if(typeof window!=="undefined"&&window.location.search.includes("payment=success")){
+    window.history.replaceState({},"","/app");
+  }
+  return "login";
+});const [name,setName]=useState(()=>{try{return localStorage.getItem("parlami_name")||"";}catch{return "";}});const [email,setEmail]=useState(()=>{try{return localStorage.getItem("parlami_email")||"";}catch{return "";}});
 const [pw,setPw]=useState("");const [pw2,setPw2]=useState("");const [step,setStep]=useState("identify");const [hasInvite]=useState(()=>new URLSearchParams(window.location.search).get("invite")===INVITE_CODE);
 const [tPw,setTPw]=useState("");const [loginErr,setLoginErr]=useState("");const [showTeacher,setShowTeacher]=useState(false);
 const [msgs,setMsgs]=useState([]);const [curMsg,setCurMsg]=useState("");const [typing,setTyping]=useState(false);const [listening,setListening]=useState(false);
@@ -1193,6 +1199,10 @@ const [tab,setTab]=useState("chat");const [file,setFile]=useState(null);const [l
 const [vocabBadge,setVocabBadge]=useState(0);const [exerciseBadge,setExerciseBadge]=useState(false);const [progressBadge,setProgressBadge]=useState(false);
 const [activityLog,setActivityLog]=useState([]);const [chartFilter,setChartFilter]=useState("week");const [vocabWords,setVocabWords]=useState([]);
 const [totalMsgCount,setTotalMsgCount]=useState(0);const [recurringMistakes,setRecurringMistakes]=useState([]);const [tipLog,setTipLog]=useState([]);const [dismissedTip,setDismissedTip]=useState(null);const [savedWords,setSavedWords]=useState([]);const [todaysWords,setTodaysWords]=useState([]);const [studentReport,setStudentReport]=useState(null);const [loadingStudentReport,setLoadingStudentReport]=useState(false);const [categorizedVocab,setCategorizedVocab]=useState({});
+const [subscriptionStatus,setSubscriptionStatus]=useState("free");
+const [isPreplyStudent,setIsPreplyStudent]=useState(false);
+const [trialStart,setTrialStart]=useState(null);
+const [promoCode,setPromoCode]=useState("");
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
 const fileRef=useRef(null),endRef=useRef(null);
@@ -1280,6 +1290,7 @@ if(oldWords.length>0){
   await store("student:"+e,d);
 }
 setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setSavedWords(finalSaved);setTodaysWords(todayOnly);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});
+setSubscriptionStatus(d.subscriptionStatus||"free");setIsPreplyStudent(d.isPreplyStudent||false);setTrialStart(d.trialStart||null);
 if(!d.emailVerified)return"unverified";
 return"ok";};
 
@@ -1382,7 +1393,9 @@ const handleRemove=async e=>{try{await dbCall("delete",{email:e});}catch{}setStu
 const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordHash=hashPw("parlami2026");await store("student:"+e,d);}};
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
-const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){const tm={id:Date.now(),text:"👨‍🏫 "+msg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};d.messages=[...(d.messages||[]),tm];d.pendingMsg=null;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,messages:d.messages}:s));}};
+const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};
+const handleToggleFree=async(e,val)=>{const d=await load("student:"+e);if(d){d.isPreplyStudent=val;d.subscriptionStatus=val?"free":d.subscriptionStatus;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,isPreplyStudent:val}:s));setSel(s=>s?{...s,isPreplyStudent:val}:s);}};
+const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){const tm={id:Date.now(),text:"👨‍🏫 "+msg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};d.messages=[...(d.messages||[]),tm];d.pendingMsg=null;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,messages:d.messages}:s));}};
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
 const passTest=async l=>{const newTests=[...testsPassed,l];const ni=LEVELS.indexOf(l)+1;const newLevel=ni<LEVELS.length?LEVELS[ni]:level;setTestsPassed(newTests);setLevel(newLevel);setShowTest(false);const d=await load("student:"+email);if(d){d.testsPassed=newTests;d.level=newLevel;await store("student:"+email,d);}};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
@@ -1419,12 +1432,12 @@ const completeOnboarding=async(goal,lvl,daily)=>{
   setDailyGoal(daily);
   const txt=goalWelcome[goal]||"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. Sono qui per aiutarti a praticare ogni giorno — chatta con me liberamente, fai domande, fai errori (è così che si impara! 😄). Pronto? Come stai oggi?";
   const welcomeMsg={id:1,text:txt,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};
-  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal});
+  await store("student:"+email,{name,email,level:lvl,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal:goal,trialStart:new Date().toISOString().slice(0,10),subscriptionStatus:"free",isPreplyStudent:false});
   setDailyGoal(daily);setMsgs([welcomeMsg]);
   fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));
   setView("pending");
 };
-const steps=["Your Italian","Your goal","Daily practice"];
+const steps=["Your Italian","Your goal","Daily practice","Promo code"];
 return(
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",fontFamily:"'DM Sans',sans-serif"}}>
 <DarkStyle dark={dark}/>
@@ -1432,9 +1445,9 @@ return(
   <div className="text-center mb-10">
     <div className="flex justify-center"><Logo size={48}/></div>
     <p className="mt-5 text-2xl font-semibold tracking-tight" style={{color:"#1a1a2e"}}>Benvenuto, {name.split(" ")[0]}.</p>
-    <p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>3 quick questions and you're in.</p>
+    <p className="text-sm mt-1.5" style={{color:"#9ca3af"}}>{onboardStep<3?"3 quick questions and you're in.":"Almost there!"}</p>
     <div className="flex justify-center gap-1.5 mt-5">
-      {[0,1,2].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>i?32:onboardStep===i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
+      {[0,1,2,3].map(i=><div key={i} className="h-0.5 rounded-full transition-all duration-300" style={{width:onboardStep>i?32:onboardStep===i?32:16,background:onboardStep>=i?"#1a1a2e":"#e5e7eb"}}/>)}
     </div>
     <p className="text-xs mt-2" style={{color:"#d1d5db"}}>{steps[onboardStep]}</p>
   </div>
@@ -1463,12 +1476,22 @@ return(
     <p className="text-xs text-center mb-4" style={{color:"#9ca3af"}}>How many messages do you want to send each day?</p>
     <div className="grid grid-cols-2 gap-2">
       {DAILY.map(d=>(
-        <button key={d.v} onClick={()=>completeOnboarding(studentGoal,level,d.v)} className="py-5 rounded-2xl text-center transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+        <button key={d.v} onClick={()=>{setDailyGoal(d.v);setOnboardStep(3);}} className="py-5 rounded-2xl text-center transition-all" style={{background:"white",border:"1.5px solid #f0f0f0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
           <p className="text-3xl font-semibold" style={{color:"#1a1a2e"}}>{d.label}</p>
           <p className="text-xs mt-1" style={{color:"#9ca3af"}}>{d.desc}</p>
         </button>
       ))}
     </div>
+  </div>
+  )}
+  {onboardStep===3&&(
+  <div className="text-center">
+    <p className="text-sm mb-4" style={{color:"#6b7280"}}>Are you studying with Andrei?</p>
+    <p className="text-xs mb-4" style={{color:"#9ca3af"}}>If your teacher gave you a promo code, enter it below.</p>
+    <input value={promoCode} onChange={e=>setPromoCode(e.target.value)} placeholder="Enter promo code" className="w-full px-4 py-3 rounded-xl text-sm text-center border border-gray-200 mb-3 outline-none focus:border-gray-400" style={{background:"white"}}/>
+    {promoCode==="PreplyParlami2026"&&<p className="text-xs font-semibold mb-3" style={{color:"#16a34a"}}>✨ Welcome! Your teacher will activate your VIP access.</p>}
+    <button onClick={()=>completeOnboarding(studentGoal,level,dailyGoal)} className="w-full py-3 rounded-xl text-sm font-semibold text-white mb-2" style={{background:"#1a1a2e"}}>{promoCode?"Continue →":"Skip & start free trial →"}</button>
+    <p className="text-xs" style={{color:"#d1d5db"}}>7 days free, then €6.99/month</p>
   </div>
   )}
 </div>
@@ -1480,7 +1503,7 @@ const LEVELS_OB=[{id:"A1",label:"Beginner",desc:"I know very little or no Italia
 const GOALS=[{id:"travel",label:"Travel & holidays",icon:"✈️"},{id:"living",label:"Living in Italy",icon:"🏠"},{id:"family",label:"Family & friends",icon:"👨‍👩‍👧"},{id:"work",label:"Work & business",icon:"💼"},{id:"fun",label:"Just for fun",icon:"🎉"}];
 const DAILY=[{v:5,label:"5",desc:"Casual"},{v:10,label:"10",desc:"Regular"},{v:20,label:"20",desc:"Intensive"},{v:30,label:"30",desc:"Serious"}];
 const goalWelcome2={travel:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. I heard you want to travel to Italy — perfect! Let's make sure you can order a coffee, ask for directions and charm the locals. Tell me: where in Italy would you love to go?",living:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Living in Italy is a dream — and I'm here to help make it real. Let's start with the everyday Italian you'll actually need. Tell me a bit about yourself: cosa fai nella vita?",family:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante. How wonderful that Italian connects you to family and friends! Let's chat — tell me about someone special in your life. In Italian, of course! 😊",work:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor. Business Italian — let's get professional. Tell me: what do you do for work? Cosa fai di lavoro?",fun:"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante — and I love teaching Italian to people who just love the language! No pressure, no tests, just good conversation. Tell me: cosa ti piace fare nel tempo libero?"};
-const finishOnboard=async(daily)=>{const g=studentGoal;const txt=goalWelcome2[g]||"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. Sono qui per aiutarti a praticare ogni giorno — chatta con me liberamente, fai domande, fai errori (è così che si impara! 😄). Pronto? Come stai oggi?";const welcomeMsg={id:1,text:txt,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
+const finishOnboard=async(daily)=>{const g=studentGoal;const txt=goalWelcome2[g]||"Ciao "+name.split(" ")[0]+"! 🇮🇹 Sono Dante, il tuo tutor di italiano. Sono qui per aiutarti a praticare ogni giorno — chatta con me liberamente, fai domande, fai errori (è così che si impara! 😄). Pronto? Come stai oggi?";const welcomeMsg={id:1,text:txt,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};await store("student:"+email,{name,email,level,passwordHash:hashPw(pw),messages:[welcomeMsg],badges:[],streak:0,lastDate:null,testsPassed:[],testFailedAt:{},vocabCount:0,lessonNote:"",lessonVocab:"",recurringMistakes:[],tipLog:[],dailyGoal:daily,totalMsgCount:0,savedWords:[],messageCount:0,progress:0,badgeCount:0,studentGoal,trialStart:new Date().toISOString().slice(0,10),subscriptionStatus:"free",isPreplyStudent:false});setDailyGoal(daily);setMsgs([welcomeMsg]);fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})}).catch(e=>console.error("send-welcome:",e));setView("pending");};
 const steps2=["Your Italian","Your goal","Daily practice"];
 return(<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",fontFamily:"'DM Sans',sans-serif"}}><DarkStyle dark={dark}/>
 <div className="w-full max-w-xs">
@@ -1503,7 +1526,7 @@ if(view==="pending") return(
 </div>
 </div>
 );
-if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel}/>;
+if(view==="teacher") return <TeacherDash dark={dark} setDark={setDark} students={students} onLogout={()=>setView("login")} onRemove={handleRemove} onResetPw={handleResetPw} onSaveNote={handleSaveNote} onSaveVocab={handleSaveVocab} onSendMsg={handleSendMsg} onChangeLevel={handleChangeLevel} onToggleFree={handleToggleFree}/>;
 if(view==="login") return (
 <div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}><DarkStyle dark={dark}/>
 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
@@ -1547,6 +1570,33 @@ const saveCategorizedVocab=async(cv)=>{
   setCategorizedVocab(cv);
   try{const d=await load("student:"+email);if(d){d.categorizedVocab=cv;await store("student:"+email,d);}}catch(e){console.error("save categorized error",e);}
 };
+// PAYWALL CHECK
+const trialExpired=trialStart&&((Date.now()-new Date(trialStart).getTime())/(1000*60*60*24))>7;
+const needsPaywall=trialExpired&&!isPreplyStudent&&subscriptionStatus!=="active";
+if(needsPaywall) return(
+<div className={"min-h-screen flex items-center justify-center p-4"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7"}}>
+<DarkStyle dark={dark}/>
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm text-center">
+<div className="text-5xl mb-4">🇮🇹</div>
+<h2 className="text-xl font-bold mb-2" style={{color:"#1a1a2e"}}>Your free trial has ended</h2>
+<p className="text-sm text-gray-500 mb-6">Subscribe to keep practicing with Dante and access all features.</p>
+<div className="rounded-xl p-4 mb-6" style={{background:"#faf9f7",border:"1px solid #f0f0f0"}}>
+<p className="text-3xl font-bold" style={{color:"#1a1a2e"}}>€6.99<span className="text-sm font-normal text-gray-400">/month</span></p>
+<p className="text-xs text-gray-400 mt-1">Unlimited conversations, vocab tracking, exercises & more</p>
+</div>
+<button onClick={async()=>{
+  try{
+    const r=await fetch("/api/create-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,name})});
+    const d=await r.json();
+    if(d.url)window.location.href=d.url;
+    else alert("Something went wrong. Please try again.");
+  }catch{alert("Could not connect to payment. Please try again.");}
+}} className="w-full py-3 rounded-xl text-sm font-semibold text-white mb-3" style={{background:"#1a1a2e"}}>Subscribe now →</button>
+<button onClick={logout} className="w-full py-3 rounded-xl text-sm text-gray-400 border border-gray-200">Log out</button>
+</div>
+</div>
+);
+
 const handleTabClick=(t)=>{
   setTab(t);
   if(t==="vocab") setVocabBadge(0);
