@@ -472,6 +472,112 @@
       color: var(--gray);
     }
 
+    /* PRICING */
+    .pricing {
+      padding: 100px 24px;
+      text-align: center;
+      background: white;
+    }
+
+    .pricing-card {
+      max-width: 400px;
+      margin: 40px auto 0;
+      background: var(--cream);
+      border: 1px solid rgba(26,26,46,0.08);
+      border-radius: 24px;
+      padding: 48px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--navy);
+      color: white;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+    }
+
+    .pricing-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 64px;
+      font-weight: 300;
+      color: var(--navy);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pricing-price span {
+      font-size: 20px;
+      color: var(--gray);
+    }
+
+    .pricing-period {
+      font-size: 14px;
+      color: var(--gray);
+      font-weight: 300;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features {
+      text-align: left;
+      list-style: none;
+      margin-bottom: 36px;
+    }
+
+    .pricing-features li {
+      font-size: 14px;
+      color: var(--navy);
+      font-weight: 400;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(26,26,46,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pricing-features li:last-child { border-bottom: none; }
+
+    .pricing-check {
+      color: var(--green);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .pricing-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy);
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 32px;
+      border-radius: 100px;
+      transition: all 0.25s;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .pricing-cta:hover {
+      background: #2d2d4e;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(26,26,46,0.2);
+    }
+
+    .pricing-note {
+      font-size: 12px;
+      color: var(--gray);
+      font-weight: 300;
+      margin-top: 16px;
+    }
+
     /* ANIMATIONS */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -513,7 +619,7 @@
     <p class="hero-subtitle">Practice Italian between your lessons with Dante, your personal AI tutor — available anytime, on any device.</p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp 0.8s 0.5s forwards;">
   <a href="/app" style="display:inline-flex;align-items:center;gap:10px;background:#1a1a2e;color:white;text-decoration:none;font-size:14px;font-weight:500;padding:16px 36px;border-radius:100px;letter-spacing:0.02em;transition:all 0.25s;">
-    Sign up — it's free →
+    Start free — 7 days on us →
   </a>
   <a href="/app" style="display:inline-flex;align-items:center;gap:10px;background:transparent;color:#1a1a2e;text-decoration:none;font-size:14px;font-weight:500;padding:16px 28px;border-radius:100px;border:1.5px solid rgba(26,26,46,0.2);transition:all 0.25s;">
     Log in
@@ -606,6 +712,25 @@
           <p class="step-desc">Your vocabulary grows, your streak builds, and your confidence in Italian grows — one conversation at a time.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <p class="section-label">Simple pricing</p>
+    <div class="pricing-card">
+      <span class="pricing-badge">7 days free</span>
+      <div class="pricing-price">€6.99<span>/mo</span></div>
+      <p class="pricing-period">After your free trial</p>
+      <ul class="pricing-features">
+        <li><span class="pricing-check">✓</span> Unlimited conversations with Dante</li>
+        <li><span class="pricing-check">✓</span> Vocabulary tracking & flashcards</li>
+        <li><span class="pricing-check">✓</span> Daily exercises & quizzes</li>
+        <li><span class="pricing-check">✓</span> Progress tracking & streaks</li>
+        <li><span class="pricing-check">✓</span> Adapts to your level (A1–C2)</li>
+      </ul>
+      <a href="/app" class="pricing-cta">Start your free trial →</a>
+      <p class="pricing-note">No credit card required. Cancel anytime.</p>
     </div>
   </section>
 
