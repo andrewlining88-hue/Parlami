@@ -65,8 +65,6 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         stripe_customer_id: customerId,
-        subscription_status: 'trial',
-        trial_start: new Date().toISOString().slice(0, 10),
       }),
     });
 
