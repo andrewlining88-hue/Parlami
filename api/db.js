@@ -49,10 +49,10 @@ const toDb = (d) => ({
   todays_words: d.todaysWords || [],
   student_report: d.studentReport || null,
   categorized_vocab: d.categorizedVocab || {},
-  subscription_status: d.subscriptionStatus || 'free',
-  stripe_customer_id: d.stripeCustomerId || null,
-  is_preply_student: d.isPreplyStudent || false,
-  trial_start: d.trialStart || null,
+  ...(d.subscriptionStatus !== undefined ? { subscription_status: d.subscriptionStatus } : {}),
+  ...(d.stripeCustomerId !== undefined ? { stripe_customer_id: d.stripeCustomerId } : {}),
+  ...(d.isPreplyStudent !== undefined ? { is_preply_student: d.isPreplyStudent } : {}),
+  ...(d.trialStart !== undefined ? { trial_start: d.trialStart } : {}),
 });
 
 const fromDb = (d) => ({
