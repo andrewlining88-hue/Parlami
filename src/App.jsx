@@ -1246,6 +1246,28 @@ useEffect(()=>{
   if(msgs.length>0&&!initialScrollDone.current){initialScrollDone.current=true;setTimeout(()=>endRef.current?.scrollIntoView({behavior:"instant"}),100);}
   else if(initialScrollDone.current){endRef.current?.scrollIntoView({behavior:"smooth"});}
 },[msgs]);
+const greetingSent=useRef(false);
+useEffect(()=>{
+  if(!dataLoaded||view!=="student"||greetingSent.current)return;
+  const today=new Date().toISOString().slice(0,10);
+  const hasToday=msgs.some(m=>m.sender==="ai"&&m.date===today);
+  if(hasToday)return;
+  greetingSent.current=true;
+  (async()=>{
+    setTyping(true);
+    const hasNotes=!!lessonNote;const hasVocab=!!lessonVocab;
+    const menuOpts=[];
+    if(hasNotes)menuOpts.push("📚 Review your lesson with Andrei");
+    if(hasVocab)menuOpts.push("📖 Review vocabulary from your lesson");
+    menuOpts.push("🎭 Role play (restaurant, shopping, travel, doctor, airport)","🔄 Verb practice","💬 Free chat — talk about anything","📝 Grammar drills");
+    const menuText=menuOpts.map((o,i)=>(i+1)+") "+o).join("\n");
+    const greeting=level==="A1"||level==="A2"
+      ?"Ciao "+name.split(" ")[0]+"! 👋 Welcome back! What would you like to practice today?\n\n"+menuText
+      :"Ciao "+name.split(" ")[0]+"! 👋 [it]Come stai oggi?[/it] Cosa vuoi fare?\n\n"+menuText;
+    setMsgs(p=>[...p,{id:Date.now(),text:greeting,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:today}]);
+    setTyping(false);
+  })();
+},[dataLoaded,view]);
 useEffect(()=>{if(tab==="chat")setTimeout(()=>endRef.current?.scrollIntoView({behavior:"instant"}),50);},[tab]);
 useEffect(()=>{if(view!=="student"||!email||!dataLoaded)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,savedWords,todaysWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,todaysWords,studentReport,categorizedVocab]);
 useEffect(()=>{
