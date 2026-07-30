@@ -601,7 +601,7 @@ return (
 {students.length===0?<div className={cx.card+" p-16 text-center"}><Users className="w-8 h-8 text-gray-200 mx-auto mb-3"/><p className="text-sm text-gray-400">No students yet.</p></div>:(
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
-{students.map((s,i)=>(
+{[...students].sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map((s,i)=>(
 <div key={i} className={"bg-white rounded-2xl border p-4 cursor-pointer transition-all "+(sel?.email===s.email?"border-gray-900 shadow-sm":"border-gray-100 hover:border-gray-200")} onClick={()=>{setSel(s);setReport("");setInsights("");setHomework("");setNoteText(s.lessonNote||"");setNoteSaved(false);setShowHistory(false);setMsgText("");setMsgSent(false);setVocabText(s.lessonVocab||"");setVocabSaved(false);setShowVocabHistory(false);setShowChat(false);setActiveDetail(null);}}>
 <div className="flex items-center justify-between">
 <div className="flex items-center space-x-3">
