@@ -124,8 +124,7 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('streak')">🔥 Streak</button>
-    <button class="tab-btn" onclick="switchTab('messages')">💬 All Time</button>
+    <button class="tab-btn active">💬 Most Messages</button>
   </div>
 
   <div id="board-container">
@@ -181,18 +180,10 @@ function switchTab(tab) {
 function renderBoard() {
   const container = document.getElementById('board-container');
 
-  let sorted;
-  if (currentTab === 'streak') {
-    sorted = [...allStudents]
-      .map(s => ({ ...s, _val: s.streak || 0, _label: 'day streak' }))
-      .filter(s => s._val > 0)
-      .sort((a, b) => b._val - a._val);
-  } else {
-    sorted = [...allStudents]
-      .map(s => ({ ...s, _val: s.messageCount || 0, _label: 'messages' }))
-      .filter(s => s._val > 0)
-      .sort((a, b) => b._val - a._val);
-  }
+  const sorted = [...allStudents]
+    .map(s => ({ ...s, _val: s.totalMsgCount || 0, _label: 'messages' }))
+    .filter(s => s._val > 0)
+    .sort((a, b) => b._val - a._val);
 
   if (sorted.length === 0) {
     container.innerHTML = '<div class="empty">No activity yet.<br>Be the first on the board! 🇮🇹</div>';
