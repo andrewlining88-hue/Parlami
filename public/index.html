@@ -479,6 +479,35 @@
       background: white;
     }
 
+    /* REVIEWS */
+    .reviews {
+      padding: 80px 24px;
+      text-align: center;
+      background: var(--cream);
+    }
+    .reviews-grid {
+      max-width: 800px;
+      margin: 40px auto 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .reviews-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .review-card {
+      background: white;
+      border: 1px solid rgba(26,26,46,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: left;
+    }
+    .review-stars { color: #f59e0b; font-size: 14px; letter-spacing: 2px; margin-bottom: 12px; }
+    .review-text { font-size: 14px; color: var(--navy); line-height: 1.6; font-style: italic; margin-bottom: 16px; }
+    .review-author { font-size: 12px; font-weight: 600; color: var(--navy); }
+    .review-level { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .no-reviews { font-size: 14px; color: var(--gray); padding: 40px; }
+
     .pricing-card {
       max-width: 400px;
       margin: 40px auto 0;
@@ -716,6 +745,14 @@
     </div>
   </section>
 
+  <!-- REVIEWS -->
+  <section class="reviews" id="reviews">
+    <p class="section-label">What students say</p>
+    <div class="reviews-grid" id="reviews-grid">
+      <p class="no-reviews">Loading reviews...</p>
+    </div>
+  </section>
+
   <!-- PRICING -->
   <section class="pricing" id="pricing">
     <p class="section-label">Simple pricing</p>
@@ -749,5 +786,32 @@
     <span class="footer-right">© 2026 Parlami. All rights reserved.</span>
   </footer>
 
+<script>
+(async function(){
+  try {
+    const r = await fetch('/api/reviews', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'approved'})
+    });
+    const d = await r.json();
+    const grid = document.getElementById('reviews-grid');
+    if (!d.reviews || d.reviews.length === 0) {
+      grid.innerHTML = '<p class="no-reviews">Be the first to review Parlami! Sign up and share your experience.</p>';
+      return;
+    }
+    grid.innerHTML = d.reviews.map(rv =>
+      '<div class="review-card">' +
+        '<div class="review-stars">' + '★'.repeat(rv.rating) + '☆'.repeat(5 - rv.rating) + '</div>' +
+        '<p class="review-text">"' + rv.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '"</p>' +
+        '<p class="review-author">' + (rv.name || '').split(' ')[0] + '</p>' +
+        '<p class="review-level">' + rv.level + ' Student</p>' +
+      '</div>'
+    ).join('');
+  } catch(e) {
+    document.getElementById('reviews-grid').innerHTML = '';
+  }
+})();
+</script>
 </body>
 </html>
