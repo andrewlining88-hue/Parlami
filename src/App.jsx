@@ -1265,6 +1265,18 @@ useEffect(()=>{
   else if(initialScrollDone.current){endRef.current?.scrollIntoView({behavior:"smooth"});}
 },[msgs]);
 const greetingSent=useRef(false);
+const reviewPromptShown=useRef(false);
+useEffect(()=>{
+  if(dataLoaded&&totalMsgCount>=25&&!hasReviewed&&!reviewPromptShown.current){
+    reviewPromptShown.current=true;
+    const lastPrompt=localStorage.getItem("parlami_review_prompt");
+    const today=new Date().toDateString();
+    if(lastPrompt!==today){
+      localStorage.setItem("parlami_review_prompt",today);
+      setTimeout(()=>setShowReview(true),5000);
+    }
+  }
+},[dataLoaded,totalMsgCount]);
 useEffect(()=>{
   if(!dataLoaded||view!=="student"||greetingSent.current)return;
   const today=new Date().toISOString().slice(0,10);
