@@ -540,10 +540,12 @@ const [showWeekly,setShowWeekly]=useState(false);
 const [msgText,setMsgText]=useState("");const [msgSent,setMsgSent]=useState(false);
 const [reminderSent,setReminderSent]=useState(false);
 const [homework,setHomework]=useState("");const [loadingHomework,setLoadingHomework]=useState(false);const [homeworkCopied,setHomeworkCopied]=useState(false);
+const [pendingReviews,setPendingReviews]=useState([]);const [showReviews,setShowReviews]=useState(false);
 const toggleFree=async(email,newVal)=>{
   setSel(s=>s?{...s,isPreplyStudent:newVal}:s);
   await onToggleFree(email,newVal);
 };
+useEffect(()=>{fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"list"})}).then(r=>r.json()).then(d=>setPendingReviews(d.reviews||[])).catch(()=>{});},[]);
 const genReport = async () => {
 setLoadingReport(true);setReport("");
 try{
@@ -598,6 +600,20 @@ return (
 {showWeekly?"✕ Close Weekly Summary":"📊 Weekly Summary"}
 </button>
 {showWeekly&&<WeeklySummary students={students} onSendMsg={onSendMsg} reminderSent={reminderSent} setReminderSent={setReminderSent} dark={dark}/>}
+<button onClick={()=>setShowReviews(v=>!v)} className="w-full py-3 rounded-2xl text-sm font-semibold border-2 transition-all" style={{borderColor:showReviews?"#1a1a2e":"#e5e7eb",background:showReviews?"#1a1a2e":"white",color:showReviews?"white":"#374151"}}>
+{showReviews?"✕ Close Reviews":"⭐ Student Reviews"+(pendingReviews.filter(r=>!r.approved).length>0?" ("+pendingReviews.filter(r=>!r.approved).length+" pending)":"")}
+</button>
+{showReviews&&<div className={cx.card}>
+<p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Student Reviews</p>
+{pendingReviews.length===0?<p className="text-xs text-gray-300 text-center py-4">No reviews yet.</p>:
+<div className="space-y-3">{pendingReviews.map(r=>(
+<div key={r.id} className="rounded-xl p-3" style={{background:r.approved?"#f0fdf4":"#fefce8",border:"1px solid",borderColor:r.approved?"#bbf7d0":"#fde68a"}}>
+<div className="flex items-center justify-between mb-1"><p className="text-sm font-semibold">{r.name?.split(" ")[0]} <span className="text-xs text-gray-400">({r.level})</span></p><p className="text-sm">{"⭐".repeat(r.rating)}</p></div>
+<p className="text-xs text-gray-600 mb-2">"{r.text}"</p>
+<div className="flex gap-2">{!r.approved&&<button onClick={async()=>{await fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"approve",data:{id:r.id}})});setPendingReviews(p=>p.map(x=>x.id===r.id?{...x,approved:true}:x));}} className="text-xs px-3 py-1 rounded-lg font-semibold text-white" style={{background:"#16a34a"}}>✓ Approve</button>}<button onClick={async()=>{await fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"reject",data:{id:r.id}})});setPendingReviews(p=>p.filter(x=>x.id!==r.id));}} className="text-xs px-3 py-1 rounded-lg font-semibold text-white" style={{background:"#ef4444"}}>✕ Delete</button>{r.approved&&<span className="text-xs text-green-600 font-semibold ml-1">✅ Live on website</span>}</div>
+</div>
+))}</div>}
+</div>}
 {students.length===0?<div className={cx.card+" p-16 text-center"}><Users className="w-8 h-8 text-gray-200 mx-auto mb-3"/><p className="text-sm text-gray-400">No students yet.</p></div>:(
 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 <div className="lg:col-span-2 space-y-2">
@@ -1211,6 +1227,7 @@ const [promoCode,setPromoCode]=useState("");
 const [dataLoaded,setDataLoaded]=useState(false);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
+const [showReview,setShowReview]=useState(false);const [reviewRating,setReviewRating]=useState(5);const [reviewText,setReviewText]=useState("");const [reviewSubmitted,setReviewSubmitted]=useState(false);const [hasReviewed,setHasReviewed]=useState(false);
 const fileRef=useRef(null),endRef=useRef(null);
 const prevVocabLen=useRef(null);const prevBadgesLen=useRef(null);const prevTipsLen=useRef(null);
 // Exercise badge — once per day
@@ -1412,6 +1429,7 @@ if(reply.length>20){
   }catch(e){console.error("vocab extract error",e);}
 }
 const newTotal=totalMsgCount+1;setTotalMsgCount(newTotal);
+if(newTotal===25&&!hasReviewed)setTimeout(()=>setShowReview(true),2000);
 if(newTotal%10===0){const re=msgs.slice(-20).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");try{const ex=await callClaude([{role:"user",content:"Previous mistakes tracked: "+JSON.stringify(recurringMistakes)+"\n\nRecent conversation:\n"+re}],"Italian teacher. Analyse the recent conversation carefully. Return a JSON object with two keys: {\"add\": [new recurring mistakes you notice, max 2], \"remove\": [mistakes from the previous list that the student is now getting right consistently]}. Return ONLY the JSON object. IMPORTANT: Do NOT flag English loanwords used in Italian (drink, cocktail, computer, smartphone, internet, sport, bar, club, stress, ok, wifi, etc) — these are normal and accepted in Italian. If nothing to add or remove, use empty arrays.");const parsed=JSON.parse(ex.replace(/^[^{]*\{/,"{").replace(/\}[^}]*$/,"}").trim());setRecurringMistakes(p=>{let updated=p.filter(m=>!(parsed.remove||[]).some(r=>r.toLowerCase().includes(m.toLowerCase().slice(0,15))||m.toLowerCase().includes(r.toLowerCase().slice(0,15))));updated=[...new Set([...updated,...(parsed.add||[])])].slice(0,5);return updated;});}catch{}}
 if(newTotal%5===0){
   const recentExchange=msgs.slice(-10).map(m=>(m.sender==="user"?"Student: ":"Dante: ")+m.text).join("\n");
@@ -1656,6 +1674,19 @@ const handleTabClick=(t)=>{
 return (
 <div className={"flex flex-col h-screen"+(dark?" dark-app":"")} style={{background:dark?"#111827":"#faf9f7",color:dark?"#faf9f7":"#111827"}}><DarkStyle dark={dark}/>
 {showTest&&<TestModal level={level} onClose={()=>setShowTest(false)} onPass={passTest} onFail={failTest}/>}
+{showReview&&(
+<div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
+<div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4">
+{reviewSubmitted?<div className="text-center py-4"><p className="text-3xl mb-3">🎉</p><p className="font-semibold mb-1">Grazie!</p><p className="text-sm text-gray-400">Your review has been submitted. It will appear on our website once approved.</p><button onClick={()=>{setShowReview(false);setReviewSubmitted(false);}} className="mt-4 text-sm font-semibold" style={{color:"#1a1a2e"}}>Close</button></div>:(
+<><div className={cx.row+" mb-4"}><p className="font-semibold">How's Parlami? ⭐</p><button onClick={()=>setShowReview(false)}><X className="w-4 h-4 text-gray-400"/></button></div>
+<p className="text-xs text-gray-400 mb-4">Your feedback helps other learners discover Parlami!</p>
+<div className="flex justify-center gap-2 mb-4">{[1,2,3,4,5].map(s=><button key={s} onClick={()=>setReviewRating(s)} className="text-2xl transition-transform hover:scale-110">{s<=reviewRating?"⭐":"☆"}</button>)}</div>
+<textarea value={reviewText} onChange={e=>setReviewText(e.target.value)} placeholder="What do you like about Parlami?" className={cx.input+" w-full text-sm"} rows={3} style={{resize:"none"}}/>
+<button onClick={async()=>{if(!reviewText.trim())return;try{await fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"submit",data:{email,name,level,rating:reviewRating,text:reviewText.trim()}})});setReviewSubmitted(true);setHasReviewed(true);}catch{}}} disabled={!reviewText.trim()} className={cx.btn+" mt-3"} style={{background:"#1a1a2e"}}>Submit Review</button>
+</>)}
+</div>
+</div>
+)}
 {showChangePw&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
 <div className="bg-white rounded-2xl p-7 shadow-xl max-w-xs w-full mx-4">
