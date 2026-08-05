@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-behavior:smooth;">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -43,6 +43,19 @@
       backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(26,26,46,0.06);
     }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .nav-link {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--navy); }
 
     .nav-logo {
       display: flex;
@@ -90,7 +103,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 120px 24px 80px;
+      padding: 80px 24px 50px;
       position: relative;
     }
 
@@ -292,7 +305,7 @@
 
     /* FEATURES */
     .features {
-      padding: 100px 24px;
+      padding: 60px 24px;
       max-width: 960px;
       margin: 0 auto;
     }
@@ -348,7 +361,7 @@
 
     /* QUOTE */
     .quote-section {
-      padding: 80px 24px;
+      padding: 50px 24px;
       text-align: center;
       background: var(--navy);
       color: white;
@@ -374,7 +387,7 @@
 
     /* HOW IT WORKS */
     .how {
-      padding: 100px 24px;
+      padding: 60px 24px;
       max-width: 800px;
       margin: 0 auto;
     }
@@ -421,7 +434,7 @@
 
     /* CTA BOTTOM */
     .cta-bottom {
-      padding: 100px 24px;
+      padding: 60px 24px;
       text-align: center;
       position: relative;
     }
@@ -474,14 +487,14 @@
 
     /* PRICING */
     .pricing {
-      padding: 100px 24px;
+      padding: 60px 24px;
       text-align: center;
       background: white;
     }
 
     /* REVIEWS */
     .reviews {
-      padding: 80px 24px;
+      padding: 60px 24px;
       text-align: center;
       background: var(--cream);
     }
@@ -553,7 +566,7 @@
       margin-bottom: 32px;
     }
 
-    .pricing-features {
+    .pricing.features {
       text-align: left;
       list-style: none;
       margin-bottom: 36px;
@@ -634,6 +647,12 @@
       <img src="/icons/web-app-manifest-192x192.png" alt="Parlami" />
       <span class="nav-logo-text">Parlami</span>
     </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#reviews" class="nav-link">Reviews</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="/app" class="nav-login">Log in</a>
+    </div>
   </nav>
 
   <!-- HERO -->
@@ -690,7 +709,7 @@
   </section>
 
   <!-- FEATURES -->
-  <section class="features">
+  <section class="features" id="features">
     <p class="section-label">What you get</p>
     <div class="features-grid">
       <div class="feature">
@@ -709,17 +728,7 @@
         <p class="feature-desc">Fill-in-the-blank, multiple choice and vocab drills — all tailored to your exact level.</p>
       </div>
     </div>
-  </section>
-
-  <!-- QUOTE -->
-  <section class="quote-section">
-    <p class="quote-text">"The secret to learning Italian is simple — practice a little, every single day."</p>
-    <p class="quote-author">— Andrei, Italian teacher</p>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="how">
-    <p class="section-label" style="text-align:left; margin-bottom: 48px;">How it works</p>
+    <p class="section-label" style="margin-top:48px;">How it works</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">01</div>
@@ -743,6 +752,12 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- QUOTE -->
+  <section class="quote-section">
+    <p class="quote-text">"The secret to learning Italian is simple — practice a little, every single day."</p>
+    <p class="quote-author">— Andrei, Italian teacher</p>
   </section>
 
   <!-- REVIEWS -->
