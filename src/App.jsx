@@ -1367,29 +1367,6 @@ const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),ha
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
 const logout=()=>{try{localStorage.removeItem("parlami_email");localStorage.removeItem("parlami_name");localStorage.removeItem("parlami_hash");}catch{}setView("login");setMsgs([]);setTab("chat");setLevel("A1");setBadges([]);setStreak(0);setLastDate(null);setTestsPassed([]);setVocabCount(0);setPw("");setPw2("");setLessonNote("");setStep("identify");setLoginErr("");setRecurringMistakes([]);setTipLog([]);setTotalMsgCount(0);setSavedWords([]);setTodaysWords([]);setShowChangePw(false);setDataLoaded(false);setStudentGoal("");setOnboardStep(0);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");};
 const handleChangePw=async()=>{const d=await load("student:"+email);if(!d||d.passwordHash!==hashPw(oldPw)){setChangePwErr("Current password is incorrect.");return;}if(newPw.length<4){setChangePwErr("New password must be at least 4 characters.");return;}if(newPw!==newPw2){setChangePwErr("Passwords don't match.");return;}d.passwordHash=hashPw(newPw);await store("student:"+email,d);setPw(newPw);setChangePwOk(true);setTimeout(()=>{setShowChangePw(false);setOldPw("");setNewPw("");setNewPw2("");setChangePwErr("");setChangePwOk(false);},1800);};
-useEffect(()=>{
-if(view!=="student")return;
-const ts=new Date().toISOString().slice(0,10);
-if(msgs.some(m=>m.sender==="ai"&&m.date===ts))return;
-const hour=new Date().getHours();
-const practicedToday=msgs.filter(m=>m.sender==="user"&&m.date===ts).length;
-const streakAtRisk=streak>0&&practicedToday===0;
-const goalBehind=practicedToday<dailyGoal&&hour>=18;
-const open=async()=>{
-setTyping(true);
-try{
-const np=lessonNote?"Teacher's last lesson note: \""+lessonNote+"\". Reference this naturally.":"";
-const vp=lessonVocab?"New vocabulary from this lesson: \""+lessonVocab+"\". Try to use or reference these words naturally.":"";
-let urgency="";
-if(streakAtRisk&&streak>=3) urgency="IMPORTANT: The student has a "+streak+"-day streak at risk today — they haven't practiced yet. Open with urgent but encouraging Italian warning about losing the streak. Reference the number directly.";
-else if(goalBehind) urgency="The student hasn't reached their daily goal of "+dailyGoal+" messages yet and it's evening. Open with a gentle motivating nudge in Italian to keep going.";
-const r=await callClaude([{role:"user",content:"[Student just logged in]"}],"You are Dante, the AI language assistant created by Andrei, a professional Italian teacher. Your personality: warm, fun and relaxed, deeply encouraging, patient and empathetic, passionate about Italian language and culture. You have a light sense of humour — you laugh WITH students when they make mistakes, never AT them. You occasionally reference Italian culture, food, places and expressions to make conversations feel authentic and immersive. You sound like a knowledgeable Italian friend, not a robot or a textbook. Never be stiff or formal. Make students feel excited about learning Italian. Student's name is "+name+". Student is "+LN(level)+" ("+level+"). Streak: "+streak+" days. "+(studentGoal?"Their learning goal: "+studentGoal+". ":"")+ np+" "+vp+" "+(urgency||"Greet them by name warmly and with your signature friendly energy. 2-3 sentences.")+" End with a question in Italian. Never ask for their name - you already know it.");
-setMsgs(p=>[...p,{id:Date.now(),text:r,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:ts}]);
-}catch{}
-setTyping(false);
-};
-open();
-},[view]);
 const send=async()=>{
 if((!curMsg.trim()&&!file)||typing)return;
 const txt=curMsg,f=file;setCurMsg("");setFile(null);
