@@ -48,7 +48,7 @@ const DarkToggle = ({dark, setDark}) => (
     {dark?"☀️":"🌙"}
   </button>
 );
-const LEVEL_REQ = { A1:1000, A2:2000, B1:3500, B2:5500, C1:8000, C2:12000 };
+const LEVEL_REQ = { A1:500, A2:1000, B1:1750, B2:2750, C1:4000, C2:6000 };
 const DarkStyle = ({dark}) => dark ? <style>{`
   .dark-app .bg-white { background: #1f2937 !important; color: #faf9f7 !important; }
   .dark-app .border-gray-100 { border-color: #374151 !important; }
@@ -1440,7 +1440,7 @@ const handleRemove=async e=>{try{await dbCall("delete",{email:e});}catch{}setStu
 const handleResetPw=async e=>{const d=await load("student:"+e);if(d){d.passwordHash=hashPw("parlami2026");await store("student:"+e,d);}};
 const handleSaveNote=async(e,note)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonNote=note;d.lessonNoteDate=date;d.noteHistory=[...(d.noteHistory||[]),{note,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory}:s));return{lessonNote:note,lessonNoteDate:date,noteHistory:d.noteHistory};}return null;};
 const handleSaveVocab=async(e,vocab)=>{const d=await load("student:"+e);if(d){const date=new Date().toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});d.lessonVocab=vocab;d.vocabHistory=[...(d.vocabHistory||[]),{vocab,date}].slice(-5);await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,lessonVocab:vocab,vocabHistory:d.vocabHistory}:s));return{lessonVocab:vocab,vocabHistory:d.vocabHistory};}return null;};
-const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel}:s));setSel(s=>s?{...s,level:newLevel}:s);}};
+const handleChangeLevel=async(e,newLevel)=>{const d=await load("student:"+e);if(d){d.level=newLevel;d.totalMsgCount=0;const tfa={...(d.testFailedAt||{})};delete tfa[newLevel];d.testFailedAt=tfa;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,level:newLevel,totalMsgCount:0,testFailedAt:tfa}:s));setSel(s=>s?{...s,level:newLevel,totalMsgCount:0,testFailedAt:tfa}:s);}};
 const handleToggleFree=async(e,val)=>{
   try{
     await dbCall("save",{email:e,isPreplyStudent:val,subscriptionStatus:val?"free":"free"});
@@ -1449,7 +1449,7 @@ const handleToggleFree=async(e,val)=>{
 };
 const handleSendMsg=async(e,msg)=>{const d=await load("student:"+e);if(d){const tm={id:Date.now(),text:"👨‍🏫 "+msg,sender:"ai",fromTeacher:true,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)};d.messages=[...(d.messages||[]),tm];d.pendingMsg=null;await store("student:"+e,d);setStudents(p=>p.map(s=>s.email===e?{...s,messages:d.messages}:s));}};
 const loadAll=async()=>{try{const d=await dbCall("list",{});setStudents(d.students||[]);}catch(e){console.error("loadAll error",e);}};
-const passTest=async l=>{const newTests=[...testsPassed,l];const ni=LEVELS.indexOf(l)+1;const newLevel=ni<LEVELS.length?LEVELS[ni]:level;setTestsPassed(newTests);setLevel(newLevel);setShowTest(false);const d=await load("student:"+email);if(d){d.testsPassed=newTests;d.level=newLevel;await store("student:"+email,d);}};
+const passTest=async l=>{const newTests=[...testsPassed,l];const ni=LEVELS.indexOf(l)+1;const newLevel=ni<LEVELS.length?LEVELS[ni]:level;setTestsPassed(newTests);setLevel(newLevel);setTotalMsgCount(0);setTestFailedAt(p=>{const n={...p};delete n[newLevel];return n;});setShowTest(false);const d=await load("student:"+email);if(d){d.testsPassed=newTests;d.level=newLevel;d.totalMsgCount=0;const tfa={...(d.testFailedAt||{})};delete tfa[newLevel];d.testFailedAt=tfa;await store("student:"+email,d);}};
 const failTest=l=>{setTestFailedAt(p=>({...p,[l]:totalMsgCount}));setShowTest(false);};
 if(view==="onboarding") {
 const LEVELS_OB=[
