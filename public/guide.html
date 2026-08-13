@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parlami — How It Works</title>
+<link rel="icon" href="/icons/favicon.ico">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf9f7;
+    --navy: #1a1a2e;
+    --red: #C8102E;
+    --border: #e5e7eb;
+    --gray: #6b7280;
+    --card: #ffffff;
+    --gold: #f59e0b;
+    --green: #16a34a;
+    --indigo: #6366f1;
+    --orange: #ea580c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 64px; display: flex; flex-direction: column; gap: 44px; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; }
+  .logo-row { display: flex; align-items: center; gap: 10px; }
+  .logo-row h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; }
+  .back-btn { font-size: 12px; font-weight: 600; color: var(--gray); text-decoration: none; border: 1.5px solid var(--border); padding: 6px 14px; border-radius: 100px; white-space: nowrap; }
+  .back-btn:hover { border-color: var(--navy); color: var(--navy); }
+
+  .hero { text-align: center; padding: 20px 0 4px; }
+  .hero-eyebrow { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: var(--navy); color: white; padding: 5px 14px; border-radius: 100px; margin-bottom: 18px; }
+  .hero h2 { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 700; line-height: 1.1; }
+  .hero p { font-size: 15px; color: var(--gray); margin-top: 10px; max-width: 440px; margin-left: auto; margin-right: auto; }
+
+  .tab-nav { display: flex; gap: 6px; background: white; border: 1px solid var(--border); border-radius: 14px; padding: 4px; flex-wrap: wrap; }
+  .tab-nav a { flex: 1; min-width: 70px; text-align: center; font-size: 12px; font-weight: 700; padding: 8px 6px; border-radius: 10px; text-decoration: none; color: var(--gray); }
+  .tab-nav a:hover { background: var(--cream); color: var(--navy); }
+
+  .section-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .section-label .num { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 700; color: var(--red); }
+  .section-label h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; }
+  .section-sub { font-size: 13px; color: var(--gray); margin: 6px 0 18px; }
+
+  .sub-block { margin-bottom: 20px; }
+  .sub-block:last-child { margin-bottom: 0; }
+  .sub-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sub-head .em { font-size: 16px; }
+  .sub-head h4 { font-size: 14px; font-weight: 700; }
+
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .feature-grid { grid-template-columns: 1fr; } }
+  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+  .feature-card .icon { font-size: 20px; margin-bottom: 8px; display: block; }
+  .feature-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .feature-card p { font-size: 12.5px; color: var(--gray); }
+
+  .menu-list { display: flex; flex-direction: column; gap: 8px; }
+  .menu-item { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; }
+  .menu-item .num-badge { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .menu-item .em { font-size: 18px; }
+  .menu-item .txt { font-size: 14px; font-weight: 600; }
+  .menu-item .txt span { display: block; font-size: 12px; font-weight: 400; color: var(--gray); margin-top: 1px; }
+
+  .tip { background: #f8faff; border: 1px solid #dbe4ff; border-radius: 14px; padding: 14px 16px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+  .tip .em { font-size: 16px; flex-shrink: 0; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge-chip { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 100px; padding: 7px 14px 7px 10px; font-size: 12px; font-weight: 600; }
+  .badge-chip .em { font-size: 15px; }
+
+  .page-link-row { display: flex; flex-direction: column; gap: 10px; }
+  .page-link { display: flex; align-items: center; justify-content: space-between; background: var(--navy); color: white; border-radius: 14px; padding: 16px 18px; text-decoration: none; }
+  .page-link.gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .page-link .l { display: flex; align-items: center; gap: 12px; }
+  .page-link .em { font-size: 20px; }
+  .page-link h5 { font-size: 14px; font-weight: 700; }
+  .page-link p { font-size: 12px; color: #c7cadd; margin-top: 1px; }
+  .page-link.gold p { color: #fef3c7; }
+  .page-link .arrow { font-size: 16px; opacity: 0.7; }
+
+  .prog-list { display: flex; flex-direction: column; gap: 10px; }
+  .prog-item { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .prog-item .em { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .prog-item h5 { font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
+  .prog-item p { font-size: 12.5px; color: var(--gray); }
+
+  .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 560px) { .install-grid { grid-template-columns: 1fr; } }
+  .install-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px 20px; }
+  .install-card .plat { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .install-card .plat .em { font-size: 20px; }
+  .install-card .plat h4 { font-size: 15px; font-weight: 700; }
+  .install-steps { display: flex; flex-direction: column; gap: 14px; }
+  .install-step { display: flex; gap: 12px; align-items: flex-start; }
+  .install-step .n { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--cream); border: 1.5px solid var(--navy); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .install-step .t { font-size: 13px; }
+  .install-step .t strong { font-weight: 700; }
+  .icon-inline { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 5px; background: var(--navy); color: white; font-size: 11px; vertical-align: -4px; margin: 0 2px; }
+
+  .footer { text-align: center; font-size: 12px; color: var(--gray); padding-top: 8px; border-top: 1px solid var(--border); }
+  .footer a { color: var(--navy); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-row">
+      <svg width="30" height="30" viewBox="0 0 80 80" fill="none">
+        <rect width="80" height="80" rx="20" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+        <rect x="4" y="4" width="21" height="72" rx="6" fill="#009246"/>
+        <rect x="25" y="4" width="30" height="72" fill="white"/>
+        <rect x="55" y="4" width="21" height="72" rx="6" fill="#CE2B37"/>
+        <rect x="14" y="18" width="52" height="44" rx="10" fill="white" fill-opacity="0.97"/>
+        <text x="40" y="51" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="32" fill="#1a1a2e">P</text>
+      </svg>
+      <h1>Parlami</h1>
+    </div>
+    <a href="/app" class="back-btn">← Open app</a>
+  </div>
+
+  <div class="hero">
+    <span class="hero-eyebrow">Guida rapida · Quick guide</span>
+    <h2>Get the most<br>out of Parlami</h2>
+    <p>Everything inside each tab, and how to keep Parlami one tap away on your phone.</p>
+  </div>
+
+  <div class="tab-nav">
+    <a href="#chat">💬 Chat</a>
+    <a href="#exercises">📝 Exercises</a>
+    <a href="#vocab">🗂️ Vocab</a>
+    <a href="#progress">📈 Progress</a>
+  </div>
+
+  <div id="chat">
+    <div class="section-label"><span class="num">01</span><h3>Chat tab</h3></div>
+    <p class="section-sub">This is home base — your ongoing conversation with Dante.</p>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">👋</span><h4>Every time you log in</h4></div>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Dante greets you with a menu. Reply with a number, or just type what you want in your own words.</p>
+      <div class="menu-list">
+        <div class="menu-item"><div class="num-badge">1</div><span class="em">🎭</span><div class="txt">Role play<span>Restaurant, shopping, travel, doctor, airport — Dante sets the scene and stays in character.</span></div></div>
+        <div class="menu-item"><div class="num-badge">2</div><span class="em">🔄</span><div class="txt">Verb practice<span>Conversational, not a drill — Dante mixes tenses naturally into chat.</span></div></div>
+        <div class="menu-item"><div class="num-badge">3</div><span class="em">💬</span><div class="txt">Free chat<span>Talk about anything. Dante suggests topics if you're stuck.</span></div></div>
+        <div class="menu-item"><div class="num-badge">4</div><span class="em">📝</span><div class="txt">Grammar drills<span>One concept at a time, taught through real conversation.</span></div></div>
+      </div>
+      <div class="tip" style="margin-top:12px;"><span class="em">💡</span><span>Want to switch activity mid-chat? Send the number again — Dante drops whatever you were doing and jumps straight to the new one.</span></div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">🧠</span><h4>How Dante talks to you</h4></div>
+      <div class="feature-grid">
+        <div class="feature-card"><span class="icon">🇮🇹</span><h4>Adapts to your level</h4><p>A1 gets Italian-first with English translations. By B1+, it's almost entirely in Italian.</p></div>
+        <div class="feature-card"><span class="icon">🔊</span><h4>Listen to anything</h4><p>Tap the speaker icon on any message to hear it read aloud.</p></div>
+        <div class="feature-card"><span class="icon">✏️</span><h4>Gentle corrections</h4><p>Dante fixes your biggest mistake, briefly, and moves on — never a wall of red ink.</p></div>
+        <div class="feature-card"><span class="icon">📚</span><h4>Knows your lessons</h4><p>If your teacher has added notes, Dante references them and any new vocabulary from your last lesson.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="exercises">
+    <div class="section-label"><span class="num">02</span><h3>Exercises tab</h3></div>
+    <p class="section-sub">Structured practice, separate from free conversation.</p>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">✅</span><h4>Practice exercises</h4></div>
+      <p style="font-size:13px;color:var(--gray);">A fresh set of 6 exercises every time — 3 fill-in-the-blank, 3 multiple choice — generated for your exact level. If your teacher has added a lesson note or new vocabulary, the exercises are built around that. Dante also targets your recurring mistakes on purpose, so weak spots get extra reps.</p>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">🃏</span><h4>Smart flashcards</h4></div>
+      <p style="font-size:13px;color:var(--gray);">Flip through your saved vocabulary. Mark each word "got it" or "don't know it" — the deck remembers. Words you struggle with come back sooner; words you know well fade out. Every session is built from what you're actually about to forget, not a random shuffle.</p>
+    </div>
+  </div>
+
+  <div id="vocab">
+    <div class="section-label"><span class="num">03</span><h3>Vocab tab</h3></div>
+    <p class="section-sub">Every word you encounter, organized automatically.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card"><span class="icon">⭐</span><h4>Today's Words</h4><p>New words from today's chat, collected automatically. They move into your main vocab list the next day.</p></div>
+      <div class="feature-card"><span class="icon">🗂️</span><h4>Auto-categorized</h4><p>Dante sorts every word into groups — Verbi, Cibo, Viaggio, Espressioni, and more — with English translation and pronunciation.</p></div>
+      <div class="feature-card"><span class="icon">🔤</span><h4>Three display modes</h4><p>Switch between Italian only, Italian + English, or Italian + English + phonetic pronunciation.</p></div>
+      <div class="feature-card"><span class="icon">✅</span><h4>Star or master a word</h4><p>⭐ words you want to focus on, ✅ mark words you've mastered — they move to a separate "Mastered" list.</p></div>
+    </div>
+    <div class="tip" style="margin-top:14px;"><span class="em">➕</span><span>You can also add your own words directly — anything you look up outside a chat, so nothing gets lost.</span></div>
+  </div>
+
+  <div id="progress">
+    <div class="section-label"><span class="num">04</span><h3>Progress tab</h3></div>
+    <p class="section-sub">Everything about how you're doing, all in one place.</p>
+
+    <div class="prog-list">
+      <div class="prog-item"><span class="em">📊</span><div><h5>Your stats at a glance</h5><p>Day streak, words learned, messages this month, and your leaderboard rank — tap any of them to jump straight to that tab.</p></div></div>
+      <div class="prog-item"><span class="em">📈</span><div><h5>Level progress bar</h5><p>Shows exactly how many messages stand between you and your next level test.</p></div></div>
+      <div class="prog-item"><span class="em">🗓️</span><div><h5>Activity chart & calendar</h5><p>A bar chart of your practice by week, month, or all time, plus a 4-week heatmap so you can see your consistency at a glance.</p></div></div>
+      <div class="prog-item"><span class="em">🎓</span><div><h5>Level test</h5><p>Unlocks once you hit your message target. Pass it to move up a level — if you don't pass, it locks for a bit before you can retry.</p></div></div>
+      <div class="prog-item"><span class="em">🏅</span><div><h5>Tests passed</h5><p>Every level you've cleared, shown as a permanent badge.</p></div></div>
+      <div class="prog-item"><span class="em">📋</span><div><h5>Dante's Report</h5><p>Ask for a personal written progress report — Dante reviews your recent conversations and tells you where you actually stand.</p></div></div>
+      <div class="prog-item"><span class="em">💡</span><div><h5>Tips from Dante</h5><p>A running log of personal tips, one added roughly every 5 messages, that you can flip back through anytime.</p></div></div>
+      <div class="prog-item"><span class="em">🔁</span><div><h5>Dante is watching</h5><p>Patterns in your mistakes get flagged here, so you know exactly what to keep an eye on.</p></div></div>
+      <div class="prog-item"><span class="em">📝</span><div><h5>Study tip of the week</h5><p>A short Italian study strategy, in Italian and English, that changes every week.</p></div></div>
+      <div class="prog-item"><span class="em">🏆</span><div><h5>Badges</h5><p>8 to collect, each with its own progress bar so you can see exactly how close you are.</p></div></div>
+    </div>
+    <p style="font-size:13px;font-weight:600;margin:18px 0 10px;">The 8 badges</p>
+    <div class="badge-row">
+      <div class="badge-chip"><span class="em">🎯</span>First Steps</div>
+      <div class="badge-chip"><span class="em">💬</span>Chatterbox</div>
+      <div class="badge-chip"><span class="em">⭐</span>Dedicated</div>
+      <div class="badge-chip"><span class="em">🔥</span>7-Day Streak</div>
+      <div class="badge-chip"><span class="em">🌟</span>30-Day Streak</div>
+      <div class="badge-chip"><span class="em">📖</span>Explorer</div>
+      <div class="badge-chip"><span class="em">📚</span>Word Master</div>
+      <div class="badge-chip"><span class="em">🌍</span>Polyglot</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label"><span class="num">05</span><h3>Beyond the app</h3></div>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">🎮</span><h4>Test yourself with the quiz</h4></div>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">10 questions on Italian language and culture, tailored to your level — a quick, different way to practice.</p>
+      <div class="page-link-row">
+        <a href="/game" class="page-link"><div class="l"><span class="em">🎮</span><div><h5>Parlami Quiz</h5><p>Language + culture trivia, matched to your level.</p></div></div><span class="arrow">→</span></a>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-head"><span class="em">🏆</span><h4>Stay motivated</h4></div>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">The leaderboard isn't practice itself — it's there to keep you coming back. See how your consistency compares to other students, and let a little competition do the rest.</p>
+      <div class="page-link-row">
+        <a href="/leaderboard" class="page-link gold"><div class="l"><span class="em">🏆</span><div><h5>Leaderboard</h5><p>Where you rank against everyone else practicing.</p></div></div><span class="arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label"><span class="num">06</span><h3>Add Parlami to your home screen</h3></div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:18px;">Get one-tap access, just like a real app — no App Store needed.</p>
+    <div class="install-grid">
+
+      <div class="install-card">
+        <div class="plat"><span class="em">🍎</span><h4>iPhone / iPad (Safari)</h4></div>
+        <div class="install-steps">
+          <div class="install-step"><div class="n">1</div><div class="t">Open <strong>parlami.chat</strong> in <strong>Safari</strong> (this must be Safari, not Chrome).</div></div>
+          <div class="install-step"><div class="n">2</div><div class="t">Tap the <strong>Share</strong> icon <span class="icon-inline">⬆</span> at the bottom of the screen.</div></div>
+          <div class="install-step"><div class="n">3</div><div class="t">Scroll down and tap <strong>"Add to Home Screen."</strong></div></div>
+          <div class="install-step"><div class="n">4</div><div class="t">Tap <strong>"Add"</strong> in the top corner. Parlami now appears as an icon on your home screen.</div></div>
+        </div>
+      </div>
+
+      <div class="install-card">
+        <div class="plat"><span class="em">🤖</span><h4>Android (Chrome)</h4></div>
+        <div class="install-steps">
+          <div class="install-step"><div class="n">1</div><div class="t">Open <strong>parlami.chat</strong> in <strong>Chrome</strong>.</div></div>
+          <div class="install-step"><div class="n">2</div><div class="t">Tap the <strong>⋮</strong> menu in the top-right corner.</div></div>
+          <div class="install-step"><div class="n">3</div><div class="t">Tap <strong>"Add to Home screen"</strong> or <strong>"Install app."</strong></div></div>
+          <div class="install-step"><div class="n">4</div><div class="t">Confirm by tapping <strong>"Add."</strong> Parlami now opens full-screen, just like a native app.</div></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="tip" style="margin-top:16px;"><span class="em">⚡</span><span>Once installed, Parlami opens instantly without the browser address bar — and works even with a spotty connection.</span></div>
+  </div>
+
+  <div class="footer">
+    <p>Ready to practice? <a href="/app">Open Parlami →</a></p>
+  </div>
+
+</div>
+</body>
+</html>
