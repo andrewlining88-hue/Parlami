@@ -798,7 +798,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
 {[["🔥",practiceStreak,"Day streak",null],["📚",vocabularyCount,"Words learned","vocab"],["💬",msgsThisMonth,"Messages this month","chat"],["🏆",lbPos??"—","Leaderboard rank","leaderboard"]].map(([icon,val,label,action])=>(
 <div key={label} onClick={()=>{if(action==="leaderboard")window.open("/leaderboard","_blank");else if(action&&onTabChange)onTabChange(action);}} className={"rounded-xl p-3 text-center "+(action?"cursor-pointer hover:opacity-80 transition-opacity":"")} style={{background:dark?"#111827":"#faf9f7"}}>
 <p className="text-xl mb-1">{icon}</p>
-<p className="text-xl font-bold" style={{color:"#1a1a2e"}}>{val}</p>
+<p className="text-xl font-bold" style={{color:dark?"#f9fafb":"#1a1a2e"}}>{val}</p>
 <p className="text-xs text-gray-400 mt-0.5">{label}</p>
 </div>
 ))}
