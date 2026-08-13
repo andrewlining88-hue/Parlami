@@ -782,7 +782,7 @@ useEffect(()=>{
   fetch("/api/db",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"list",data:{}})})
     .then(r=>r.json()).then(d=>{
       const students=d.students||[];
-      const sorted=[...students].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0));
+      const sorted=[...students].sort((a,b)=>(b.totalMsgCount||0)-(a.totalMsgCount||0));
       const pos=sorted.findIndex(s=>s.email===email)+1;
       setLbPos(pos>0?pos:null);
     }).catch(()=>{});
