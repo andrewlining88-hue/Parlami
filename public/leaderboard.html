@@ -181,7 +181,7 @@ function renderBoard() {
   const container = document.getElementById('board-container');
 
   const sorted = [...allStudents]
-    .map(s => ({ ...s, _val: s.totalMsgCount || 0, _label: 'messages' }))
+    .map(s => ({ ...s, _val: (s.lifetimeMsgCount != null ? s.lifetimeMsgCount : s.totalMsgCount) || 0, _label: 'messages' }))
     .filter(s => s._val > 0)
     .sort((a, b) => b._val - a._val);
 
