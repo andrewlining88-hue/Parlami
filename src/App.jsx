@@ -953,7 +953,7 @@ return(<div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
 </div>);}
 
 
-function ExercisesTab({studentLevel,vocabWords,savedWords=[],lessonNote,lessonVocab,recurringMistakes=[]}) {
+function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lessonNote,lessonVocab,recurringMistakes=[]}) {
   const color = LC(studentLevel);
   const [mode,setMode] = useState("practice"); // "flashcards" | "practice"
 
@@ -967,8 +967,12 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],lessonNote,lessonVo
   const [translations,setTranslations] = useState({});
   const [loadingTrans,setLoadingTrans] = useState(false);
 
+  const todayStr = new Date().toISOString().slice(0,10);
+  const dueOf = (w) => { const sw = savedWords.find(s=>s.word===w.word); return (!sw||!sw.nextReview)?"0000-00-00":sw.nextReview; };
   const startFlashcards = async () => {
-    const shuffled = [...allVocab].sort(()=>Math.random()-0.5).slice(0,10);
+    const due = allVocab.filter(w=>dueOf(w)<=todayStr).sort((a,b)=>dueOf(a).localeCompare(dueOf(b)));
+    const notDueYet = allVocab.filter(w=>dueOf(w)>todayStr).sort((a,b)=>dueOf(a).localeCompare(dueOf(b)));
+    const shuffled = [...due.slice(0,10),...notDueYet].slice(0,10);
     setDeck(shuffled);
     setCardIdx(0);
     setFlipped(false);
@@ -989,8 +993,30 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],lessonNote,lessonVo
     }
   };
 
+  const updateSRS = (wordStr, correct) => {
+    if(!setSavedWords) return;
+    setSavedWords(prev=>{
+      const idx = prev.findIndex(w=>w.word===wordStr);
+      const ex = idx!==-1 ? prev[idx] : {word:wordStr,starred:false,mastered:false};
+      let {interval=0, easeFactor=2.5, reviewCount=0} = ex;
+      if(correct){
+        reviewCount++;
+        interval = reviewCount===1?1:reviewCount===2?3:Math.round(Math.max(interval,1)*easeFactor);
+        easeFactor = Math.min(easeFactor+0.1, 3.0);
+      } else {
+        reviewCount = Math.max(0, reviewCount-1);
+        interval = 1;
+        easeFactor = Math.max(easeFactor-0.2, 1.3);
+      }
+      const nextReview = new Date(Date.now()+interval*86400000).toISOString().slice(0,10);
+      const updated = {...ex, interval, easeFactor, reviewCount, nextReview};
+      if(idx!==-1){ const copy=[...prev]; copy[idx]=updated; return copy; }
+      return [...prev, updated];
+    });
+  };
   const handleFC = (result) => {
     setFcResult(p=>({...p,[cardIdx]:result}));
+    updateSRS(deck[cardIdx].word, result==="got");
     if(cardIdx<deck.length-1){setCardIdx(cardIdx+1);setFlipped(false);}
     else setFcDone(true);
   };
@@ -1798,7 +1824,7 @@ return <button key={t} onClick={()=>handleTabClick(t)} className={"flex-1 py-3 t
 )}
 {tab==="progress"&&<ProgressTab messages={msgs} studentLevel={level} practiceStreak={streak} vocabularyCount={[...new Map([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)].map(w=>[w,1])).keys()].length} testsPassed={testsPassed} unlockedBadges={badges} chartFilter={chartFilter} setChartFilter={setChartFilter} activityLog={activityLog} onShowTest={()=>setShowTest(true)} recurringMistakes={recurringMistakes} tipLog={tipLog} testFailedAt={testFailedAt} totalMsgCount={totalMsgCount} studentReport={studentReport} onGenReport={genStudentReport} loadingStudentReport={loadingStudentReport} onTabChange={handleTabClick} dark={dark}/>}
 {tab==="vocab"&&<VocabTab vocabWords={vocabWords} studentLevel={level} savedWords={savedWords} setSavedWords={setSavedWords} todaysWords={todaysWords} setTodaysWords={setTodaysWords} categorizedVocab={categorizedVocab} onSaveCategorized={saveCategorizedVocab} dark={dark}/>}
-{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
+{tab==="exercises"&&<ExercisesTab studentLevel={level} vocabWords={vocabWords} savedWords={savedWords} setSavedWords={setSavedWords} lessonNote={lessonNote} lessonVocab={lessonVocab} recurringMistakes={recurringMistakes}/>}
 
 </div>
 );
