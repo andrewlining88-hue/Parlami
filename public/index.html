@@ -7,6 +7,8 @@
   <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
 <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#ffffff" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
@@ -668,6 +670,7 @@
       <a href="#features" class="nav-link">Features</a>
       <a href="#reviews" class="nav-link">Reviews</a>
       <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="/guide" class="nav-link">Guide</a>
       <a href="/app" class="nav-login">Log in</a>
     </div>
   </nav>
@@ -856,6 +859,13 @@
     document.getElementById('reviews-grid').innerHTML = '';
   }
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.error('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
