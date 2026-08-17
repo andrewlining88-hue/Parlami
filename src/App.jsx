@@ -1047,7 +1047,7 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lesso
       const r=await callClaude([{role:"user",content:"STUDENT LEVEL: "+studentLevel+". "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+seed}],
         "You are an Italian teacher. Create exercises at exactly "+studentLevel+" level. "+
         (studentLevel==="A1"?"A1: Only present tense, very simple sentences.":studentLevel==="A2"?"A2: Present and simple past, everyday vocabulary.":studentLevel==="B1"?"B1: Must use passato prossimo, imperfetto or condizionale. Never simple present as answer.":studentLevel==="B2"?"B2: Use congiuntivo, conditional, complex structures.":"C1/C2: Idiomatic expressions, advanced grammar.")+
-        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank with word bank: {type:fill,s:sentence with ___,a:correct,wb:[correct,wrong1,wrong2,wrong3]}. 3 multiple choice: {type:mc,q:question,o:[opt1,opt2,opt3,opt4],a:correct}. No other text.");
+        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank with word bank: {type:fill,s:sentence with ___,a:correct,wb:[correct,wrong1,wrong2,wrong3],why:brief explanation}. 3 multiple choice: {type:mc,q:question,o:[opt1,opt2,opt3,opt4],a:correct,why:brief explanation}. CRITICAL: the 'a' field must be copied EXACTLY character-for-character from one of the entries in 'wb'/'o' — same capitalization, same punctuation, same spacing. Do not rephrase or reformat it differently. The 'why' field is one short sentence explaining the grammar rule or reasoning behind the correct answer — written in "+(studentLevel==="A1"||studentLevel==="A2"?"simple English":"Italian, with the key rule in [it]...[/it] tags")+". No other text.");
       const start=r.indexOf("[");const end=r.lastIndexOf("]");
       if(start===-1||end===-1)throw new Error("no array");
       const arr=JSON.parse(r.slice(start,end+1));
@@ -1056,6 +1056,12 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lesso
         if(e.type==="fill")return typeof e.s==="string"&&e.s.includes("___")&&Array.isArray(e.wb)&&e.wb.length>=2;
         if(e.type==="mc")return typeof e.q==="string"&&Array.isArray(e.o)&&e.o.length>=2;
         return false;
+      }).map(e=>{
+        const opts=e.type==="fill"?e.wb:e.o;
+        const match=opts.find(o=>norm(o)===norm(e.a));
+        if(match)e.a=match;
+        else if(!opts.some(o=>norm(o)===norm(e.a)))opts[0]=e.a;
+        return e;
       });
       if(valid.length>=4)setList(valid);
     }catch{}
@@ -1163,7 +1169,10 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lesso
                     })}
                   </div>
                 ):(
-                  <p className="text-xs font-medium mt-1" style={{color:isOk?"#16a34a":"#dc2626"}}>{isOk?"Perfetto! 🎉":"Correct: "+ex.a}</p>
+                  <div>
+                    <p className="text-xs font-medium mt-1" style={{color:isOk?"#16a34a":"#dc2626"}}>{isOk?"Perfetto! 🎉":"Correct: "+ex.a}</p>
+                    {ex.why&&<div className="text-xs text-gray-400 mt-1.5"><Markdown text={ex.why}/></div>}
+                  </div>
                 )}
               </div>
             )}
@@ -1179,7 +1188,7 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lesso
                     return<button key={j} onClick={()=>{if(isDone)return;setSel(p=>({...p,[i]:opt}));checkIt(i,opt);}} className="px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition-all" style={{background:bg,borderColor:br,color:co}}>{opt}</button>;
                   })}
                 </div>
-                {isDone&&<p className="text-xs mt-2 font-medium" style={{color:isOk?"#16a34a":"#dc2626"}}>{isOk?"Perfetto! 🎉":"✗ Correct: "+ex.a}</p>}
+                {isDone&&<div><p className="text-xs mt-2 font-medium" style={{color:isOk?"#16a34a":"#dc2626"}}>{isOk?"Perfetto! 🎉":"✗ Correct: "+ex.a}</p>{ex.why&&<div className="text-xs text-gray-400 mt-1"><Markdown text={ex.why}/></div>}</div>}
               </div>
             )}
           </div>
