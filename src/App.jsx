@@ -1047,7 +1047,7 @@ function ExercisesTab({studentLevel,vocabWords,savedWords=[],setSavedWords,lesso
       const r=await callClaude([{role:"user",content:"STUDENT LEVEL: "+studentLevel+". "+teacherBlock+" "+chatBlock+" "+mistakesBlock+" "+seed}],
         "You are an Italian teacher. Create exercises at exactly "+studentLevel+" level. "+
         (studentLevel==="A1"?"A1: Only present tense, very simple sentences.":studentLevel==="A2"?"A2: Present and simple past, everyday vocabulary.":studentLevel==="B1"?"B1: Must use passato prossimo, imperfetto or condizionale. Never simple present as answer.":studentLevel==="B2"?"B2: Use congiuntivo, conditional, complex structures.":"C1/C2: Idiomatic expressions, advanced grammar.")+
-        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank with word bank: {type:fill,s:sentence with ___,a:correct,wb:[correct,wrong1,wrong2,wrong3],why:brief explanation}. 3 multiple choice: {type:mc,q:question,o:[opt1,opt2,opt3,opt4],a:correct,why:brief explanation}. CRITICAL: the 'a' field must be copied EXACTLY character-for-character from one of the entries in 'wb'/'o' — same capitalization, same punctuation, same spacing. Do not rephrase or reformat it differently. The 'why' field is one short sentence explaining the grammar rule or reasoning behind the correct answer — written in "+(studentLevel==="A1"||studentLevel==="A2"?"simple English":"Italian, with the key rule in [it]...[/it] tags")+". No other text.");
+        " Return ONLY a JSON array of exactly 6 exercises. 3 fill-in-blank with word bank: {type:fill,s:sentence with ___,a:correct,wb:[correct,wrong1,wrong2,wrong3],why:brief explanation}. 3 multiple choice: {type:mc,q:question,o:[opt1,opt2,opt3,opt4],a:correct,why:brief explanation}. CRITICAL: every entry in 'wb' and 'o' must be an actual Italian word or phrase — NEVER English, even if the question itself ('q') is phrased in English. The 'a' field must be copied EXACTLY character-for-character from one of the entries in 'wb'/'o' — same capitalization, same punctuation, same spacing. Do not rephrase or reformat it differently. The 'why' field is one short sentence explaining the grammar rule or reasoning behind the correct answer — written in "+(studentLevel==="A1"||studentLevel==="A2"?"simple English":"Italian, with the key rule in [it]...[/it] tags")+". No other text.");
       const start=r.indexOf("[");const end=r.lastIndexOf("]");
       if(start===-1||end===-1)throw new Error("no array");
       const arr=JSON.parse(r.slice(start,end+1));
@@ -1434,11 +1434,12 @@ if(!reply||!reply.trim()){setMsgs(p=>[...p,{id:Date.now()+1,text:"Sorry, the ser
 setMsgs(p=>[...p,{id:Date.now()+1,text:reply,sender:"ai",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:new Date().toISOString().slice(0,10)}]);
 if(reply.length>20){
   try{
-    const cleanReply=reply.replace(/\[it\]|\[\/it\]/g,"");
+    const itMatches=[...reply.matchAll(/\[it\](.*?)\[\/it\]/gs)].map(m=>m[1]);
+    const cleanReply=itMatches.length>0?itMatches.join(" "):reply.replace(/\[it\]|\[\/it\]/g,"");
     const knownWords=new Set([...vocabWords.map(w=>w.word),...savedWords.map(w=>w.word),...todaysWords.map(w=>w.word)]);
     const r=await callClaude(
       [{role:"user",content:"Italian text: "+cleanReply+"\n\nKnown words to exclude: "+[...knownWords].join(", ")}],
-      "You are an Italian teacher. From this Italian text, pick the 1 or 2 most useful NEW vocabulary words for a language learner to know. Choose meaningful content words — nouns, verbs, adjectives — not common function words like per, con, tra, che, non. Return ONLY a valid JSON array. Format: [{\"it\":\"parola\",\"en\":\"translation\"}]. Maximum 2 words. No other text."
+      "You are an Italian teacher. From this Italian text, pick the 1 or 2 most useful NEW Italian vocabulary words for a language learner to know. The \"it\" field must be an actual Italian word — never English. Choose meaningful content words — nouns, verbs, adjectives — not common function words like per, con, tra, che, non. Return ONLY a valid JSON array. Format: [{\"it\":\"parola\",\"en\":\"translation\"}]. Maximum 2 words. No other text."
     );
     const start=r.indexOf("[");const end=r.lastIndexOf("]");
     if(start!==-1&&end!==-1){
