@@ -1,11 +1,5 @@
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  'mailto:hello@parlami.chat',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { subscription, title, body, url, tag } = req.body;
@@ -13,6 +7,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing subscription' });
   }
   try {
+    webpush.setVapidDetails(
+      'mailto:hello@parlami.chat',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
     await webpush.sendNotification(
       subscription,
       JSON.stringify({ title: title || 'Parlami', body: body || '', url: url || '/app', tag: tag || 'parlami-reminder' })

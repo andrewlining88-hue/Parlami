@@ -3,12 +3,6 @@ import webpush from 'web-push';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 
-webpush.setVapidDetails(
-  'mailto:hello@parlami.chat',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
-
 const sb = async (path, method = 'GET', body = null) => {
   const opts = {
     method,
@@ -43,6 +37,11 @@ export default async function handler(req, res) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  webpush.setVapidDetails(
+    'mailto:hello@parlami.chat',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
   try {
     const students = await sb('students?select=email,name,streak,last_date,push_subscription,last_reminder_date');
     const today = new Date().toISOString().slice(0, 10);
