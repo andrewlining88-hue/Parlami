@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parlami-v2';
+const CACHE_NAME = 'parlami-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html'
@@ -33,5 +33,35 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+self.addEventListener('push', event => {
+  let payload = { title: 'Parlami', body: 'Dante ha un messaggio per te!' };
+  try {
+    if (event.data) payload = event.data.json();
+  } catch (e) {
+    if (event.data) payload.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'Parlami', {
+      body: payload.body || '',
+      icon: '/icons/web-app-manifest-192x192.png',
+      badge: '/icons/web-app-manifest-192x192.png',
+      tag: payload.tag || 'parlami-reminder',
+      data: { url: payload.url || '/app' }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/app';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientsArr => {
+      const existing = clientsArr.find(c => c.url.includes('/app'));
+      if (existing) return existing.focus();
+      return self.clients.openWindow(targetUrl);
+    })
   );
 });
