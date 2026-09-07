@@ -1372,7 +1372,7 @@ setVocabWords(s);setVocabCount(s.length);
 useEffect(()=>{BADGES.forEach(b=>{if(badges.includes(b.id))return;const p=b.type==="messages"?umc:b.type==="streak"?streak:b.type==="tests"?testsPassed.length:vocabCount;if(p>=b.req){setBadges(p=>[...p,b.id]);setBadgeNotif(b);setTimeout(()=>setBadgeNotif(null),3500);}});},[umc,streak,vocabCount,testsPassed]);
 const checkEmail=async e=>{const d=await load("student:"+e);return d?{exists:true,hasPassword:!!d.passwordHash,name:d.name||""}:{exists:false};};
 const loadData=async(e,hash)=>{const d=await load("student:"+e);if(!d)return"not_found";if(d.passwordHash&&d.passwordHash!==hash)return"wrong_password";
-const today=new Date();const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=thirtyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
+const today=new Date();const ninetyDaysAgo=new Date(Date.now()-90*24*60*60*1000).toISOString().slice(0,10);if(d.messages&&d.messages.length>0){const filtered=d.messages.filter(m=>!m.date||m.date>=ninetyDaysAgo);if(filtered.length!==d.messages.length){d.messages=filtered;await store("student:"+e,d);}}
 const today0=new Date().toISOString().slice(0,10);
 const tw=d.todaysWords||[];
 const todayOnly=tw.filter(w=>w.date===today0);
