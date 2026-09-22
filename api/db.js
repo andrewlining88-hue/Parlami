@@ -53,7 +53,7 @@ const toDb = (d) => ({
   student_report: d.studentReport || null,
   categorized_vocab: d.categorizedVocab || {},
   has_reviewed: d.hasReviewed || false,
-  push_subscription: d.pushSubscription || null,
+  push_subscriptions: d.pushSubscriptions || [],
   ...(d.subscriptionStatus !== undefined ? { subscription_status: d.subscriptionStatus } : {}),
   ...(d.stripeCustomerId !== undefined ? { stripe_customer_id: d.stripeCustomerId } : {}),
   ...(d.isPreplyStudent !== undefined ? { is_preply_student: d.isPreplyStudent } : {}),
@@ -93,7 +93,7 @@ const fromDb = (d) => ({
   studentReport: d.student_report || null,
   categorizedVocab: d.categorized_vocab || {},
   hasReviewed: d.has_reviewed || false,
-  pushSubscription: d.push_subscription || null,
+  pushSubscriptions: (d.push_subscriptions && d.push_subscriptions.length) ? d.push_subscriptions : (d.push_subscription ? [d.push_subscription] : []),
   subscriptionStatus: d.subscription_status || 'free',
   stripeCustomerId: d.stripe_customer_id || null,
   isPreplyStudent: d.is_preply_student || false,
@@ -116,12 +116,13 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 async function runCronReminders(res) {
   webpush.setVapidDetails('mailto:hello@parlami.chat', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
   try {
-    const students = await sb('students?select=email,name,streak,last_date,push_subscription,last_reminder_date');
+    const students = await sb('students?select=email,name,streak,last_date,push_subscriptions,last_reminder_date');
     const today = new Date().toISOString().slice(0, 10);
     const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
     let sent = 0, expired = 0, skipped = 0;
     for (const s of students || []) {
-      if (!s.push_subscription || !s.push_subscription.endpoint) { skipped++; continue; }
+      const subs = s.push_subscriptions || [];
+      if (subs.length === 0) { skipped++; continue; }
       if (s.last_date === today) { skipped++; continue; }
       if (s.last_reminder_date === today) { skipped++; continue; }
       const daysSince = s.last_date ? daysBetween(s.last_date, today) : null;
@@ -129,16 +130,23 @@ async function runCronReminders(res) {
       if (s.streak >= 2 && daysSince === 1) msg = pick(streakMessages(s.name ? s.name.split(' ')[0] : 'Ciao', s.streak));
       else if (daysSince === 2 || daysSince === 3) msg = pick(checkinMessages(s.name ? s.name.split(' ')[0] : 'Ciao'));
       if (!msg) { skipped++; continue; }
-      try {
-        await webpush.sendNotification(s.push_subscription, JSON.stringify({ title: msg.title, body: msg.body, url: '/app', tag: 'parlami-reminder' }));
-        sent++;
-        await sb(`students?email=eq.${encodeURIComponent(s.email)}`, 'PATCH', { last_reminder_date: today });
-      } catch (err) {
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          expired++;
-          await sb(`students?email=eq.${encodeURIComponent(s.email)}`, 'PATCH', { push_subscription: null });
+      let anySent = false;
+      const stillValid = [];
+      for (const sub of subs) {
+        try {
+          await webpush.sendNotification(sub, JSON.stringify({ title: msg.title, body: msg.body, url: '/app', tag: 'parlami-reminder' }));
+          anySent = true;
+          stillValid.push(sub);
+        } catch (err) {
+          if (err.statusCode === 410 || err.statusCode === 404) expired++;
+          else stillValid.push(sub); // keep it if the failure wasn't "this subscription is dead"
         }
       }
+      if (anySent) sent++;
+      if (stillValid.length !== subs.length) {
+        await sb(`students?email=eq.${encodeURIComponent(s.email)}`, 'PATCH', { push_subscriptions: stillValid });
+      }
+      await sb(`students?email=eq.${encodeURIComponent(s.email)}`, 'PATCH', { last_reminder_date: today });
     }
     return res.status(200).json({ sent, expired, skipped, total: (students || []).length });
   } catch (error) {
