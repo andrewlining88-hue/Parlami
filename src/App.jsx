@@ -1268,7 +1268,7 @@ const [promoCode,setPromoCode]=useState("");
 const [dataLoaded,setDataLoaded]=useState(false);
 const [dailyGoal,setDailyGoal]=useState(10);const [showGoalPicker,setShowGoalPicker]=useState(false);const [customGoal,setCustomGoal]=useState("");const [onboardStep,setOnboardStep]=useState(0);const [studentGoal,setStudentGoal]=useState("");
 const [showChangePw,setShowChangePw]=useState(false);const [oldPw,setOldPw]=useState("");const [newPw,setNewPw]=useState("");const [newPw2,setNewPw2]=useState("");const [changePwErr,setChangePwErr]=useState("");const [changePwOk,setChangePwOk]=useState(false);const [emailVerified,setEmailVerified]=useState(false);const [resendSent,setResendSent]=useState(false);const [tourStep,setTourStep]=useState(-1);const [forgotSent,setForgotSent]=useState(false);const [showForgot,setShowForgot]=useState(false);const [forgotEmail,setForgotEmail]=useState("");
-const [showReview,setShowReview]=useState(false);const [reviewRating,setReviewRating]=useState(5);const [reviewText,setReviewText]=useState("");const [reviewSubmitted,setReviewSubmitted]=useState(false);const [hasReviewed,setHasReviewed]=useState(false);const [pushSubscription,setPushSubscription]=useState(null);const [pushBusy,setPushBusy]=useState(false);
+const [showReview,setShowReview]=useState(false);const [reviewRating,setReviewRating]=useState(5);const [reviewText,setReviewText]=useState("");const [reviewSubmitted,setReviewSubmitted]=useState(false);const [hasReviewed,setHasReviewed]=useState(false);const [pushSubscriptions,setPushSubscriptions]=useState([]);const [deviceSubscribed,setDeviceSubscribed]=useState(false);const [pushBusy,setPushBusy]=useState(false);
 const fileRef=useRef(null),endRef=useRef(null);
 const prevVocabLen=useRef(null);const prevBadgesLen=useRef(null);const prevTipsLen=useRef(null);
 // Exercise badge — once per day
@@ -1343,7 +1343,7 @@ useEffect(()=>{
   })();
 },[dataLoaded,view]);
 useEffect(()=>{if(tab==="chat")setTimeout(()=>endRef.current?.scrollIntoView({behavior:"instant"}),50);},[tab]);
-useEffect(()=>{if(view!=="student"||!email||!dataLoaded)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,lifetimeMsgCount,savedWords,todaysWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab,hasReviewed,pushSubscription})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,todaysWords,studentReport,categorizedVocab,hasReviewed,lifetimeMsgCount,pushSubscription]);
+useEffect(()=>{if(view!=="student"||!email||!dataLoaded)return;(async()=>{const fresh=await load("student:"+email);const mergedNote=fresh?.lessonNote||lessonNote;const mergedVocab=fresh?.lessonVocab||lessonVocab;const mergedNoteHistory=fresh?.noteHistory||[];const mergedVocabHistory=fresh?.vocabHistory||[];const freshLevel=fresh?.level||level;if(freshLevel!==level)setLevel(freshLevel);store("student:"+email,{name,email,level:freshLevel,passwordHash:fresh?.passwordHash,messages:msgs,badges,streak,lastDate,testsPassed,testFailedAt,vocabCount,lessonNote:mergedNote,lessonVocab:mergedVocab,noteHistory:mergedNoteHistory,vocabHistory:mergedVocabHistory,recurringMistakes,tipLog,dailyGoal,totalMsgCount,lifetimeMsgCount,savedWords,todaysWords,messageCount:umc,progress:lp,badgeCount:badges.length,studentReport,categorizedVocab,hasReviewed,pushSubscriptions})})();},[msgs,level,badges,streak,testsPassed,vocabCount,tipLog,recurringMistakes,dailyGoal,savedWords,todaysWords,studentReport,categorizedVocab,hasReviewed,lifetimeMsgCount,pushSubscriptions]);
 useEffect(()=>{
 if(view!=="student"||!email)return;
 const interval=setInterval(async()=>{
@@ -1390,7 +1390,7 @@ if(oldWords.length>0){
   finalSaved=merged;d.savedWords=merged;d.todaysWords=todayOnly;
   await store("student:"+e,d);
 }
-setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setLifetimeMsgCount(d.lifetimeMsgCount!=null?d.lifetimeMsgCount:(d.totalMsgCount||0));setSavedWords(finalSaved);setTodaysWords(todayOnly);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});setHasReviewed(d.hasReviewed||false);setPushSubscription(d.pushSubscription||null);
+setMsgs(d.messages||[]);setLevel(d.level||"A1");setBadges(d.badges||[]);setStreak(d.streak||0);setLastDate(d.lastDate||null);setTestsPassed(d.testsPassed||[]);setTestFailedAt(d.testFailedAt||{});setVocabCount(d.vocabCount||0);setLessonNote(d.lessonNote||"");setRecurringMistakes(d.recurringMistakes||[]);setTipLog(d.tipLog||[]);setDailyGoal(d.dailyGoal||10);setLessonVocab(d.lessonVocab||"");setTotalMsgCount(d.totalMsgCount||0);setLifetimeMsgCount(d.lifetimeMsgCount!=null?d.lifetimeMsgCount:(d.totalMsgCount||0));setSavedWords(finalSaved);setTodaysWords(todayOnly);setStudentGoal(d.studentGoal||"");setEmailVerified(d.emailVerified||false);setStudentReport(d.studentReport||null);setCategorizedVocab(d.categorizedVocab||{});setHasReviewed(d.hasReviewed||false);setPushSubscriptions(d.pushSubscriptions||[]);
 setSubscriptionStatus(d.subscriptionStatus||"free");setIsPreplyStudent(d.isPreplyStudent||false);setTrialStart(d.trialStart||null);
 setDataLoaded(true);
 if(!d.emailVerified)return"unverified";
@@ -1411,24 +1411,33 @@ useEffect(()=>{
 const handleIdentify=async()=>{if(!email.trim()){setLoginErr("Please enter your email.");return;}const i=await checkEmail(email.trim().toLowerCase());if(i.exists&&i.hasPassword){setName(i.name);setStep("returning");}else if(i.exists){setName(i.name);setStep("newuser");}else setStep("newuser");setLoginErr("");};
 const handleLogin=async()=>{const r=await loadData(email.trim().toLowerCase(),hashPw(pw));if(r==="wrong_password"){setLoginErr("Incorrect password.");setPw("");}else if(r==="ok"||r==="unverified"){setLoginErr("");try{localStorage.setItem("parlami_email",email.trim().toLowerCase());localStorage.setItem("parlami_name",name);localStorage.setItem("parlami_hash",hashPw(pw));}catch{}const dest=r==="ok"?"student":"pending";if(dest==="student"){const isFirst=!localStorage.getItem("parlami_toured");if(isFirst){setTourStep(0);localStorage.setItem("parlami_toured","1");}}setView(dest);}else{setLoginErr("Account not found.");setStep("identify");}};
 const handleRegister=async()=>{if(!name.trim()){setLoginErr("Please enter your name.");return;}if(pw.length<4){setLoginErr("Password must be at least 4 characters.");return;}if(pw!==pw2){setLoginErr("Passwords don't match.");return;}await loadData(email.trim().toLowerCase(),null);setLoginErr("");setOnboardStep(0);setView("onboarding");};
+useEffect(()=>{
+  if(view!=="student"||!("serviceWorker" in navigator)||!("PushManager" in window))return;
+  navigator.serviceWorker.ready.then(reg=>reg.pushManager.getSubscription()).then(sub=>setDeviceSubscribed(!!sub)).catch(()=>{});
+},[view]);
 const enablePush=async()=>{
   if(!("serviceWorker" in navigator)||!("PushManager" in window)){alert("Push notifications aren't supported on this browser.");return;}
   setPushBusy(true);
   try{
-    if(pushSubscription){
-      const reg=await navigator.serviceWorker.ready;
+    const reg=await navigator.serviceWorker.ready;
+    if(deviceSubscribed){
       const existing=await reg.pushManager.getSubscription();
-      if(existing)await existing.unsubscribe();
-      setPushSubscription(null);
+      if(existing){
+        const endpoint=existing.endpoint;
+        await existing.unsubscribe();
+        setPushSubscriptions(p=>p.filter(s=>s.endpoint!==endpoint));
+      }
+      setDeviceSubscribed(false);
       setPushBusy(false);
       return;
     }
     const perm=await Notification.requestPermission();
     if(perm!=="granted"){setPushBusy(false);return;}
-    const reg=await navigator.serviceWorker.ready;
     const vapidKey=import.meta.env.VITE_VAPID_PUBLIC_KEY;
     const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(vapidKey)});
-    setPushSubscription(sub.toJSON());
+    const subJson=sub.toJSON();
+    setPushSubscriptions(p=>p.some(s=>s.endpoint===subJson.endpoint)?p:[...p,subJson]);
+    setDeviceSubscribed(true);
   }catch(e){console.error("Push subscribe error:",e);alert("Couldn't enable reminders. Please try again.");}
   setPushBusy(false);
 };
@@ -1786,7 +1795,7 @@ return (
 {badgeNotif&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="flex items-center space-x-3 px-5 py-3 rounded-2xl shadow-lg text-white text-sm font-medium" style={{background:"#1a1a2e"}}><span className="text-2xl">{badgeNotif.icon}</span><span>Badge unlocked: {badgeNotif.name}</span></div></div>}
 <div className="bg-white border-b border-gray-100 px-5 py-3.5 flex items-center justify-between flex-shrink-0" style={{background:dark?"#1f2937":"white",borderColor:dark?"#374151":"#f3f4f6"}}>
 <div className="flex items-center space-x-2.5"><Logo size={32}/><div><p className="text-sm font-semibold">Parlami</p><p className={cx.xs4}>{name}</p></div></div>
-<div className="flex items-center space-x-2"><a href="/guide" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-gray-500" title="How Parlami works"><span className="text-sm">❓</span></a><button onClick={enablePush} disabled={pushBusy} className="text-gray-300 hover:text-gray-500" title={pushSubscription?"Disable reminders":"Enable reminders"}><span className="text-sm">{pushSubscription?"🔔":"🔕"}</span></button><DarkToggle dark={dark} setDark={setDark}/>{subscriptionStatus==="active"&&<button onClick={async()=>{try{const r=await fetch("/api/customer-portal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});const d=await r.json();if(d.url)window.location.href=d.url;else alert("Could not open subscription manager: "+(d.error||"Unknown error"));}catch(e){alert("Error: "+e.message);}}} className="text-gray-300 hover:text-gray-500" title="Manage subscription"><span className="text-sm">💳</span></button>}<button onClick={()=>setShowChangePw(true)} className="text-gray-300 hover:text-gray-500" title="Change password"><span className="text-sm">🔑</span></button><button onClick={logout} className="text-gray-300 hover:text-gray-500"><LogOut className="w-4 h-4"/></button></div>
+<div className="flex items-center space-x-2"><a href="/guide" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-gray-500" title="How Parlami works"><span className="text-sm">❓</span></a><button onClick={enablePush} disabled={pushBusy} className="text-gray-300 hover:text-gray-500" title={deviceSubscribed?"Disable reminders on this device":"Enable reminders on this device"}><span className="text-sm">{deviceSubscribed?"🔔":"🔕"}</span></button><DarkToggle dark={dark} setDark={setDark}/>{subscriptionStatus==="active"&&<button onClick={async()=>{try{const r=await fetch("/api/customer-portal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});const d=await r.json();if(d.url)window.location.href=d.url;else alert("Could not open subscription manager: "+(d.error||"Unknown error"));}catch(e){alert("Error: "+e.message);}}} className="text-gray-300 hover:text-gray-500" title="Manage subscription"><span className="text-sm">💳</span></button>}<button onClick={()=>setShowChangePw(true)} className="text-gray-300 hover:text-gray-500" title="Change password"><span className="text-sm">🔑</span></button><button onClick={logout} className="text-gray-300 hover:text-gray-500"><LogOut className="w-4 h-4"/></button></div>
 </div>
 {showGoalPicker&&(
 <div className={cx.modal} style={{background:"rgba(0,0,0,0.35)"}}>
